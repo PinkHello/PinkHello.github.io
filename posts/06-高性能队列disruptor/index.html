@@ -24,7 +24,13 @@ Disruptor 核心逻辑, 两个实现: 单生产者和多生产者。他们实现
 <a ref=navTitle class=navbar-brand href=https://pinkhello.github.io/>一杯哈希不加盐</a>
 <button type=button class=nav-darkmode-toggle v-on:click=toggleDarkMode>
 <i class=material-icons v-if=isDarkMode>brightness_4</i>
-<i class=material-icons v-else=isDarkMode>brightness_7</i></button></div></nav><div class=single-column-header-container ref=pageHead v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }"><a href=https://pinkhello.github.io/><div class=single-column-header-title>一杯哈希不加盐</div><div class=single-column-header-subtitle>做一个快乐的程序猿</div></a></div><div id=content><div ref=streamContainer class=stream-container><div class="post-list-container post-list-container-shadow"><div class=post><div class=post-head-wrapper-text-only><div class=post-title>06 高性能队列Disruptor<div class=post-meta><time itemprop=datePublished>2021-02-10 08:35</time></div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h1 id=背景>背景</h1><p><code>Disruptor</code> 是 外汇交易公司<code>LMAX</code>开发的高性能队列、研发是为了解决内存队列延迟问题。
+<i class=material-icons v-else=isDarkMode>brightness_7</i></button></div></nav><div class=single-column-header-container ref=pageHead v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }"><a href=https://pinkhello.github.io/><div class=single-column-header-title>一杯哈希不加盐</div><div class=single-column-header-subtitle>做一个快乐的程序猿</div></a></div><div id=content><div ref=streamContainer class=stream-container><div class="post-list-container post-list-container-shadow"><div class=post><div class=post-head-wrapper-text-only><div class=post-title>06 高性能队列Disruptor<div class=post-meta><time itemprop=datePublished>2021-02-10 08:35</time>
+<i class=material-icons>folder</i>
+<a href=/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6>中间件</a>
+&nbsp;
+<i class=material-icons>label</i>
+<a href=/tags/disruptor>Disruptor</a>
+&nbsp;</div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h1 id=背景>背景</h1><p><code>Disruptor</code> 是 外汇交易公司<code>LMAX</code>开发的高性能队列、研发是为了解决内存队列延迟问题。
 <code>Disruptor</code> 一般用于线程间的消息传递。
 <a href=http://lmax-exchange.github.io/disruptor/>Disruptor GitHub 地址</a></p><h1 id=disruptor-介绍><code>Disruptor</code> 介绍</h1><p>理解 <code>Disruptor</code> 最好的方式，选择一个最接近熟悉的样本进行比较。在这个前提下，可以选择 <code>Java</code> 中的 <code>BlockingQueue</code>.
 和队列相似，<code>Disruptor</code> 也是在同一个进程中不同的线程之间进行传递数据的（例如消息或者事件），同时 <code>Disruptor</code> 提供了一些将关键功能和队列分开的特性：</p><ul><li>向消费者发送多播事件</li><li>消息者依赖关系图</li><li>预先为事件分配内存</li><li>可选的（无锁）</li></ul><h1 id=disruptor-核心概念><code>Disruptor</code> 核心概念</h1><p>在我们理解<code>Disruptor</code>如何工作之前，了解下核心概念</p><ul><li><a href=https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java>Ring Buffer</a>

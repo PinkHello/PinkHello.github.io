@@ -18,7 +18,15 @@
 <a ref=navTitle class=navbar-brand href=https://pinkhello.github.io/>一杯哈希不加盐</a>
 <button type=button class=nav-darkmode-toggle v-on:click=toggleDarkMode>
 <i class=material-icons v-if=isDarkMode>brightness_4</i>
-<i class=material-icons v-else=isDarkMode>brightness_7</i></button></div></nav><div class=single-column-header-container ref=pageHead v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }"><a href=https://pinkhello.github.io/><div class=single-column-header-title>一杯哈希不加盐</div><div class=single-column-header-subtitle>做一个快乐的程序猿</div></a></div><div id=content><div ref=streamContainer class=stream-container><div class="post-list-container post-list-container-shadow"><div class=post><div class=post-head-wrapper-text-only><div class=post-title>08 Gradle多模块项目模板化<div class=post-meta><time itemprop=datePublished>2021-02-10 08:43</time></div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h2 id=前言>前言</h2><p>Maven 冗余， Gradle 简单轻便
+<i class=material-icons v-else=isDarkMode>brightness_7</i></button></div></nav><div class=single-column-header-container ref=pageHead v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }"><a href=https://pinkhello.github.io/><div class=single-column-header-title>一杯哈希不加盐</div><div class=single-column-header-subtitle>做一个快乐的程序猿</div></a></div><div id=content><div ref=streamContainer class=stream-container><div class="post-list-container post-list-container-shadow"><div class=post><div class=post-head-wrapper-text-only><div class=post-title>08 Gradle多模块项目模板化<div class=post-meta><time itemprop=datePublished>2021-02-10 08:43</time>
+<i class=material-icons>folder</i>
+<a href=/categories/devops>DevOps</a>
+&nbsp;
+<i class=material-icons>label</i>
+<a href=/tags/git>git</a>
+&nbsp;
+<a href=/tags/ci/cd>CI/CD</a>
+&nbsp;</div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h2 id=前言>前言</h2><p>Maven 冗余， Gradle 简单轻便
 公司原有的 CI/CD 流程，借助 Maven 插件 build Docker Image,改为原生 Docker Runner 原始构建</p><h2 id=1多模块项目>1、多模块项目</h2><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml>project<span style=color:#bbb>
 </span><span style=color:#bbb> </span>- app<span style=color:#bbb>
 </span><span style=color:#bbb>   </span>- src/main/[java|resources] | src/test/[java|resources]  <span style=color:#bbb> </span><span style=color:#228b22># classpath</span><span style=color:#bbb>

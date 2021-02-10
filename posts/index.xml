@@ -70,5 +70,4 @@ ThreadLocal 是什么 ThreadLocal 为解决多线程并发问题提供的一种�
 ThreadLocalMap 用来存储数据，采用类似HashMap的机制，存储了以ThreadLocal为Key，目标数据为Value的Entry键值对数组结构。
 Thread 有个 ThreadLocalMap 的属性，存储的数据存放在此处。
 Thread、ThreadLocal、 ThreadLocalMap的关系 ThreadLocalMap 是 ThreadLocal 的内部类，有 ThreadLocal创建，Thread有 ThreadLocal.ThreadLocalMap 类型的属性，源码如下
-Thread public class Thread implements Runnable { /* * ThreadLocal values pertaining to this thread. This map is maintained * by the ThreadLocal class.</description></item><item><title>helloworld</title><link>https://pinkhello.github.io/posts/helloworld/</link><pubDate>Tue, 09 Feb 2021 22:10:17 +0800</pubDate><guid>https://pinkhello.github.io/posts/helloworld/</guid><description>说明 hello world
-这是内容</description></item></channel></rss>
+Thread public class Thread implements Runnable { /* * ThreadLocal values pertaining to this thread. This map is maintained * by the ThreadLocal class.</description></item></channel></rss>
