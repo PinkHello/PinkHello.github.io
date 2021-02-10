@@ -1,8 +1,9 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Wed, 10 Feb 2021 19:36:33 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>16 Hexo迁移hugo</title><link>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</link><pubDate>Wed, 10 Feb 2021 19:36:33 +0800</pubDate><guid>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ -&lt;h1 id="为什么迁移-hugo">为什么迁移 &lt;code>Hugo&lt;/code>&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Wed, 10 Feb 2021 19:36:33 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>16 Hexo迁移Hugo</title><link>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</link><pubDate>Wed, 10 Feb 2021 19:36:33 +0800</pubDate><guid>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ -&lt;h1 id="为什么迁移-hugo">为什么迁移 &lt;code>Hugo&lt;/code>&lt;/h1>
 &lt;ul>
 &lt;li>&lt;code>Hugo&lt;/code> 使用比 &lt;code>Hexo&lt;/code> 简单, 只有单独的一个二进制文件&lt;/li>
 &lt;li>苦于 &lt;code>Hexo&lt;/code> 的 &lt;code>NodeModule&lt;/code> 管理&lt;/li>
 &lt;li>迁移成本更低, 结合 &lt;code>Github Action&lt;/code> 实现 &lt;code>Markdown&lt;/code> 文章发布, 自动更新至静态站&lt;/li>
+&lt;li>规划：加入自定义域名以及做静态资源CDN做的加速&lt;/li>
 &lt;/ul>
 &lt;h1 id="前置工作">前置工作&lt;/h1>
 &lt;p>1、 之前基本所有的博客都托管与 &lt;code>github&lt;/code>,这次也不例外, 复用 &lt;code>https://pinkhello.github.io&lt;/code>,创建两个项目&lt;/p>
