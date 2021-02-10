@@ -1,4 +1,405 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Wed, 10 Feb 2021 10:05:29 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>07 Fabric使用</title><link>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:40:46 +0800</pubDate><guid>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/ -&lt;h2 id="docker-加入systemctl环境并启动docker">docker 加入systemctl环境并启动docker&lt;/h2>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Wed, 10 Feb 2021 19:36:33 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>08 Gradle多模块项目模板化</title><link>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</link><pubDate>Wed, 10 Feb 2021 08:43:21 +0800</pubDate><guid>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ -&lt;h2 id="前言">前言&lt;/h2>
+&lt;p>Maven 冗余， Gradle 简单轻便
+公司原有的 CI/CD 流程，借助 Maven 插件 build Docker Image,改为原生 Docker Runner 原始构建&lt;/p>
+&lt;h2 id="1多模块项目">1、多模块项目&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">project&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- app&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- src/main/[java|resources] | src/test/[java|resources] &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># classpath&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- Dockerfile &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Dockerfile&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- build.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># APP 模块 gradle 配置&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- sdk &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># SDK 模块 可有可无&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- src/main/java&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- build.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># SDK 的 gradle 配置&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- deploy &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># delpoy 项目 注意 checkstyle 相关配置在这里面&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- checkstyle/**&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#1e889b">**.yml&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- build.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 项目顶级 gradle配置&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- gradle&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- wrapper/** &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># gradle 配置信息&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- check.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># pmd &amp;amp; checkstyle&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- repo.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 仓库定义&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># test.gradle 放这儿，就没有高亮了 =&amp;gt; 暂时维护在 顶层的 build.gradle 中，单独维护，不要和其他配置混在一起。&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- settings.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 配置&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- versions-prod.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 版本定义&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- versions-dev.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 版本定义&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- .gitignore &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># git忽略文件&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- .gitlab-ci.yml &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># CI/CD&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="2project-下各个gradle文件">2、Project 下各个gradle文件&lt;/h2>
+&lt;p>Project/versions.gradle 可以统一版本管理&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="color:#228b22">//start step
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#00688b;font-weight:bold">def&lt;/span> versions = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Expando()
+&lt;span style="color:#00688b;font-weight:bold">def&lt;/span> deps = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Expando()
+ext.&lt;span style="color:#658b00">versions&lt;/span> = versions
+ext.&lt;span style="color:#658b00">deps&lt;/span> = deps
+&lt;span style="color:#228b22">//set versions
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>versions.&lt;span style="color:#658b00">springboot&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;2.1.16.RELEASE&amp;#34;&lt;/span>
+versions.&lt;span style="color:#658b00">mysql&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;8.0.16&amp;#34;&lt;/span>
+versions.&lt;span style="color:#658b00">guava&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;25.1-jre&amp;#34;&lt;/span>
+versions.&lt;span style="color:#658b00">httpclient&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;4.5.9&amp;#34;&lt;/span>
+versions.&lt;span style="color:#658b00">okhttp3&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;3.8.1&amp;#34;&lt;/span>
+versions.&lt;span style="color:#658b00">apm&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;1.7.0&amp;#34;&lt;/span>
+versions.&lt;span style="color:#658b00">kotlin&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;1.4.10&amp;#34;&lt;/span>
+&lt;span style="color:#228b22">//set dependencies
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">// 基础开源包
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>deps.&lt;span style="color:#658b00">mysql&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;mysql:mysql-connector-java:${versions.mysql}&amp;#34;&lt;/span>
+deps.&lt;span style="color:#658b00">guava&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;com.google.guava:guava:${versions.guava}&amp;#34;&lt;/span>
+deps.&lt;span style="color:#658b00">okhttp3&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;com.squareup.okhttp3:okhttp:${versions.okhttp3}&amp;#34;&lt;/span>
+deps.&lt;span style="color:#658b00">apm&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;co.elastic.apm:apm-agent-attach:${versions.apm}&amp;#34;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/settings.gradle 根配置文件，build 快不快全靠它&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="color:#228b22">//配置插件走国内代理
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>pluginManagement {
+repositories {
+maven {
+url &lt;span style="color:#cd5555">&amp;#39;https://maven.aliyun.com/repository/gradle-plugin&amp;#39;&lt;/span>
+}
+gradlePluginPortal()
+}
+}
+rootProject.&lt;span style="color:#658b00">name&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;project-name&amp;#39;&lt;/span>
+include &lt;span style="color:#cd5555">&amp;#39;:app&amp;#39;&lt;/span>
+include &lt;span style="color:#cd5555">&amp;#39;:sdk&amp;#39;&lt;/span> &lt;span style="color:#228b22">// 没有SDK模块的化不需要这个
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/build.gradle&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">buildscript {
+ext {
+kotlinVersion = &lt;span style="color:#cd5555">&amp;#34;1.4.10&amp;#34;&lt;/span>
+springBootVersion = &lt;span style="color:#cd5555">&amp;#39;2.1.16.RELEASE&amp;#39;&lt;/span>
+springBootGradleVersion = &lt;span style="color:#cd5555">&amp;#39;2.3.3.RELEASE&amp;#39;&lt;/span>
+}
+}
+plugins {
+id &lt;span style="color:#cd5555">&amp;#34;java&amp;#34;&lt;/span>
+id &lt;span style="color:#cd5555">&amp;#34;pmd&amp;#34;&lt;/span>
+id &lt;span style="color:#cd5555">&amp;#34;checkstyle&amp;#34;&lt;/span>
+id &lt;span style="color:#cd5555">&amp;#34;maven-publish&amp;#34;&lt;/span>
+id &lt;span style="color:#cd5555">&amp;#34;org.jetbrains.kotlin.jvm&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;$kotlinVersion&amp;#34;&lt;/span>
+id &lt;span style="color:#cd5555">&amp;#34;org.jetbrains.kotlin.plugin.spring&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;$kotlinVersion&amp;#34;&lt;/span>
+id &lt;span style="color:#cd5555">&amp;#34;org.springframework.boot&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;$springBootVersion&amp;#34;&lt;/span>
+id &lt;span style="color:#cd5555">&amp;#34;io.spring.dependency-management&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;1.0.9.RELEASE&amp;#34;&lt;/span>
+}
+apply from: file(&lt;span style="color:#cd5555">&amp;#34;versions.gradle&amp;#34;&lt;/span>)
+&lt;span style="color:#228b22">// 为了一如不同的版本环境下的代码配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#00688b;font-weight:bold">def&lt;/span> env = System.&lt;span style="color:#658b00">getProperty&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;env&amp;#39;&lt;/span>) ?: &lt;span style="color:#cd5555">&amp;#39;dev&amp;#39;&lt;/span>
+apply from: &lt;span style="color:#cd5555">&amp;#34;${rootDir}/versions-${env}.gradle&amp;#34;&lt;/span>
+allprojects {
+&lt;span style="color:#228b22">// 配置 group
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> group &lt;span style="color:#cd5555">&amp;#34;com.XXX.XXX&amp;#34;&lt;/span>
+&lt;span style="color:#228b22">//配置版本
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> version = findProperty &lt;span style="color:#cd5555">&amp;#39;version&amp;#39;&lt;/span> ?: &lt;span style="color:#cd5555">&amp;#39;1.0.0-SNAPSHOT&amp;#39;&lt;/span>
+bootJar {
+enabled = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
+}
+apply plugin: &lt;span style="color:#cd5555">&amp;#34;java&amp;#34;&lt;/span>
+apply plugin: &lt;span style="color:#cd5555">&amp;#34;idea&amp;#34;&lt;/span>
+apply plugin: &lt;span style="color:#cd5555">&amp;#34;maven-publish&amp;#34;&lt;/span>
+apply plugin: &lt;span style="color:#cd5555">&amp;#34;org.jetbrains.kotlin.jvm&amp;#34;&lt;/span>
+apply plugin: &lt;span style="color:#cd5555">&amp;#34;kotlin-spring&amp;#34;&lt;/span>
+apply plugin: &lt;span style="color:#cd5555">&amp;#34;org.springframework.boot&amp;#34;&lt;/span>
+apply plugin: &lt;span style="color:#cd5555">&amp;#34;io.spring.dependency-management&amp;#34;&lt;/span>
+apply plugin: &lt;span style="color:#cd5555">&amp;#39;jacoco&amp;#39;&lt;/span>
+&lt;span style="color:#228b22">//假如 你的 mapper.xml 或者 grovvy 写在 src/main/java ，打包需要处理到 需要加入的resources，需要手动处理
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// 当然如果 你的 mapper.xml 直接在 src/main/resources 里面 不需要处理，可以直接删除
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> processResources {
+from(&lt;span style="color:#cd5555">&amp;#39;src/main/java&amp;#39;&lt;/span>) {
+include &lt;span style="color:#cd5555">&amp;#39;**/*.xml&amp;#39;&lt;/span>
+include &lt;span style="color:#cd5555">&amp;#39;**/*.groovy&amp;#39;&lt;/span>
+}
+}
+}
+&lt;span style="color:#228b22">// apply from: file(&amp;#34;gradle/repo.gradle&amp;#34;)
+&lt;/span>&lt;span style="color:#228b22">// apply from: file(&amp;#34;gradle/check.gradle&amp;#34;)
+&lt;/span>&lt;span style="color:#228b22">// apply from: file(&amp;#34;gradle/maven-publish.gradle&amp;#34;)
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>apply from: &lt;span style="color:#cd5555">&amp;#39;https://${DownloadPath}/gradle/check-style.gradle&amp;#39;&lt;/span>
+apply from: &lt;span style="color:#cd5555">&amp;#39;https://${DownloadPath}/gradle/maven-repo.gradle&amp;#39;&lt;/span>
+apply from: &lt;span style="color:#cd5555">&amp;#39;https://${DownloadPath}/gradle/maven-publish.gradle&amp;#39;&lt;/span>
+subprojects {
+configurations {
+provided
+}
+sourceSets.&lt;span style="color:#658b00">main&lt;/span>.&lt;span style="color:#658b00">compileClasspath&lt;/span> += configurations.&lt;span style="color:#658b00">provided&lt;/span>
+sourceSets.&lt;span style="color:#658b00">test&lt;/span>.&lt;span style="color:#658b00">compileClasspath&lt;/span> += configurations.&lt;span style="color:#658b00">provided&lt;/span>
+sourceSets.&lt;span style="color:#658b00">test&lt;/span>.&lt;span style="color:#658b00">runtimeClasspath&lt;/span> += configurations.&lt;span style="color:#658b00">provided&lt;/span>
+tasks.&lt;span style="color:#658b00">withType&lt;/span>(JavaCompile) {
+options.&lt;span style="color:#658b00">encoding&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;UTF-8&amp;#39;&lt;/span>
+}
+task &lt;span style="color:#008b45">sourceJar&lt;/span>(type: Jar) {
+from sourceSets.&lt;span style="color:#658b00">main&lt;/span>.&lt;span style="color:#658b00">allJava&lt;/span>
+classifier &lt;span style="color:#cd5555">&amp;#34;sources&amp;#34;&lt;/span>
+}
+task &lt;span style="color:#008b45">javadocJar&lt;/span>(type: Jar, dependsOn: javadoc) {
+from javadoc.&lt;span style="color:#658b00">destinationDir&lt;/span>
+}
+dependencies {
+implementation &lt;span style="color:#cd5555">&amp;#34;com.google.guava:guava:$versions.guava&amp;#34;&lt;/span>
+compileOnly &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
+annotationProcessor &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
+testCompileOnly &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
+testAnnotationProcessor &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
+testImplementation &lt;span style="color:#cd5555">&amp;#34;org.springframework.boot:spring-boot-starter-test:$springBootVersion&amp;#34;&lt;/span>
+testImplementation &lt;span style="color:#cd5555">&amp;#34;org.mockito:mockito-core:2.23.4&amp;#34;&lt;/span>
+testImplementation &lt;span style="color:#cd5555">&amp;#39;junit:junit:4.13&amp;#39;&lt;/span>
+&lt;span style="color:#228b22">// h2
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> testImplementation &lt;span style="color:#cd5555">&amp;#34;com.h2database:h2:1.4.200&amp;#34;&lt;/span>
+&lt;span style="color:#228b22">// redis memery
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> testImplementation &lt;span style="color:#cd5555">&amp;#34;com.github.kstyrc:embedded-redis:0.6&amp;#34;&lt;/span>
+}
+&lt;span style="color:#228b22">// jacoco report
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> jacocoTestReport {
+reports {
+xml.&lt;span style="color:#658b00">enabled&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
+html.&lt;span style="color:#658b00">enabled&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+}
+}
+check.&lt;span style="color:#658b00">dependsOn&lt;/span> jacocoTestReport
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">
+allprojects {
+apply plugin: &lt;span style="color:#cd5555">&amp;#39;maven-publish&amp;#39;&lt;/span>
+publishing {
+task &lt;span style="color:#008b45">sourceJar&lt;/span>(type: Jar) {
+from sourceSets.&lt;span style="color:#658b00">main&lt;/span>.&lt;span style="color:#658b00">allJava&lt;/span>
+classifier &lt;span style="color:#cd5555">&amp;#34;sources&amp;#34;&lt;/span>
+}
+publications {
+mavenSnapshots(MavenPublication) {
+groupId project.&lt;span style="color:#658b00">group&lt;/span>
+artifactId project.&lt;span style="color:#658b00">name&lt;/span>
+version project.&lt;span style="color:#658b00">version&lt;/span>
+from components.&lt;span style="color:#658b00">java&lt;/span>
+artifact sourceJar
+ext.&lt;span style="color:#658b00">repo&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;Dev&amp;#39;&lt;/span>
+}
+mavenRelease(MavenPublication) {
+groupId project.&lt;span style="color:#658b00">group&lt;/span>
+artifactId project.&lt;span style="color:#658b00">name&lt;/span>
+version project.&lt;span style="color:#658b00">version&lt;/span>
+from components.&lt;span style="color:#658b00">java&lt;/span>
+artifact sourceJar
+ext.&lt;span style="color:#658b00">repo&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;Prod&amp;#39;&lt;/span>
+}
+}
+repositories {
+maven {
+name &lt;span style="color:#cd5555">&amp;#39;Dev&amp;#39;&lt;/span>
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven {
+name &lt;span style="color:#cd5555">&amp;#39;Prod&amp;#39;&lt;/span>
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
+}
+}
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/gradle/repo.gradle 指定私有仓库地址以及验证方式&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">buildscript {
+repositories {
+mavenLocal()
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-public/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://maven.aliyun.com/nexus/content/groups/public/&amp;#34;&lt;/span> }
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://repo.spring.io/milestone&amp;#34;&lt;/span> }
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://oss.sonatype.org/content/repositories/snapshots/&amp;#34;&lt;/span> }
+}
+}
+allprojects {
+repositories {
+mavenLocal()
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-public/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://maven.aliyun.com/nexus/content/groups/public/&amp;#34;&lt;/span> }
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://repo.spring.io/milestone&amp;#34;&lt;/span> }
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://oss.sonatype.org/content/repositories/snapshots/&amp;#34;&lt;/span> }
+}
+}
+subprojects {
+repositories {
+mavenLocal()
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven {
+url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-public/&amp;#34;&lt;/span>
+authentication {
+header(HttpHeaderAuthentication)
+}
+credentials(HttpHeaderCredentials) {
+name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
+value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
+}
+}
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://maven.aliyun.com/nexus/content/groups/public/&amp;#34;&lt;/span> }
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://repo.spring.io/milestone&amp;#34;&lt;/span> }
+maven { url &lt;span style="color:#cd5555">&amp;#34;https://oss.sonatype.org/content/repositories/snapshots/&amp;#34;&lt;/span> }
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/gradle/check.gradle&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">subprojects {
+apply plugin: &lt;span style="color:#cd5555">&amp;#39;checkstyle&amp;#39;&lt;/span>
+checkstyle {
+configFile = rootProject.&lt;span style="color:#658b00">file&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;deploy/checkstyle/checkstyle.xml&amp;#39;&lt;/span>)
+showViolations = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+&lt;span style="color:#228b22">// ignoreFailures = true
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+}
+&lt;span style="color:#228b22">//可以指定排查
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> checkstyleMain {
+exclude &lt;span style="color:#cd5555">&amp;#34;**/*.groovy&amp;#34;&lt;/span>
+}
+apply plugin: &lt;span style="color:#cd5555">&amp;#39;pmd&amp;#39;&lt;/span>
+dependencies {
+pmd &lt;span style="color:#cd5555">&amp;#34;com.alibaba.p3c:p3c-pmd:2.0.0&amp;#34;&lt;/span>
+}
+pmd {
+consoleOutput = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+ruleSets = [
+&lt;span style="color:#cd5555">&amp;#34;java-ali-comment&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-concurrent&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-constant&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-exception&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-flowcontrol&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-naming&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-oop&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-orm&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-other&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;java-ali-set&amp;#34;&lt;/span>
+]
+incrementalAnalysis = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
+}
+pmdMain {
+exclude &lt;span style="color:#cd5555">&amp;#34;**/exclude_package/**&amp;#34;&lt;/span>
+}
+}
+test.&lt;span style="color:#658b00">mustRunAfter&lt;/span> checkstyleMain, checkstyleTest
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/sdk/build.gradle&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">apply from: file(&lt;span style="color:#cd5555">&amp;#34;$rootDir/versions.gradle&amp;#34;&lt;/span>)
+jar {
+enabled = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+}
+bootJar {
+enabled = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
+}
+dependencies {
+implementation &lt;span style="color:#cd5555">&amp;#39;org.springframework.cloud:spring-cloud-starter-openfeign:2.1.0.RELEASE&amp;#39;&lt;/span>
+......
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/app/build.gradle&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">apply from: file(&lt;span style="color:#cd5555">&amp;#34;$rootDir/versions.gradle&amp;#34;&lt;/span>)
+bootJar {
+enabled = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
+}
+jar {
+enabled = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
+}
+dependencies {
+implementation deps.&lt;span style="color:#658b00">springboot&lt;/span>.&lt;span style="color:#658b00">starter&lt;/span>
+implementation deps.&lt;span style="color:#658b00">springboot&lt;/span>.&lt;span style="color:#658b00">starter_web&lt;/span>
+implementation deps.&lt;span style="color:#658b00">mysql&lt;/span>
+implementation deps.&lt;span style="color:#658b00">myabtis&lt;/span>.&lt;span style="color:#658b00">myabtis&lt;/span>
+implementation deps.&lt;span style="color:#658b00">myabtis&lt;/span>.&lt;span style="color:#658b00">starter&lt;/span>
+implementation &lt;span style="color:#cd5555">&amp;#39;org.springframework.boot:spring-boot-starter-amqp:2.1.2.RELEASE&amp;#39;&lt;/span>
+implementation &lt;span style="color:#cd5555">&amp;#34;org.springframework.cloud:spring-cloud-starter-openfeign:2.1.0.RELEASE&amp;#34;&lt;/span>
+implementation &lt;span style="color:#cd5555">&amp;#39;com.zaxxer:HikariCP:3.4.1&amp;#39;&lt;/span>
+implementation &lt;span style="color:#cd5555">&amp;#39;com.baomidou:mybatis-plus:2.2.0&amp;#39;&lt;/span>
+implementation &lt;span style="color:#cd5555">&amp;#39;com.github.pagehelper:pagehelper:5.1.2&amp;#39;&lt;/span>
+implementation &lt;span style="color:#cd5555">&amp;#39;org.mongodb:mongo-java-driver:3.8.0&amp;#39;&lt;/span>
+...... &lt;span style="color:#228b22">//剩余映射依赖
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="3-dockerfile-注意-add-文件路径">3、 Dockerfile 注意 ADD 文件路径&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-dockerfile" data-lang="dockerfile">&lt;span style="color:#8b008b;font-weight:bold">FROM&lt;/span>&lt;span style="color:#cd5555"> {HARBOR_HOST}/BaseImage&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ADD&lt;/span> ./build/libs/app.jar /app.jar&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>.... 其他配置&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="4project-下添加-gradleproperties-注意在-gitignore-里面添加上它不要传递到公开服务器是你的密码等敏感信息">4、Project/ 下添加 gradle.properties, 注意在 .gitignore 里面添加上它，不要传递到公开服务器，是你的密码等敏感信息&lt;/h2>
+&lt;pre>&lt;code class="language-properties" data-lang="properties"># Nexus 仓库地址
+NEXUS_URL=https://nexus-url
+# 指定为你自己的maven的用户配置 settings.xml 里面的你的配置
+NEXUS_CAS_HEADER=XXXXXXX
+# gradle daemon
+org.gradle.daemon=true
+# 禁用Gradle 6.x 版本 SHA-256和SHA-512校验和的发布
+# https://juejin.im/post/6844904101126553614
+systemProp.org.gradle.internal.publish.checksums.insecure=true
+&lt;/code>&lt;/pre>&lt;h2 id="5gitlab-ci-模板化下次分享">5、gitlab-ci 模板化，下次分享~~~~&lt;/h2>
+- https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>07 Fabric使用</title><link>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:40:46 +0800</pubDate><guid>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/ -&lt;h2 id="docker-加入systemctl环境并启动docker">docker 加入systemctl环境并启动docker&lt;/h2>
 &lt;p>快速安装docker&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">curl -sSL https://get.daocloud.io/docker | sh
 &lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">systemctl &lt;span style="color:#658b00">enable&lt;/span> docker
