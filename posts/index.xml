@@ -1,217 +1,66 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Posts on 一杯哈希不加盐</title>
-    <link>https://pinkhello.github.io/posts/</link>
-    <description>Recent content in Posts on 一杯哈希不加盐</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language>
-    <copyright>一杯哈希不加盐 copyright.</copyright>
-    <lastBuildDate>Wed, 10 Feb 2021 10:05:29 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>15 记一次docker日志磁盘告警问题</title>
-      <link>https://pinkhello.github.io/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</link>
-      <pubDate>Wed, 10 Feb 2021 10:05:29 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</guid>
-      <description>前景 今日，我正在开开心心的刷着JFX的Coding中，突然线上报警群中爆了个炸弹，EC2磁盘超过80%。
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on 一杯哈希不加盐</title><link>https://pinkhello.github.io/posts/</link><description>Recent content in Posts on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh-hant</language><copyright>一杯哈希不加盐 copyright.</copyright><lastBuildDate>Wed, 10 Feb 2021 10:05:29 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>15 记一次docker日志磁盘告警问题</title><link>https://pinkhello.github.io/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</link><pubDate>Wed, 10 Feb 2021 10:05:29 +0800</pubDate><guid>https://pinkhello.github.io/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</guid><description>前景 今日，我正在开开心心的刷着JFX的Coding中，突然线上报警群中爆了个炸弹，EC2磁盘超过80%。
 处理过程 解决问题姿势就位：
-  赶紧开机 ==》 ❤️中万匹🦙奔腾而过 ❤️中MMP
-  默默的通过跳板机进入目标机器
-  不管三七二十一,执行查看磁盘占用大小，我的乖乖，占用确实超过了87%了，一下子暴涨的
-  # 查看磁盘占用大小 &amp;gt; sudo df -h # 查看当前目录总量 &amp;gt; sudo du -sh  开始定位具体哪个文件或者目录占用这么大,跑到根目录下。  # 查看当前目录下一级子文件和子目录占用的磁盘容量 &amp;gt; sudo du -lh --max-depth=1  一开始猜想可能是docker容器的日志占用大，上面执行后，还真 TM 是  /var/lib/docker/containers 目录占用 42G  开始查看是哪个容器占用的这么大的空间  # 查看 containers 日志目录排序 &amp;gt; sudo du -d1 -h /var/lib/docker/containers | sort -h # 查看具体的哪个日志文件大 &amp;gt; sudo find /var/lib/docker/containers -name *.</description>
-    </item>
-    
-    <item>
-      <title>14 工作纪实2020</title>
-      <link>https://pinkhello.github.io/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</link>
-      <pubDate>Wed, 10 Feb 2021 10:00:19 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</guid>
-      <description>每日一思篇 [2019-10-12 每日一思] Mysql WAL技术 和 RingBuffer 思想好一致? [2019-10-14 每日一思] JWT 续签该如何做? [2019-10-16 每日一思] TCP/IP 协议具体指哪些?  我们都知道网络是7层模型，应表会传网数物， 现在我只讨论应传网数这4层。TCP/IP协议应该被称为TCP/IP族， 我的理解他不是属于单个的协议类型，是一个统称，知道网络模型核心设计思想是分层，为什么分层，分层从设计上和实现难度上都简单很多，哪一层需要修改只需要修改这一层。
- 应用层，像最常见的http、ftp、dns、rtsp、rtmp等等协议都是属于这类， 传输层呢按照传输类型又分了TCP和UDP, 网络层，是数据包交互的层面， 数据链路层是处理网卡、操作系统等等软硬抽象出的可见部分。  举一个栗子，一个http请求，在应用层面是完整的，后面被传输层（TCP层）被分包，并打上序号标记，再进入网络层（IP层）添加IP首部（目标mac地址等等）， 下面就是开始疯狂的发送了，接收方一样是这个过程的逆序。应用处理完成后面的响应过程与请求过程一样的一个过程。同时可以扩展出L4与L7的问题， 各自是如何去实现负载均衡的？L4是可以看出是基于传输层即TCP层工作（通过发布VIP（第三层）以及第四层端口），L7基于应用层工作（第四层基础上+考虑应用特征）， 比如HTTP的URL、客户端的类别、语言类型等等。
- [2019-10-18 每日一思]一种场景，rabbitmq 的 Exchange 为 fanout 类型，绑定到多个queue, 什么情况会触发 rabbitmq 流控？如何解决？ [2019-10-22 每日一思]ID序列生产器怎么实现呢？  uuid生成
- 基于时间（60位utc时间 和 时间序列值14位，以及mac地址） 基于名称（针对命名空间dns、url等分配，把名称转成字节序列，再用md5或sha-1与命名空间标识进行计算，产生哈希结果） 基于随机数（密码学随机数，系统的硬盘内存线程堆栈进程句柄等sha-1生成哈希结果）  snowflake，64bit，long型ID
- ID生成方式 1bit（不使用），41bit时间戳（当前毫秒数、69年一轮回），10bit机器码（1024台，5bit数据中心，5bit机器ID），12bit作为毫秒内序列号（单机理论 409.6w/s） 雪花算法，多台机器，有因为时钟回拨导致的ID生成问题，当然可以通过发生时钟回拨后一个阈值，在阈值内则不允许产生新的ID，同步阻塞，在阈值外重新设置机器ID来解决 github.com/baidu/uid-generator 技术老铁百度开源的基于snowflake实现的ID生成器，可以借鉴研读一下   [2019-11-01 每日一思]我们常说的限流是什么？为什么要限流？限流有哪些方式？  我们常说的限流，顾名思义即限制流量. 限制系统的输入和输出 常用的限流发展至今，有四种方式
- 固定时间计数器 漏桶 令牌桶 滑动窗口计数器  固定窗口计数器：以单位时间内进入系统（系统级别）或者某一个单一接口服务（系统服务级别）请求次数，在这个单位时间内的超过次数，拒绝服务或者更换其他方案（降级、熔断）达到限流目的。</description>
-    </item>
-    
-    <item>
-      <title>13 Kafka与Debezium构建CDC管道</title>
-      <link>https://pinkhello.github.io/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</link>
-      <pubDate>Wed, 10 Feb 2021 09:53:51 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</guid>
-      <description>建设篇 1、什么是 debezium? https://debezium.io/
+赶紧开机 ==》 ❤️中万匹🦙奔腾而过 ❤️中MMP
+默默的通过跳板机进入目标机器
+不管三七二十一,执行查看磁盘占用大小，我的乖乖，占用确实超过了87%了，一下子暴涨的
+# 查看磁盘占用大小 &amp;gt; sudo df -h # 查看当前目录总量 &amp;gt; sudo du -sh 开始定位具体哪个文件或者目录占用这么大,跑到根目录下。 # 查看当前目录下一级子文件和子目录占用的磁盘容量 &amp;gt; sudo du -lh --max-depth=1 一开始猜想可能是docker容器的日志占用大，上面执行后，还真 TM 是 /var/lib/docker/containers 目录占用 42G 开始查看是哪个容器占用的这么大的空间 # 查看 containers 日志目录排序 &amp;gt; sudo du -d1 -h /var/lib/docker/containers | sort -h # 查看具体的哪个日志文件大 &amp;gt; sudo find /var/lib/docker/containers -name *.</description></item><item><title>14 工作纪实2020</title><link>https://pinkhello.github.io/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</link><pubDate>Wed, 10 Feb 2021 10:00:19 +0800</pubDate><guid>https://pinkhello.github.io/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</guid><description>每日一思篇 [2019-10-12 每日一思] Mysql WAL技术 和 RingBuffer 思想好一致? [2019-10-14 每日一思] JWT 续签该如何做? [2019-10-16 每日一思] TCP/IP 协议具体指哪些? 我们都知道网络是7层模型，应表会传网数物， 现在我只讨论应传网数这4层。TCP/IP协议应该被称为TCP/IP族， 我的理解他不是属于单个的协议类型，是一个统称，知道网络模型核心设计思想是分层，为什么分层，分层从设计上和实现难度上都简单很多，哪一层需要修改只需要修改这一层。
+应用层，像最常见的http、ftp、dns、rtsp、rtmp等等协议都是属于这类， 传输层呢按照传输类型又分了TCP和UDP, 网络层，是数据包交互的层面， 数据链路层是处理网卡、操作系统等等软硬抽象出的可见部分。 举一个栗子，一个http请求，在应用层面是完整的，后面被传输层（TCP层）被分包，并打上序号标记，再进入网络层（IP层）添加IP首部（目标mac地址等等）， 下面就是开始疯狂的发送了，接收方一样是这个过程的逆序。应用处理完成后面的响应过程与请求过程一样的一个过程。同时可以扩展出L4与L7的问题， 各自是如何去实现负载均衡的？L4是可以看出是基于传输层即TCP层工作（通过发布VIP（第三层）以及第四层端口），L7基于应用层工作（第四层基础上+考虑应用特征）， 比如HTTP的URL、客户端的类别、语言类型等等。
+[2019-10-18 每日一思]一种场景，rabbitmq 的 Exchange 为 fanout 类型，绑定到多个queue, 什么情况会触发 rabbitmq 流控？如何解决？ [2019-10-22 每日一思]ID序列生产器怎么实现呢？ uuid生成
+基于时间（60位utc时间 和 时间序列值14位，以及mac地址） 基于名称（针对命名空间dns、url等分配，把名称转成字节序列，再用md5或sha-1与命名空间标识进行计算，产生哈希结果） 基于随机数（密码学随机数，系统的硬盘内存线程堆栈进程句柄等sha-1生成哈希结果） snowflake，64bit，long型ID
+ID生成方式 1bit（不使用），41bit时间戳（当前毫秒数、69年一轮回），10bit机器码（1024台，5bit数据中心，5bit机器ID），12bit作为毫秒内序列号（单机理论 409.6w/s） 雪花算法，多台机器，有因为时钟回拨导致的ID生成问题，当然可以通过发生时钟回拨后一个阈值，在阈值内则不允许产生新的ID，同步阻塞，在阈值外重新设置机器ID来解决 github.com/baidu/uid-generator 技术老铁百度开源的基于snowflake实现的ID生成器，可以借鉴研读一下 [2019-11-01 每日一思]我们常说的限流是什么？为什么要限流？限流有哪些方式？ 我们常说的限流，顾名思义即限制流量. 限制系统的输入和输出 常用的限流发展至今，有四种方式
+固定时间计数器 漏桶 令牌桶 滑动窗口计数器 固定窗口计数器：以单位时间内进入系统（系统级别）或者某一个单一接口服务（系统服务级别）请求次数，在这个单位时间内的超过次数，拒绝服务或者更换其他方案（降级、熔断）达到限流目的。</description></item><item><title>13 Kafka与Debezium构建CDC管道</title><link>https://pinkhello.github.io/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</link><pubDate>Wed, 10 Feb 2021 09:53:51 +0800</pubDate><guid>https://pinkhello.github.io/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</guid><description>建设篇 1、什么是 debezium? https://debezium.io/
 Tutorial https://debezium.io/documentation/reference/1.3/tutorial.html
-2、Debezium 如何工作的 2.1 Debezium 支持的数据库类型  MySQL MongoDB PostgreSQL Oracle SQL Server Db2 Cassandra  2.2 Debezium 三种方式运行  Kafka Connect Debezium Server Embedded Engine  https://github.com/debezium/debezium-examples/tree/master/kinesis
+2、Debezium 如何工作的 2.1 Debezium 支持的数据库类型 MySQL MongoDB PostgreSQL Oracle SQL Server Db2 Cassandra 2.2 Debezium 三种方式运行 Kafka Connect Debezium Server Embedded Engine https://github.com/debezium/debezium-examples/tree/master/kinesis
 3、在 K8S 中构建基础Debezium集群环境 镜像准备
- kafka | debezium https://hub.docker.com/r/debezium/kafka zookeeper | debezium https://hub.docker.com/r/debezium/zookeeper connect | debezium https://hub.docker.com/r/debezium/connect schema-registry | confluentinc https://hub.docker.com/r/confluentinc/cp-schema-registry  ps： debezium 参考地址 https://github.com/debezium/docker-images confluentinc 参考地址 https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one
-3.1 K8S基础知识  kafka 与 zookeeper 建设为 stateful 状态集群 schema-registry 主要为了 支持 avro 格式这些不需要写到 kafka 消息头里面，减少消息的大小，额外的服务，属于 kafka 生态，存储依赖 kafka broker保证稳定性。 k8s steteful 集群 0&amp;hellip;~ n 个 POD zookeeper 里面 zoo.</description>
-    </item>
-    
-    <item>
-      <title>12 聊聊蝙蝠Chat</title>
-      <link>https://pinkhello.github.io/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/</link>
-      <pubDate>Wed, 10 Feb 2021 09:10:14 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/</guid>
-      <description>title: 老司机聊聊BatChat date: 2021-01-31 21:37:07 tags:
- BatChat/加密聊天   今天，在浏览小众软件的时候，突然看见一个早期小编的推广～～～蝙蝠APP，联想到之前新闻中看到的有个贩卖个人信息的人说在蝙蝠APP上，勾起了我的好奇心，作为一个程序🐶，默默的想探究一下这个蝙蝠APP玩的什么套路。
+kafka | debezium https://hub.docker.com/r/debezium/kafka zookeeper | debezium https://hub.docker.com/r/debezium/zookeeper connect | debezium https://hub.docker.com/r/debezium/connect schema-registry | confluentinc https://hub.docker.com/r/confluentinc/cp-schema-registry ps： debezium 参考地址 https://github.com/debezium/docker-images confluentinc 参考地址 https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one
+3.1 K8S基础知识 kafka 与 zookeeper 建设为 stateful 状态集群 schema-registry 主要为了 支持 avro 格式这些不需要写到 kafka 消息头里面，减少消息的大小，额外的服务，属于 kafka 生态，存储依赖 kafka broker保证稳定性。 k8s steteful 集群 0&amp;hellip;~ n 个 POD zookeeper 里面 zoo.</description></item><item><title>12 聊聊蝙蝠Chat</title><link>https://pinkhello.github.io/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/</link><pubDate>Wed, 10 Feb 2021 09:10:14 +0800</pubDate><guid>https://pinkhello.github.io/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/</guid><description>title: 老司机聊聊BatChat date: 2021-01-31 21:37:07 tags:
+BatChat/加密聊天 今天，在浏览小众软件的时候，突然看见一个早期小编的推广～～～蝙蝠APP，联想到之前新闻中看到的有个贩卖个人信息的人说在蝙蝠APP上，勾起了我的好奇心，作为一个程序🐶，默默的想探究一下这个蝙蝠APP玩的什么套路。
 什么是蝙蝠（BatChat） 一款免费的端到端加密的蝙蝠APP，随时畅聊！ 应用 IOS、Android https://batchat.com
-它的特性  安全 ｜ 畅聊时、端到端加密（所有消息经过端到端加密，任何聊天记录不进行云存储，让你的信息想象中更安全） 隐私 ｜ 畅聊时、双向撤回（聊天记录一键双向撤回，同时删除你和对方设备上所有的聊天记录，撤回数据多次覆盖删除、不可恢复、保证双方的隐私安全） 匿名群聊 ｜ 开启匿名群聊，群里面的每一个成员都可以&amp;quot;变身&amp;quot;，隐藏真实身份，群内不受身份约束  什么是端到端加密？ 端到端加密是在源结点和目的结点中对传送的数据进行加密和解密， 因此数据的安全性不会因中间结点的不可靠而受到影响。 蝙蝠APP的所有数据都通过用户端生成的私钥进行加密后再发送，任何第三方包括开发者都不能解开此数据.
-蝙蝠APP采用的安全层级？   通道加密 通道加密中采用了哪些加密算法？ 通道加密中使用到的 RSA, ECDHE, AES256_CBC, SHA256, SHA1等等(如下图)。
+它的特性 安全 ｜ 畅聊时、端到端加密（所有消息经过端到端加密，任何聊天记录不进行云存储，让你的信息想象中更安全） 隐私 ｜ 畅聊时、双向撤回（聊天记录一键双向撤回，同时删除你和对方设备上所有的聊天记录，撤回数据多次覆盖删除、不可恢复、保证双方的隐私安全） 匿名群聊 ｜ 开启匿名群聊，群里面的每一个成员都可以&amp;quot;变身&amp;quot;，隐藏真实身份，群内不受身份约束 什么是端到端加密？ 端到端加密是在源结点和目的结点中对传送的数据进行加密和解密， 因此数据的安全性不会因中间结点的不可靠而受到影响。 蝙蝠APP的所有数据都通过用户端生成的私钥进行加密后再发送，任何第三方包括开发者都不能解开此数据.
+蝙蝠APP采用的安全层级？ 通道加密 通道加密中采用了哪些加密算法？ 通道加密中使用到的 RSA, ECDHE, AES256_CBC, SHA256, SHA1等等(如下图)。
 步骤:
- (1. 客户端和服务器先产生随机数 (2. 服务器下发随机数。 (3. 客户端用 RSA 对客户端随机数进行加密，并发送给服务器。 (4. 服务器用 RSA 解密客户端随机数（使用 RSA 的目的是防止中间人攻击）。 (5. 客户端，服务器用自己的随机数加上对方的随机数生成临时密钥 TempKey 和临时偏移量 TempIV (此时双方均持有相同的 TempKey和TempIV)。 (6. 客户端服务器均使用 ECDHE 生成各自的公私钥对。 (7.</description>
-    </item>
-    
-    <item>
-      <title>11 几个关于kafka的知识点</title>
-      <link>https://pinkhello.github.io/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</link>
-      <pubDate>Wed, 10 Feb 2021 08:55:19 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</guid>
-      <description>认识kafka Kafka 是分布式消息系统， Apache 的子项目。标语也变了&amp;quot;分布式流平台&amp;quot;， 与传统的消息系统不同点在于
- 分布式的，易于扩展 为发布和订阅提供了高吞吐 支持多订阅者，在失败的时候能自动平衡消费者 消息的持久化  kafka 的架构 几点？
- Kafka 的 Topic 和 Partition 内部如何存储？ 与传统的消息系统相比， Kafka 消费模型有啥优点？ Kafka 是如何实现分布式数据存储和数据的读取？  Kafka 架构 一个 Kafka 集群，多个 Producer ，多个 Consumer ，多个 Broker ， 选举 Leader 以及在 Consumer Group 发生变化时进行 reblance 。
- Broker 消息中间件的处理节点，一个 Kafka 节点就是一个 Broker ， 一个或者多个 Broker 组成 Kafka 集群 Topic Kafka 根据 Topic 对 Message 进行归类，发布到 Kafka 的每条 Message 都要指定 Topic Producer 向 Broker 发生 message Consumer 从 Broker 读取 message Consumer Group 每个 Consumer 属于特定的 Group，一个 Message 可以发送给不同的 Consumer Group ，但是同一个 Group 下的只有一个 Consumer 能消费该 Message Partition 物理概念，一个 Topic 下可以分为多个 Partition, 每个 Partition 下是有序的。  下面来讲述 上面为问题啊</description>
-    </item>
-    
-    <item>
-      <title>10 多域名下的SSH</title>
-      <link>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</link>
-      <pubDate>Wed, 10 Feb 2021 08:52:57 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</guid>
-      <description>前言 有时候我们，有多个 git 账号（Gitlab、GitHub），这时候如果是同一个账号（邮箱注册），那不会有问题，但是如果不是相同的账号呢，我们在使用 SSH KEY 做免密登录时候，头痛了。
+(1. 客户端和服务器先产生随机数 (2. 服务器下发随机数。 (3. 客户端用 RSA 对客户端随机数进行加密，并发送给服务器。 (4. 服务器用 RSA 解密客户端随机数（使用 RSA 的目的是防止中间人攻击）。 (5. 客户端，服务器用自己的随机数加上对方的随机数生成临时密钥 TempKey 和临时偏移量 TempIV (此时双方均持有相同的 TempKey和TempIV)。 (6. 客户端服务器均使用 ECDHE 生成各自的公私钥对。 (7.</description></item><item><title>11 几个关于kafka的知识点</title><link>https://pinkhello.github.io/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</link><pubDate>Wed, 10 Feb 2021 08:55:19 +0800</pubDate><guid>https://pinkhello.github.io/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</guid><description>认识kafka Kafka 是分布式消息系统， Apache 的子项目。标语也变了&amp;quot;分布式流平台&amp;quot;， 与传统的消息系统不同点在于
+分布式的，易于扩展 为发布和订阅提供了高吞吐 支持多订阅者，在失败的时候能自动平衡消费者 消息的持久化 kafka 的架构 几点？
+Kafka 的 Topic 和 Partition 内部如何存储？ 与传统的消息系统相比， Kafka 消费模型有啥优点？ Kafka 是如何实现分布式数据存储和数据的读取？ Kafka 架构 一个 Kafka 集群，多个 Producer ，多个 Consumer ，多个 Broker ， 选举 Leader 以及在 Consumer Group 发生变化时进行 reblance 。
+Broker 消息中间件的处理节点，一个 Kafka 节点就是一个 Broker ， 一个或者多个 Broker 组成 Kafka 集群 Topic Kafka 根据 Topic 对 Message 进行归类，发布到 Kafka 的每条 Message 都要指定 Topic Producer 向 Broker 发生 message Consumer 从 Broker 读取 message Consumer Group 每个 Consumer 属于特定的 Group，一个 Message 可以发送给不同的 Consumer Group ，但是同一个 Group 下的只有一个 Consumer 能消费该 Message Partition 物理概念，一个 Topic 下可以分为多个 Partition, 每个 Partition 下是有序的。 下面来讲述 上面为问题啊</description></item><item><title>10 多域名下的SSH</title><link>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</link><pubDate>Wed, 10 Feb 2021 08:52:57 +0800</pubDate><guid>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</guid><description>前言 有时候我们，有多个 git 账号（Gitlab、GitHub），这时候如果是同一个账号（邮箱注册），那不会有问题，但是如果不是相同的账号呢，我们在使用 SSH KEY 做免密登录时候，头痛了。
 这个时候我们需要针对不同的账号，生成不同的 SSH Key，并且配置不同的域名使用不同的Key
-生成一个 SSH KEY ssh-keygen -t rsa -C &amp;#34;username@email.com&amp;#34;   一路 Enter，并且在生成时候指定名字，（不指定名字会使用默认的）得到
-  id_rsa # 私钥 id_rsa.pub # 公钥 重复上一个步骤，生成多个 私钥和公钥 github_id_rsa github_id_rsa.pub gitlab_id_rsa gitlab_id_rsa.pub 配置相应的域名对应的 SSH-KEY  本地目录 ~/.ssh/ 下，查阅有没有 config 文件, 不存在就新建 config 文件  Host github HostName github.com User UserName PreferredAuthentications publickey IdentityFile ~/.ssh/github_id_rsa Host gitlab HostName gitlab.com User UserName PreferredAuthentications publickey IdentityFile ~/.ssh/gitlab_id_rsa 将密钥添加进入 SSH-AGENT 中 ssh-add ~/.</description>
-    </item>
-    
-    <item>
-      <title>09 使用githook统一codestyle</title>
-      <link>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</link>
-      <pubDate>Wed, 10 Feb 2021 08:46:52 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</guid>
-      <description>gradle 优化  build 指定 -g cache 缓存  checkstyle 实践  基础镜像包含 checkstyle.xml 或者 放到远程其他可被拉取到的存储介质 ，防止项目成员改动 gitlab-ci beforeScript 标签执行命令 copy /checkstyle.xml 进入项目，(覆盖项目中存在的). gradle 编译的话 将 maven-publish.gradle repos.gradle checkstyle.gradle(checkstyle 插件配置 版本以及 configFile) 抽出放到公共的地方，防止项目团队成员改的. maven 的话，可以在公共的顶级继承 pom 里面指定变量checkstyle.config.location. mvn checkstyle -Dcheckstyle.config.location=checkstyle.xml  git hook 实践 每个项目里面 .git/hooks 里面有很多的 hook 模板
+生成一个 SSH KEY ssh-keygen -t rsa -C &amp;#34;username@email.com&amp;#34; 一路 Enter，并且在生成时候指定名字，（不指定名字会使用默认的）得到
+id_rsa # 私钥 id_rsa.pub # 公钥 重复上一个步骤，生成多个 私钥和公钥 github_id_rsa github_id_rsa.pub gitlab_id_rsa gitlab_id_rsa.pub 配置相应的域名对应的 SSH-KEY 本地目录 ~/.ssh/ 下，查阅有没有 config 文件, 不存在就新建 config 文件 Host github HostName github.com User UserName PreferredAuthentications publickey IdentityFile ~/.ssh/github_id_rsa Host gitlab HostName gitlab.com User UserName PreferredAuthentications publickey IdentityFile ~/.ssh/gitlab_id_rsa 将密钥添加进入 SSH-AGENT 中 ssh-add ~/.</description></item><item><title>09 使用githook统一codestyle</title><link>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</link><pubDate>Wed, 10 Feb 2021 08:46:52 +0800</pubDate><guid>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</guid><description>gradle 优化 build 指定 -g cache 缓存 checkstyle 实践 基础镜像包含 checkstyle.xml 或者 放到远程其他可被拉取到的存储介质 ，防止项目成员改动 gitlab-ci beforeScript 标签执行命令 copy /checkstyle.xml 进入项目，(覆盖项目中存在的). gradle 编译的话 将 maven-publish.gradle repos.gradle checkstyle.gradle(checkstyle 插件配置 版本以及 configFile) 抽出放到公共的地方，防止项目团队成员改的. maven 的话，可以在公共的顶级继承 pom 里面指定变量checkstyle.config.location. mvn checkstyle -Dcheckstyle.config.location=checkstyle.xml git hook 实践 每个项目里面 .git/hooks 里面有很多的 hook 模板
 客户端钩子包括:pre-commit、prepare-commit-msg、commit-msg、post-commit等，主要用于控制客户端git的提交工作流。
 服务端钩子：pre-receive、post-receive、update，主要在服务端接收提交对象时、推送到服务器之前调用。
 今天实践的是 客户端钩子，优化减少不符合规范或者低质量代码进入 gitflow 流程.
-pre-commit 和 commit-msg 是今天的主角，pre-commit 执行与 git add 之后，在进行 git commit 之前进行的操作. 可以用来进行 code check code lint 等等, commit-msg 执行与 git commit 常用于补全 git commit message check msg 等等 当然还有其他骚操作的功能，可以通知，等等，做多种自动化</description>
-    </item>
-    
-    <item>
-      <title>08 Gradle多模块项目模板化</title>
-      <link>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</link>
-      <pubDate>Wed, 10 Feb 2021 08:43:21 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</guid>
-      <description>前言 Maven 冗余， Gradle 简单轻便 公司原有的 CI/CD 流程，借助 Maven 插件 build Docker Image,改为原生 Docker Runner 原始构建
-1、多模块项目 project- app- src/main/[java|resources] | src/test/[java|resources] # classpath- Dockerfile # Dockerfile- build.gradle # APP 模块 gradle 配置- sdk # SDK 模块 可有可无- src/main/java- build.gradle # SDK 的 gradle 配置- deploy # delpoy 项目 注意 checkstyle 相关配置在这里面- checkstyle/**- **.yml- build.gradle # 项目顶级 gradle配置- gradle- wrapper/** # gradle 配置信息- check.gradle # pmd &amp;amp; checkstyle- repo.gradle # 仓库定义# test.</description>
-    </item>
-    
-    <item>
-      <title>07 Fabric使用</title>
-      <link>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</link>
-      <pubDate>Wed, 10 Feb 2021 08:40:46 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</guid>
-      <description>docker 加入systemctl环境并启动docker 快速安装docker
+pre-commit 和 commit-msg 是今天的主角，pre-commit 执行与 git add 之后，在进行 git commit 之前进行的操作. 可以用来进行 code check code lint 等等, commit-msg 执行与 git commit 常用于补全 git commit message check msg 等等 当然还有其他骚操作的功能，可以通知，等等，做多种自动化</description></item><item><title>08 Gradle多模块项目模板化</title><link>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</link><pubDate>Wed, 10 Feb 2021 08:43:21 +0800</pubDate><guid>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</guid><description>前言 Maven 冗余， Gradle 简单轻便 公司原有的 CI/CD 流程，借助 Maven 插件 build Docker Image,改为原生 Docker Runner 原始构建
+1、多模块项目 project- app- src/main/[java|resources] | src/test/[java|resources] # classpath- Dockerfile # Dockerfile- build.gradle # APP 模块 gradle 配置- sdk # SDK 模块 可有可无- src/main/java- build.gradle # SDK 的 gradle 配置- deploy # delpoy 项目 注意 checkstyle 相关配置在这里面- checkstyle/**- **.yml- build.gradle # 项目顶级 gradle配置- gradle- wrapper/** # gradle 配置信息- check.gradle # pmd &amp;amp; checkstyle- repo.gradle # 仓库定义# test.</description></item><item><title>07 Fabric使用</title><link>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:40:46 +0800</pubDate><guid>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</guid><description>docker 加入systemctl环境并启动docker 快速安装docker
 curl -sSL https://get.daocloud.io/docker | sh systemctl enable docker systemctl start docker docker-compose 安装 走外网或者 github 太慢,可以使用内部加速
 curl -L &amp;#34;https://github.com/docker/compose/releases/download/X.XX.X/docker-compose-$(uname -s)-$(uname -m)&amp;#34; -o /usr/local/bin/docker-compose curl -L https://get.daocloud.io/docker/compose/releases/download/1.26.2/docker-compose-`uname -s`-`uname -m` &amp;gt; /usr/local/bin/docker-compose fabric 自动运维 python 虚拟环境安装 参考
 创建一个独立的虚拟环境
 cd 目标目录 virtualenv --no-site-packages venv 激活虚拟环境
-source venv/bin/activate python pip 安装 Fabric pip install fabric3 python pip 导出依赖 pip freeze &amp;gt; requirements.txt 其他python pip 导入安装 pip install -r requirements.txt Fabric 文档 fabfiles 文档 # encoding=utf-8 from fabric.</description>
-    </item>
-    
-    <item>
-      <title>06 高性能队列Disruptor</title>
-      <link>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</link>
-      <pubDate>Wed, 10 Feb 2021 08:35:29 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</guid>
-      <description>背景 Disruptor 是 外汇交易公司LMAX开发的高性能队列、研发是为了解决内存队列延迟问题。 Disruptor 一般用于线程间的消息传递。 Disruptor GitHub 地址
+source venv/bin/activate python pip 安装 Fabric pip install fabric3 python pip 导出依赖 pip freeze &amp;gt; requirements.txt 其他python pip 导入安装 pip install -r requirements.txt Fabric 文档 fabfiles 文档 # encoding=utf-8 from fabric.</description></item><item><title>06 高性能队列Disruptor</title><link>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</link><pubDate>Wed, 10 Feb 2021 08:35:29 +0800</pubDate><guid>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</guid><description>背景 Disruptor 是 外汇交易公司LMAX开发的高性能队列、研发是为了解决内存队列延迟问题。 Disruptor 一般用于线程间的消息传递。 Disruptor GitHub 地址
 Disruptor 介绍 理解 Disruptor 最好的方式，选择一个最接近熟悉的样本进行比较。在这个前提下，可以选择 Java 中的 BlockingQueue. 和队列相似，Disruptor 也是在同一个进程中不同的线程之间进行传递数据的（例如消息或者事件），同时 Disruptor 提供了一些将关键功能和队列分开的特性：
- 向消费者发送多播事件 消息者依赖关系图 预先为事件分配内存 可选的（无锁）  Disruptor 核心概念 在我们理解Disruptor如何工作之前，了解下核心概念
- Ring Buffer 环形数组设计，为了避免垃圾回收，采用的数组结构，从3.0开始，环形缓冲区主要存储和更新在Disruptor中移动的数据（事件） Sequence Disruptor 每个消费者(EventProcessor)维护一个 Sequence，并发的大多数代码都依赖 Sequence 值的改动，所以 Sequence 支持 AtomicLong 的大部分也行, 唯一不同的是 Sequence 包含额外的功能来阻止Sequence和其他值之间的伪共享(false sharing) Sequencer
-Disruptor 核心逻辑, 两个实现: 单生产者和多生产者。他们实现了生产者与消费者之间的快速传递的并发算法。 Sequence Barrier 由 Sequencer 生成，包含此 Sequencer 发布的 Sequence 指针以及依赖的其他消费者的 Sequence。包含了消费者检查是否有可用的事件的代码。 Wait Strategy 消费者等待事件的策略，这个事件由生产者放入，决定了消费者怎么等待生产者将事件放入 Disruptor Event 生产者与消费者传递的事件，完全由用户定义 EventProcessor 处理事件的主要循环（main event loop），包含了一个 Sequeuece.</description>
-    </item>
-    
-    <item>
-      <title>05 OAuth2.0 那点事</title>
-      <link>https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</link>
-      <pubDate>Wed, 10 Feb 2021 08:32:02 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</guid>
-      <description>OAuth2.0 是什么? OAuth2.0 Framework RFC 6749 [https://tools.ietf.org/html/rfc6749]
+向消费者发送多播事件 消息者依赖关系图 预先为事件分配内存 可选的（无锁） Disruptor 核心概念 在我们理解Disruptor如何工作之前，了解下核心概念
+Ring Buffer 环形数组设计，为了避免垃圾回收，采用的数组结构，从3.0开始，环形缓冲区主要存储和更新在Disruptor中移动的数据（事件） Sequence Disruptor 每个消费者(EventProcessor)维护一个 Sequence，并发的大多数代码都依赖 Sequence 值的改动，所以 Sequence 支持 AtomicLong 的大部分也行, 唯一不同的是 Sequence 包含额外的功能来阻止Sequence和其他值之间的伪共享(false sharing) Sequencer
+Disruptor 核心逻辑, 两个实现: 单生产者和多生产者。他们实现了生产者与消费者之间的快速传递的并发算法。 Sequence Barrier 由 Sequencer 生成，包含此 Sequencer 发布的 Sequence 指针以及依赖的其他消费者的 Sequence。包含了消费者检查是否有可用的事件的代码。 Wait Strategy 消费者等待事件的策略，这个事件由生产者放入，决定了消费者怎么等待生产者将事件放入 Disruptor Event 生产者与消费者传递的事件，完全由用户定义 EventProcessor 处理事件的主要循环（main event loop），包含了一个 Sequeuece.</description></item><item><title>05 OAuth2.0 那点事</title><link>https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</link><pubDate>Wed, 10 Feb 2021 08:32:02 +0800</pubDate><guid>https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</guid><description>OAuth2.0 是什么? OAuth2.0 Framework RFC 6749 [https://tools.ietf.org/html/rfc6749]
 OAuth 就是一种授权机制，它介于客户端与资源所有者的授权层，为了分离不同的角色。 在资源所有者同意并向客户端颁发令牌后，客户端携带令牌可以访问部分或全部资源。
 OAuth2.0是OAuth协议的一个版本，为2.0版本。有意思的是 2.0与 1.0并不兼容。
 OAuth2.0 授权方式 获取授权的过程
- 授权码(authorization-code) 隐藏式(implicit) 密码(password) 客户端凭证(client credentials)  不管哪种方式，都需要在第三方应用申请令牌之前，需要在系统中申请身份唯一标识: 客户端ID Client ID和 客户端秘钥 Client Secret. 这样能确保Token不被恶意使用。
+授权码(authorization-code) 隐藏式(implicit) 密码(password) 客户端凭证(client credentials) 不管哪种方式，都需要在第三方应用申请令牌之前，需要在系统中申请身份唯一标识: 客户端ID Client ID和 客户端秘钥 Client Secret. 这样能确保Token不被恶意使用。
 授权重要的参数和指标:
- response_type响应类型: code(要求返回授权码),token(要求返回授权Token) client_id客户端身份标识 client_secret客户端秘钥 redirect_uri重定向地址 scope授权范围, read只读权限, all全部权限 grant_type授权方式 authorization_code(授权码)、password(密码)、client_credentials(凭证)、refresh_token(更新令牌) state应用程序传递的一个随机数，防止 CSRF攻击  授权码 在访问第三方应用先申请一个授权码，然后再用授权码获取令牌.这种方式也是最常用的流程，安全性也是最高的，适用于有后端的Web应用。授权码通过前端传送，令牌存储在后端。所有的和资源服务器的交互都在服务端完成，避免了令牌的泄露。 授权码和令牌的在 浏览器和客户端WEB应用以及资源服务器的交互流程大致如下:  1.2.3.4 用户选择 Google登陆 yelp.com 3.4 Yelp.com请求用户授权 Google权限 5.6 用户同意后返回授权码  7.8 Yelp.com通过授权码 会向 Google发起请求Token 9 验证必要参数，返回 Token 10.11 操作请求  隐藏式 密码式 顾名思议,在自己的系统输入第三方系统的账号密码,自己的系统拿账号密码去申请令牌，响应题里面返回token</description>
-    </item>
-    
-    <item>
-      <title>04 如何构建一个简单的RPC调用</title>
-      <link>https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link>
-      <pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid>
-      <description>1、什么叫RPC?
+response_type响应类型: code(要求返回授权码),token(要求返回授权Token) client_id客户端身份标识 client_secret客户端秘钥 redirect_uri重定向地址 scope授权范围, read只读权限, all全部权限 grant_type授权方式 authorization_code(授权码)、password(密码)、client_credentials(凭证)、refresh_token(更新令牌) state应用程序传递的一个随机数，防止 CSRF攻击 授权码 在访问第三方应用先申请一个授权码，然后再用授权码获取令牌.这种方式也是最常用的流程，安全性也是最高的，适用于有后端的Web应用。授权码通过前端传送，令牌存储在后端。所有的和资源服务器的交互都在服务端完成，避免了令牌的泄露。 授权码和令牌的在 浏览器和客户端WEB应用以及资源服务器的交互流程大致如下: 1.2.3.4 用户选择 Google登陆 yelp.com 3.4 Yelp.com请求用户授权 Google权限 5.6 用户同意后返回授权码 7.8 Yelp.com通过授权码 会向 Google发起请求Token 9 验证必要参数，返回 Token 10.11 操作请求 隐藏式 密码式 顾名思议,在自己的系统输入第三方系统的账号密码,自己的系统拿账号密码去申请令牌，响应题里面返回token</description></item><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>1、什么叫RPC?
 RPC构成
- RPC Consumer RPC Provider ConfigServer   1、Provider 启动 ConfigServer 注册服务 2、Consumer 启动 ConfigServer 订阅服务， 3、发起调用 Consumer &amp;mdash;&amp;gt; Provider 4、响应调用 Consumer &amp;lt;&amp;mdash; Provider  2、什么是 Netty ? https://netty.io/
+RPC Consumer RPC Provider ConfigServer 1、Provider 启动 ConfigServer 注册服务 2、Consumer 启动 ConfigServer 订阅服务， 3、发起调用 Consumer &amp;mdash;&amp;gt; Provider 4、响应调用 Consumer &amp;lt;&amp;mdash; Provider 2、什么是 Netty ? https://netty.io/
 3、现有的开源的项目是否使用了 Netty ?
- Dubbo Grpc Spark &amp;hellip;.  4、RPC Provider 启动
- Netty Server 方式启动 Rpc 服务的注册   5、RPC Consumer 启动
- Netty Client 方式启动 RPC 泛化调用、通过字节码基于反射来实现远程调度 Consumer 服务订阅 启动时建立长连接   6、从第四可以看出，多个 Provider 是由一个 NettyServer 提供的，通过 HandlerMap 映射找到对应的 Ioc Bean，完成服务调用</description>
-    </item>
-    
-    <item>
-      <title>03 String为什么设计成final</title>
-      <link>https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link>
-      <pubDate>Wed, 10 Feb 2021 08:19:51 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid>
-      <description>String源码剖析 public final class String implements java.io.Serializable, Comparable&amp;lt;String&amp;gt;, CharSequence { /** The value is used for character storage. */ private final char value[]; /** Cache the hash code for the string */ private int hash; // Default to 0  /** use serialVersionUID from JDK 1.0.2 for interoperability */ private static final long serialVersionUID = -6849794470754667710L; /** * Class String is special cased within the Serialization Stream Protocol. * * A String instance is written into an ObjectOutputStream according to * &amp;lt;a href=&amp;#34;{@docRoot}/.</description>
-    </item>
-    
-    <item>
-      <title>02 关于final的思考</title>
-      <link>https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link>
-      <pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid>
-      <description>关于final的思考  final 是声明数据域最终的,不可以修改的，常见的 是类的 序列化ID String 类，其数据域都是 final 的  修改 final 修饰的属性 反射修改 final 修饰的数据域【非常成功的修改了】
+Dubbo Grpc Spark &amp;hellip;. 4、RPC Provider 启动
+Netty Server 方式启动 Rpc 服务的注册 5、RPC Consumer 启动
+Netty Client 方式启动 RPC 泛化调用、通过字节码基于反射来实现远程调度 Consumer 服务订阅 启动时建立长连接 6、从第四可以看出，多个 Provider 是由一个 NettyServer 提供的，通过 HandlerMap 映射找到对应的 Ioc Bean，完成服务调用</description></item><item><title>03 String为什么设计成final</title><link>https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Wed, 10 Feb 2021 08:19:51 +0800</pubDate><guid>https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>String源码剖析 public final class String implements java.io.Serializable, Comparable&amp;lt;String&amp;gt;, CharSequence { /** The value is used for character storage. */ private final char value[]; /** Cache the hash code for the string */ private int hash; // Default to 0 /** use serialVersionUID from JDK 1.0.2 for interoperability */ private static final long serialVersionUID = -6849794470754667710L; /** * Class String is special cased within the Serialization Stream Protocol. * * A String instance is written into an ObjectOutputStream according to * &amp;lt;a href=&amp;#34;{@docRoot}/.</description></item><item><title>02 关于final的思考</title><link>https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate><guid>https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>关于final的思考 final 是声明数据域最终的,不可以修改的，常见的 是类的 序列化ID String 类，其数据域都是 final 的 修改 final 修饰的属性 反射修改 final 修饰的数据域【非常成功的修改了】
 public class Test { private final String name = &amp;#34;hello world&amp;#34;; public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException { Test test = new Test(); Field field = test.getClass().getDeclaredField(&amp;#34;name&amp;#34;); field.setAccessible(true); field.set(test,&amp;#34;HELLO, WORLD!&amp;#34;); System.out.println(field.get(test)); System.out.println(test.name); } } 输出 Hello, WORLD! hello world 第一个输出是因为说明运行成功，修改final修饰的对象的属性成功修改；
 但是第二个输出，表明了我直接使用 name 的属性却还是输出端额原来的值.
 反编译后的代码
-public class Test { private final String name = &amp;#34;hello world&amp;#34;; public Test() { } public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException { Test test = new Test(); Field field = test.</description>
-    </item>
-    
-    <item>
-      <title>01 一致性哈希算法</title>
-      <link>https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link>
-      <pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid>
-      <description>分布式均衡寻址算法 在分布式集群中，对机器的添加删除，或者机器故障后自动脱落集群的操作是分布式集群管理的基本功能。
- 在集群环境中，判断分布式寻址算法好坏的原则：
- 平衡性（Balance） 单调性（Monotonicity） 分散性（Spread） 负载（Load）   Hash(Object)%N 集群N台机器，根据N取模，路由到对应的机器，但是缺点在于，对于机器的添加删除，已经缓存的数据都失效、严重违反单调性， 大量的缓存重建
- 假设0-3个节点、20个数据: 进行取模后分布: 扩容后: 当前只有4个数据能命中。命中率 4/20 = 20% ,命中率底下，并且有大量缓存需要重建
- 一致性Hash ( DHT )  公共哈希函数和哈希环 Hash算法设计: 采取取模方式，按常用的 Hash 算法将对应的 Key 哈希到一个具有 2^32 次方的桶空间中，即 0 ~ (2^32)-1 的数字空间。想想一下，将数字首位相连，组成一个闭合的环形。   对象(Object)映射到哈希环 把对象映射到 0-2^32-1 空间里，假设有4个对象 object1-4 ，映射进hash环状   缓存(Cache)映射到哈希环 下面将 Cache 映射进 Hash 空间，假设现在有三个cache：
- 基本思想就是 Object 和 Cache 都映射到同一 Hash 数值空间中，并且使用相同的 Hash算法，可以使用 Cache 的 IP地址或者其他因子）</description>
-    </item>
-    
-    <item>
-      <title>00 Threadlocal 魔法</title>
-      <link>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link>
-      <pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid>
-      <description>ThreadLocal 详解 前言 对于 ThreadLocal 的使用，并不难，这次主要讲述 ThreadLocal 的实现方式以及原理
+public class Test { private final String name = &amp;#34;hello world&amp;#34;; public Test() { } public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException { Test test = new Test(); Field field = test.</description></item><item><title>01 一致性哈希算法</title><link>https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate><guid>https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>分布式均衡寻址算法 在分布式集群中，对机器的添加删除，或者机器故障后自动脱落集群的操作是分布式集群管理的基本功能。
+在集群环境中，判断分布式寻址算法好坏的原则：
+平衡性（Balance） 单调性（Monotonicity） 分散性（Spread） 负载（Load） Hash(Object)%N 集群N台机器，根据N取模，路由到对应的机器，但是缺点在于，对于机器的添加删除，已经缓存的数据都失效、严重违反单调性， 大量的缓存重建
+假设0-3个节点、20个数据: 进行取模后分布: 扩容后: 当前只有4个数据能命中。命中率 4/20 = 20% ,命中率底下，并且有大量缓存需要重建
+一致性Hash ( DHT ) 公共哈希函数和哈希环 Hash算法设计: 采取取模方式，按常用的 Hash 算法将对应的 Key 哈希到一个具有 2^32 次方的桶空间中，即 0 ~ (2^32)-1 的数字空间。想想一下，将数字首位相连，组成一个闭合的环形。 对象(Object)映射到哈希环 把对象映射到 0-2^32-1 空间里，假设有4个对象 object1-4 ，映射进hash环状 缓存(Cache)映射到哈希环 下面将 Cache 映射进 Hash 空间，假设现在有三个cache：
+基本思想就是 Object 和 Cache 都映射到同一 Hash 数值空间中，并且使用相同的 Hash算法，可以使用 Cache 的 IP地址或者其他因子）</description></item><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>ThreadLocal 详解 前言 对于 ThreadLocal 的使用，并不难，这次主要讲述 ThreadLocal 的实现方式以及原理
 ThreadLocal 是什么 ThreadLocal 为解决多线程并发问题提供的一种新的思路。
 当使用 ThreadLocal 维护变量的时候，ThreadLocal 为每个使用该变量的线程提供独立的变量副本，所以每个线程都可以独立修改自己的副本，而不会修改到其他人的变量副本。
 从线程角度看，Local 即本地意思，目标变量就像是线程的本地变量。
@@ -219,8 +68,4 @@ ThreadLocal 是什么 ThreadLocal 为解决多线程并发问题提供的一种�
 ThreadLocalMap 用来存储数据，采用类似HashMap的机制，存储了以ThreadLocal为Key，目标数据为Value的Entry键值对数组结构。
 Thread 有个 ThreadLocalMap 的属性，存储的数据存放在此处。
 Thread、ThreadLocal、 ThreadLocalMap的关系 ThreadLocalMap 是 ThreadLocal 的内部类，有 ThreadLocal创建，Thread有 ThreadLocal.ThreadLocalMap 类型的属性，源码如下
-Thread public class Thread implements Runnable { /* * ThreadLocal values pertaining to this thread. This map is maintained * by the ThreadLocal class.</description>
-    </item>
-    
-  </channel>
-</rss>
+Thread public class Thread implements Runnable { /* * ThreadLocal values pertaining to this thread. This map is maintained * by the ThreadLocal class.</description></item></channel></rss>
