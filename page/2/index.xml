@@ -1122,4 +1122,9 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;li>此方法为 1.5 引入，旨在协助&lt;code>jvm&lt;/code>进行有效的快速 &lt;code>gc&lt;/code>；&lt;/li>
 &lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
 &lt;/ul>
-- https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>helloworld</title><link>https://pinkhello.github.io/posts/helloworld/</link><pubDate>Tue, 09 Feb 2021 22:10:17 +0800</pubDate><guid>https://pinkhello.github.io/posts/helloworld/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/helloworld/ -&lt;h2 id="说明">说明&lt;/h2>
+&lt;blockquote>
+&lt;p>hello world&lt;/p>
+&lt;/blockquote>
+&lt;p>这是内容&lt;/p>
+- https://pinkhello.github.io/posts/helloworld/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
