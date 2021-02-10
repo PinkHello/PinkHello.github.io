@@ -1,492 +1,530 @@
-<!doctype html><html lang=en><head><title>一杯哈希不加盐</title><meta charset=utf-8><meta content="utf-8" http-equiv=encoding><meta name=viewport content="width=device-width,initial-scale=1"><meta name=format-detection content="telephone=no"><meta name=theme-color content="#000084"><link rel=icon href=https://pinkhello.github.io//favicon.ico><link rel=canonical href=https://pinkhello.github.io/></head><body><nav class="navbar navbar-inverse navbar-fixed-top"><div class=navbar-inner><div class=container><button type=button class="btn btn-navbar" data-toggle=collapse data-target=.nav-collapse></button>
-<a class=brand href=https://pinkhello.github.io/>一杯哈希不加盐</a><div class="nav-collapse collapse"><ul class=nav><li><a href=/about/><span>About</span></a></li><li><a href=/posts/><span>Archive</span></a></li></ul></div></div></div></nav><div id=content class=container><div class="row-fluid navmargin"><div class=page-header><h1>13 Kafka与Debezium构建CDC管道 - Wed, Feb 10, 2021</h1></div><p class=lead></p><h1 id=建设篇>建设篇</h1><h2 id=1什么是-debezium>1、什么是 debezium?</h2><p><a href=https://debezium.io/>https://debezium.io/</a></p><p>Tutorial
+<!doctype html><html><head><title>13 Kafka与Debezium构建CDC管道</title><meta charset=utf-8><meta name=X-UA-Compatible content="IE=edge"><meta name=google-site-verification content><meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" name=viewport><meta content="telephone=no" name=format-detection><meta name=description content><meta name=renderer content="webkit"><meta name=theme-color content="#ffffff"><meta property="og:title" content="13 Kafka与Debezium构建CDC管道"><meta property="og:description" content="建设篇 1、什么是 debezium? https://debezium.io/
+Tutorial https://debezium.io/documentation/reference/1.3/tutorial.html
+2、Debezium 如何工作的 2.1 Debezium 支持的数据库类型  MySQL MongoDB PostgreSQL Oracle SQL Server Db2 Cassandra  2.2 Debezium 三种方式运行  Kafka Connect Debezium Server Embedded Engine  https://github.com/debezium/debezium-examples/tree/master/kinesis
+3、在 K8S 中构建基础Debezium集群环境 镜像准备
+ kafka | debezium https://hub.docker.com/r/debezium/kafka zookeeper | debezium https://hub.docker.com/r/debezium/zookeeper connect | debezium https://hub.docker.com/r/debezium/connect schema-registry | confluentinc https://hub.docker.com/r/confluentinc/cp-schema-registry  ps： debezium 参考地址 https://github.com/debezium/docker-images confluentinc 参考地址 https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one
+3.1 K8S基础知识  kafka 与 zookeeper 建设为 stateful 状态集群 schema-registry 主要为了 支持 avro 格式这些不需要写到 kafka 消息头里面，减少消息的大小，额外的服务，属于 kafka 生态，存储依赖 kafka broker保证稳定性。 k8s steteful 集群 0&mldr;~ n 个 POD zookeeper 里面 zoo."><meta property="og:type" content="article"><meta property="og:url" content="https://pinkhello.github.io/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/"><meta property="article:published_time" content="2021-02-10T09:53:51+08:00"><meta property="article:modified_time" content="2021-02-10T09:53:51+08:00"><meta property="og:site_name" content="一杯哈希不加盐"><meta name=twitter:card content="summary"><meta name=twitter:title content="13 Kafka与Debezium构建CDC管道"><meta name=twitter:description content="建设篇 1、什么是 debezium? https://debezium.io/
+Tutorial https://debezium.io/documentation/reference/1.3/tutorial.html
+2、Debezium 如何工作的 2.1 Debezium 支持的数据库类型  MySQL MongoDB PostgreSQL Oracle SQL Server Db2 Cassandra  2.2 Debezium 三种方式运行  Kafka Connect Debezium Server Embedded Engine  https://github.com/debezium/debezium-examples/tree/master/kinesis
+3、在 K8S 中构建基础Debezium集群环境 镜像准备
+ kafka | debezium https://hub.docker.com/r/debezium/kafka zookeeper | debezium https://hub.docker.com/r/debezium/zookeeper connect | debezium https://hub.docker.com/r/debezium/connect schema-registry | confluentinc https://hub.docker.com/r/confluentinc/cp-schema-registry  ps： debezium 参考地址 https://github.com/debezium/docker-images confluentinc 参考地址 https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one
+3.1 K8S基础知识  kafka 与 zookeeper 建设为 stateful 状态集群 schema-registry 主要为了 支持 avro 格式这些不需要写到 kafka 消息头里面，减少消息的大小，额外的服务，属于 kafka 生态，存储依赖 kafka broker保证稳定性。 k8s steteful 集群 0&mldr;~ n 个 POD zookeeper 里面 zoo."><script src=/vendor/js/jquery.min.js></script><script src=/vendor/js/popper.min.js></script><script src=/vendor/js/bootstrap.min.js></script><script src=/vendor/js/smooth-scroll.polyfills.min.js></script><link type=text/css rel=stylesheet href=/vendor/css/bootstrap.min.css><script src=/vendor/js/vue.min.js></script><link rel=stylesheet href=https://pinkhello.github.io/scss/journal.min.c116bc90d171283f099f173854157ec8f183f9073b93443b2c8ad82899ee9025.css integrity="sha256-wRa8kNFxKD8Jnxc4VBV+yPGD+Qc7k0Q7LIrYKJnukCU=" media=screen><link rel=stylesheet href=https://pinkhello.github.io/scss/dark-mode.min.552aae4638a84aa57cf0b195750a49ea9131d3bb621d1ed3ebc9b14b18166536.css integrity="sha256-VSquRjioSqV88LGVdQpJ6pEx07tiHR7T68mxSxgWZTY=" media=screen><script src=https://pinkhello.github.io//js/loadCSS.js></script><script>loadCSS("https://fonts.googleapis.com/css?family=Lora|Montserrat|Fira+Mono|Noto+Serif+SC|Material+Icons");</script><script src=https://pinkhello.github.io//js/toc-collapse.js></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css><script src=https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js></script><script src=/vendor/js/md5.min.js></script><script>var gitalk=new Gitalk({clientID:'419eb00d100865eb61e7',clientSecret:'f171ccc842eab6f06942e6a943a62546fc95b411',repo:'PinkHello.github.io',owner:'PinkHello',admin:['PinkHello'],id:md5(location.pathname),distractionFreeMode:'false'});window.onload=function(){gitalk.render('gitalk-container')}</script></head><body><div id=app><div ref=sideContainer class=side-container><a class="a-block nav-head false" href=https://pinkhello.github.io/><div class=nav-title>一杯哈希不加盐</div><div class=nav-subtitle>做一个快乐的程序猿</div></a><div class=nav-link-list><a class="a-block nav-link-item active" href=/posts>Archive</a>
+<a class="a-block nav-link-item false" href=/categories>Categories</a>
+<a class="a-block nav-link-item false" href=/tags>Tags</a>
+<a class="a-block nav-link-item false" href=/about>About</a>
+<a class="a-block nav-link-item false" href=/links>Links</a>
+<a class="a-block nav-link-item false" href=/index.xml>RSS Feed</a></div><div class=nav-footer>Hugo Theme <a href=https://github.com/amazingrise/hugo-theme-diary>Diary</a> by <a href=https://amazingrise.net>Rise</a><br>移植自 <a href=https://mak1t0.cc/ target=_blank rel="noreferrer noopener">Makito</a>'s <a href=https://github.com/SumiMakito/hexo-theme-journal/ target=_blank rel="noreferrer noopener">Journal.</a><br><br>&copy;
+一杯哈希不加盐, All Rights Reserved</div></div><div ref=extraContainer class=extra-container><div class="toc animated-visibility" :class="{ invisible: scrollY <= 140 }"><div class=toc-content><center>- 目录 -</center><ul><li><a href=#%e5%bb%ba%e8%ae%be%e7%af%87 onclick="onNavClick(`#建设篇-nav`)" id=建设篇-nav>建设篇</a></li><ul class=collapse data-toggle=collapse><li><a href=#1%e4%bb%80%e4%b9%88%e6%98%af-debezium onclick="onNavClick(`#1什么是-debezium-nav`)" id=1什么是-debezium-nav>1、什么是 debezium?</a></li><li><a href=#2debezium-%e5%a6%82%e4%bd%95%e5%b7%a5%e4%bd%9c%e7%9a%84 onclick="onNavClick(`#2debezium-如何工作的-nav`)" id=2debezium-如何工作的-nav>2、Debezium 如何工作的</a></li><ul class=collapse data-toggle=collapse><li><a href=#21-debezium-%e6%94%af%e6%8c%81%e7%9a%84%e6%95%b0%e6%8d%ae%e5%ba%93%e7%b1%bb%e5%9e%8b onclick="onNavClick(`#21-debezium-支持的数据库类型-nav`)" id=21-debezium-支持的数据库类型-nav>2.1 Debezium 支持的数据库类型</a></li><li><a href=#22-debezium-%e4%b8%89%e7%a7%8d%e6%96%b9%e5%bc%8f%e8%bf%90%e8%a1%8c onclick="onNavClick(`#22-debezium-三种方式运行-nav`)" id=22-debezium-三种方式运行-nav>2.2 Debezium 三种方式运行</a></li></ul><li><a href=#3%e5%9c%a8-k8s-%e4%b8%ad%e6%9e%84%e5%bb%ba%e5%9f%ba%e7%a1%80debezium%e9%9b%86%e7%be%a4%e7%8e%af%e5%a2%83 onclick="onNavClick(`#3在-k8s-中构建基础debezium集群环境-nav`)" id=3在-k8s-中构建基础debezium集群环境-nav>3、在 K8S 中构建基础Debezium集群环境</a></li><ul class=collapse data-toggle=collapse><li><a href=#31-k8s%e5%9f%ba%e7%a1%80%e7%9f%a5%e8%af%86 onclick="onNavClick(`#31-k8s基础知识-nav`)" id=31-k8s基础知识-nav>3.1 K8S基础知识</a></li><li><a href=#32-zookeeper-%e6%9e%84%e5%bb%ba onclick="onNavClick(`#32-zookeeper-构建-nav`)" id=32-zookeeper-构建-nav>3.2 zookeeper 构建</a></li><li><a href=#33-kafka-%e6%9e%84%e5%bb%ba onclick="onNavClick(`#33-kafka-构建-nav`)" id=33-kafka-构建-nav>3.3 kafka 构建</a></li><li><a href=#33-kafka-schema-registry-%e6%9e%84%e5%bb%ba onclick="onNavClick(`#33-kafka-schema-registry-构建-nav`)" id=33-kafka-schema-registry-构建-nav>3.3 kafka schema-registry 构建</a></li><li><a href=#33-kafka-connect-%e5%bb%ba%e8%ae%be onclick="onNavClick(`#33-kafka-connect-建设-nav`)" id=33-kafka-connect-建设-nav>3.3 kafka connect 建设</a></li></ul></ul><li><a href=#%e6%95%b0%e6%8d%ae%e6%b9%96%e7%af%87 onclick="onNavClick(`#数据湖篇-nav`)" id=数据湖篇-nav>数据湖篇</a></li><ul class=collapse data-toggle=collapse><li><a href=#1hudi-data-lake onclick="onNavClick(`#1hudi-data-lake-nav`)" id=1hudi-data-lake-nav>1、Hudi Data Lake？</a></li><li><a href=#2timeline onclick="onNavClick(`#2timeline-nav`)" id=2timeline-nav>2、Timeline</a></li><li><a href=#3hudi-%e7%9a%84%e5%ad%98%e5%82%a8%e7%b1%bb%e5%9e%8b onclick="onNavClick(`#3hudi-的存储类型-nav`)" id=3hudi-的存储类型-nav>3、Hudi 的存储类型</a></li></ul></div></div><div class=pagination><a id=globalBackToTop class="pagination-action animated-visibility" href=#top :class="{ invisible: scrollY == 0 }"><i class="material-icons pagination-action-icon">keyboard_arrow_up</i></a>
+<a class=pagination-action v-on:click=toggleDarkMode><i class="material-icons pagination-action-icon" v-if=isDarkMode>brightness_4</i>
+<i class="material-icons pagination-action-icon" v-else=isDarkMode>brightness_7</i></a></div></div><div class=single-column-drawer-container ref=drawer v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }"><div class=drawer-content><div class=drawer-menu><a class="a-block drawer-menu-item active" href=/posts>Archive</a>
+<a class="a-block drawer-menu-item false" href=/categories>Categories</a>
+<a class="a-block drawer-menu-item false" href=/tags>Tags</a>
+<a class="a-block drawer-menu-item false" href=/about>About</a>
+<a class="a-block drawer-menu-item false" href=/links>Links</a>
+<a class="a-block drawer-menu-item false" href=/index.xml>RSS Feed</a><div class=toc><div class=toc-content><center>- 目录 -</center><ul><li><a href=#%e5%bb%ba%e8%ae%be%e7%af%87 onclick="onNavClick(`#建设篇-nav`)" id=建设篇-nav>建设篇</a></li><ul class=collapse data-toggle=collapse><li><a href=#1%e4%bb%80%e4%b9%88%e6%98%af-debezium onclick="onNavClick(`#1什么是-debezium-nav`)" id=1什么是-debezium-nav>1、什么是 debezium?</a></li><li><a href=#2debezium-%e5%a6%82%e4%bd%95%e5%b7%a5%e4%bd%9c%e7%9a%84 onclick="onNavClick(`#2debezium-如何工作的-nav`)" id=2debezium-如何工作的-nav>2、Debezium 如何工作的</a></li><ul class=collapse data-toggle=collapse><li><a href=#21-debezium-%e6%94%af%e6%8c%81%e7%9a%84%e6%95%b0%e6%8d%ae%e5%ba%93%e7%b1%bb%e5%9e%8b onclick="onNavClick(`#21-debezium-支持的数据库类型-nav`)" id=21-debezium-支持的数据库类型-nav>2.1 Debezium 支持的数据库类型</a></li><li><a href=#22-debezium-%e4%b8%89%e7%a7%8d%e6%96%b9%e5%bc%8f%e8%bf%90%e8%a1%8c onclick="onNavClick(`#22-debezium-三种方式运行-nav`)" id=22-debezium-三种方式运行-nav>2.2 Debezium 三种方式运行</a></li></ul><li><a href=#3%e5%9c%a8-k8s-%e4%b8%ad%e6%9e%84%e5%bb%ba%e5%9f%ba%e7%a1%80debezium%e9%9b%86%e7%be%a4%e7%8e%af%e5%a2%83 onclick="onNavClick(`#3在-k8s-中构建基础debezium集群环境-nav`)" id=3在-k8s-中构建基础debezium集群环境-nav>3、在 K8S 中构建基础Debezium集群环境</a></li><ul class=collapse data-toggle=collapse><li><a href=#31-k8s%e5%9f%ba%e7%a1%80%e7%9f%a5%e8%af%86 onclick="onNavClick(`#31-k8s基础知识-nav`)" id=31-k8s基础知识-nav>3.1 K8S基础知识</a></li><li><a href=#32-zookeeper-%e6%9e%84%e5%bb%ba onclick="onNavClick(`#32-zookeeper-构建-nav`)" id=32-zookeeper-构建-nav>3.2 zookeeper 构建</a></li><li><a href=#33-kafka-%e6%9e%84%e5%bb%ba onclick="onNavClick(`#33-kafka-构建-nav`)" id=33-kafka-构建-nav>3.3 kafka 构建</a></li><li><a href=#33-kafka-schema-registry-%e6%9e%84%e5%bb%ba onclick="onNavClick(`#33-kafka-schema-registry-构建-nav`)" id=33-kafka-schema-registry-构建-nav>3.3 kafka schema-registry 构建</a></li><li><a href=#33-kafka-connect-%e5%bb%ba%e8%ae%be onclick="onNavClick(`#33-kafka-connect-建设-nav`)" id=33-kafka-connect-建设-nav>3.3 kafka connect 建设</a></li></ul></ul><li><a href=#%e6%95%b0%e6%8d%ae%e6%b9%96%e7%af%87 onclick="onNavClick(`#数据湖篇-nav`)" id=数据湖篇-nav>数据湖篇</a></li><ul class=collapse data-toggle=collapse><li><a href=#1hudi-data-lake onclick="onNavClick(`#1hudi-data-lake-nav`)" id=1hudi-data-lake-nav>1、Hudi Data Lake？</a></li><li><a href=#2timeline onclick="onNavClick(`#2timeline-nav`)" id=2timeline-nav>2、Timeline</a></li><li><a href=#3hudi-%e7%9a%84%e5%ad%98%e5%82%a8%e7%b1%bb%e5%9e%8b onclick="onNavClick(`#3hudi-的存储类型-nav`)" id=3hudi-的存储类型-nav>3、Hudi 的存储类型</a></li></ul></div></div></div></div></div><transition name=fade><div v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if=isDrawerOpen v-on:click=toggleDrawer></div></transition><nav ref=navBar class="navbar sticky-top navbar-light single-column-nav-container"><div ref=navBackground class=nav-background></div><div class="container container-narrow nav-content"><button id=nav_dropdown_btn class=nav-dropdown-toggle type=button v-on:click=toggleDrawer>
+<i class=material-icons>menu</i></button>
+<a ref=navTitle class=navbar-brand href=https://pinkhello.github.io/>一杯哈希不加盐</a>
+<button type=button class=nav-darkmode-toggle v-on:click=toggleDarkMode>
+<i class=material-icons v-if=isDarkMode>brightness_4</i>
+<i class=material-icons v-else=isDarkMode>brightness_7</i></button></div></nav><div class=single-column-header-container ref=pageHead v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }"><a href=https://pinkhello.github.io/><div class=single-column-header-title>一杯哈希不加盐</div><div class=single-column-header-subtitle>做一个快乐的程序猿</div></a></div><div id=content><div ref=streamContainer class=stream-container><div class="post-list-container post-list-container-shadow"><div class=post><div class=post-head-wrapper-text-only><div class=post-title>13 Kafka与Debezium构建CDC管道<div class=post-meta><time itemprop=datePublished>2021-02-10 09:53</time>
+<i class=material-icons>folder</i>
+<a href=/categories/%E6%95%B0%E6%8D%AE%E6%B9%96>数据湖</a>
+&nbsp;
+<i class=material-icons>label</i>
+<a href=/tags/%E6%95%B0%E4%BB%93>数仓</a>
+&nbsp;
+<a href=/tags/kafka>Kafka</a>
+&nbsp;
+<a href=/tags/%E6%95%B0%E6%8D%AE%E6%B9%96>数据湖</a>
+&nbsp;
+<i class=material-icons>schedule</i>
+12 min
+36 s.</div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h1 id=建设篇>建设篇</h1><h2 id=1什么是-debezium>1、什么是 debezium?</h2><p><a href=https://debezium.io/>https://debezium.io/</a></p><p>Tutorial
 <a href=https://debezium.io/documentation/reference/1.3/tutorial.html>https://debezium.io/documentation/reference/1.3/tutorial.html</a></p><h2 id=2debezium-如何工作的>2、Debezium 如何工作的</h2><p><img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/debezium-architecture.png alt=Debezium工作流程></p><h3 id=21-debezium-支持的数据库类型>2.1 Debezium 支持的数据库类型</h3><ul><li>MySQL</li><li>MongoDB</li><li>PostgreSQL</li><li>Oracle</li><li>SQL Server</li><li>Db2</li><li>Cassandra</li></ul><h3 id=22-debezium-三种方式运行>2.2 Debezium 三种方式运行</h3><ul><li>Kafka Connect</li><li>Debezium Server</li><li>Embedded Engine</li></ul><p><a href=https://github.com/debezium/debezium-examples/tree/master/kinesis>https://github.com/debezium/debezium-examples/tree/master/kinesis</a></p><h2 id=3在-k8s-中构建基础debezium集群环境>3、在 K8S 中构建基础Debezium集群环境</h2><p>镜像准备</p><ul><li>kafka | debezium <a href=https://hub.docker.com/r/debezium/kafka>https://hub.docker.com/r/debezium/kafka</a></li><li>zookeeper | debezium <a href=https://hub.docker.com/r/debezium/zookeeper>https://hub.docker.com/r/debezium/zookeeper</a></li><li>connect | debezium <a href=https://hub.docker.com/r/debezium/connect>https://hub.docker.com/r/debezium/connect</a></li><li>schema-registry | confluentinc <a href=https://hub.docker.com/r/confluentinc/cp-schema-registry>https://hub.docker.com/r/confluentinc/cp-schema-registry</a></li></ul><p>ps：
 debezium 参考地址 <a href=https://github.com/debezium/docker-images>https://github.com/debezium/docker-images</a>
-confluentinc 参考地址 <a href=https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one>https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one</a></p><h3 id=31-k8s基础知识>3.1 K8S基础知识</h3><ul><li>kafka 与 zookeeper 建设为 stateful 状态集群</li><li>schema-registry 主要为了 支持 avro 格式这些不需要写到 kafka 消息头里面，减少消息的大小，额外的服务，属于 kafka 生态，存储依赖 kafka broker保证稳定性。</li><li>k8s steteful 集群 0&mldr;~ n 个 POD</li><li>zookeeper 里面 zoo.cfg 指定的是从 1 开始</li><li>kafka 里面 broker 也是从 1 开始</li></ul><h3 id=32-zookeeper-构建>3.2 zookeeper 构建</h3><ul><li>对应的 docker-entrypoint.sh 需要改写，注重 zoo.cfg 的生成</li><li>开放 2888 端口 3888 端口 2181 端口</li></ul><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#75715e># 使用的 debezium zk 镜像</span>
-<span style=color:#75715e># https://github.com/debezium/docker-images/blob/master/zookeeper/1.4/README.md</span>
-
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Service</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>zookeeper-hs</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>zookeeper</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>ports</span>:
-    - <span style=color:#f92672>port</span>: <span style=color:#ae81ff>2888</span>
-      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>server</span>
-    - <span style=color:#f92672>port</span>: <span style=color:#ae81ff>3888</span>
-      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>leader-election</span>
-    - <span style=color:#f92672>port</span>: <span style=color:#ae81ff>2181</span>
-      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>client</span>
-  <span style=color:#f92672>clusterIP</span>: <span style=color:#ae81ff>None</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>zookeeper</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>apps/v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>StatefulSet</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>zookeeper</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>matchLabels</span>:
-      <span style=color:#f92672>app</span>: <span style=color:#ae81ff>zookeeper</span>
-  <span style=color:#f92672>serviceName</span>: <span style=color:#ae81ff>zookeeper-hs</span>
-  <span style=color:#f92672>replicas</span>: <span style=color:#ae81ff>3</span>
-  <span style=color:#f92672>updateStrategy</span>:
-    <span style=color:#f92672>type</span>: <span style=color:#ae81ff>RollingUpdate</span>
-  <span style=color:#f92672>podManagementPolicy</span>: <span style=color:#ae81ff>OrderedReady</span>
-  <span style=color:#f92672>template</span>:
-    <span style=color:#f92672>metadata</span>:
-      <span style=color:#f92672>labels</span>:
-        <span style=color:#f92672>app</span>: <span style=color:#ae81ff>zookeeper</span>
-    <span style=color:#f92672>spec</span>:
-      <span style=color:#f92672>affinity</span>:
-        <span style=color:#f92672>podAntiAffinity</span>:
-          <span style=color:#f92672>requiredDuringSchedulingIgnoredDuringExecution</span>:
-            - <span style=color:#f92672>labelSelector</span>:
-                <span style=color:#f92672>matchExpressions</span>:
-                  - <span style=color:#f92672>key</span>: <span style=color:#e6db74>&#34;app&#34;</span>
-                    <span style=color:#f92672>operator</span>: <span style=color:#ae81ff>In</span>
-                    <span style=color:#f92672>values</span>:
-                      - <span style=color:#ae81ff>zookeeper</span>
-              <span style=color:#f92672>topologyKey</span>: <span style=color:#e6db74>&#34;kubernetes.io/hostname&#34;</span>
-      <span style=color:#f92672>securityContext</span>:
-        <span style=color:#f92672>fsGroup</span>: <span style=color:#ae81ff>1000</span>
-        <span style=color:#f92672>runAsUser</span>: <span style=color:#ae81ff>1000</span>
-      <span style=color:#f92672>containers</span>:
-        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>zookeeper</span>
-          <span style=color:#f92672>imagePullPolicy</span>: <span style=color:#ae81ff>Always</span>
-          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>debezium/zookeeper:1.3</span>
-          <span style=color:#f92672>ports</span>:
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>2181</span>
-              <span style=color:#f92672>name</span>: <span style=color:#ae81ff>client</span>
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>2888</span>
-              <span style=color:#f92672>name</span>: <span style=color:#ae81ff>server</span>
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>3888</span>
-              <span style=color:#f92672>name</span>: <span style=color:#ae81ff>leader-election</span>
-          <span style=color:#f92672>resources</span>:
-            <span style=color:#f92672>requests</span>:
-              <span style=color:#f92672>cpu</span>: <span style=color:#ae81ff>50m</span>
-              <span style=color:#f92672>memory</span>: <span style=color:#ae81ff>1500Mi</span>
-          <span style=color:#f92672>command</span>:
-            - <span style=color:#ae81ff>bash</span>
-            - -<span style=color:#ae81ff>ec</span>
-            - |<span style=color:#e6db74>
-</span><span style=color:#e6db74>              if [ ! -d &#34;/zookeeper/zdata/data&#34; ];then
-</span><span style=color:#e6db74>                mkdir /zookeeper/zdata/data
-</span><span style=color:#e6db74>              fi
-</span><span style=color:#e6db74>              if [ ! -d &#34;/zookeeper/zdata/txns&#34; ];then
-</span><span style=color:#e6db74>                mkdir /zookeeper/zdata/txns
-</span><span style=color:#e6db74>              fi
-</span><span style=color:#e6db74>              export INDEX=${HOSTNAME##*-}
-</span><span style=color:#e6db74>              echo $INDEX
-</span><span style=color:#e6db74>              export SERVER_ID=$(( INDEX + 1 ))
-</span><span style=color:#e6db74>              export SERVER_COUNT=3
-</span><span style=color:#e6db74>              export LOG_LEVEL=INFO
-</span><span style=color:#e6db74>              cp -rn $ZK_HOME/conf.orig/* $ZK_HOME/conf
-</span><span style=color:#e6db74>              sed -i -r -e &#34;s|\\$\\{zookeeper.root.logger\\}|$LOG_LEVEL, CONSOLE|g&#34; $ZK_HOME/conf/log4j.properties
-</span><span style=color:#e6db74>              sed -i -r -e &#34;s|\\$\\{zookeeper.console.threshold\\}|$LOG_LEVEL|g&#34; $ZK_HOME/conf/log4j.properties
-</span><span style=color:#e6db74>              echo &#34;&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
-</span><span style=color:#e6db74>              echo &#34;#Server List&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
-</span><span style=color:#e6db74>              for i in $( eval echo {1..$SERVER_COUNT});do
-</span><span style=color:#e6db74>                  export HS_INDEX=$((i - 1))
-</span><span style=color:#e6db74>                  if [ &#34;$SERVER_ID&#34; = &#34;$i&#34; ];then
-</span><span style=color:#e6db74>                      echo &#34;server.$i=0.0.0.0:2888:3888&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
-</span><span style=color:#e6db74>                  else
-</span><span style=color:#e6db74>                      echo &#34;server.$i=zookeeper-$HS_INDEX.zookeeper-hs:2888:3888&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
-</span><span style=color:#e6db74>                  fi
-</span><span style=color:#e6db74>              done
-</span><span style=color:#e6db74>              echo ${SERVER_ID} &gt; $ZK_HOME/zdata/data/myid
-</span><span style=color:#e6db74>              sed -i &#34;s|/zookeeper/data|/zookeeper/zdata/data|g&#34; $ZK_HOME/conf/zoo.cfg
-</span><span style=color:#e6db74>              sed -i &#34;s|/zookeeper/txns|/zookeeper/zdata/txns|g&#34; $ZK_HOME/conf/zoo.cfg
-</span><span style=color:#e6db74>              export ZOOCFGDIR=&#34;$ZK_HOME/conf&#34;
-</span><span style=color:#e6db74>              export ZOOCFG=&#34;zoo.cfg&#34;
-</span><span style=color:#e6db74>              exec $ZK_HOME/bin/zkServer.sh start-foreground</span>              
-          <span style=color:#f92672>volumeMounts</span>:
-          - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>zk-data</span>
-            <span style=color:#f92672>mountPath</span>: <span style=color:#ae81ff>/zookeeper/zdata</span>
-  <span style=color:#f92672>volumeClaimTemplates</span>:
-  - <span style=color:#f92672>metadata</span>:
-      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>zk-data</span>
-    <span style=color:#f92672>spec</span>:
-      <span style=color:#f92672>accessModes</span>: [ <span style=color:#e6db74>&#34;ReadWriteOnce&#34;</span> ]
-      <span style=color:#f92672>storageClassName</span>: <span style=color:#ae81ff>alicloud-disk-efficiency</span>
-      <span style=color:#f92672>resources</span>:
-        <span style=color:#f92672>requests</span>:
-          <span style=color:#f92672>storage</span>: <span style=color:#ae81ff>20Gi</span>
-
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Service</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>zookeeper-hs</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>zookeeper</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>ports</span>:
-    - <span style=color:#f92672>port</span>: <span style=color:#ae81ff>2888</span>
-      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>server</span>
-    - <span style=color:#f92672>port</span>: <span style=color:#ae81ff>3888</span>
-      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>leader-election</span>
-    - <span style=color:#f92672>port</span>: <span style=color:#ae81ff>2181</span>
-      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>client</span>
-  <span style=color:#f92672>clusterIP</span>: <span style=color:#ae81ff>None</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>zookeeper</span>
-</code></pre></div><p>参考文档 <a href=https://github.com/debezium/docker-images/blob/master/zookeeper/1.3/README.md>https://github.com/debezium/docker-images/blob/master/zookeeper/1.3/README.md</a></p><h3 id=33-kafka-构建>3.3 kafka 构建</h3><ul><li>Kafka BrokerID 要变更，通过 POD 的 Index</li><li>KAFKA_LISTENERS 与 KAFKA_ADVERTISED_LISTENERS 的配置</li></ul><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>apps/v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>StatefulSet</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>matchLabels</span>:
-      <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka</span>
-  <span style=color:#f92672>serviceName</span>: <span style=color:#ae81ff>kafka</span>
-  <span style=color:#f92672>replicas</span>: <span style=color:#ae81ff>3</span>
-  <span style=color:#f92672>updateStrategy</span>:
-    <span style=color:#f92672>type</span>: <span style=color:#ae81ff>RollingUpdate</span>
-  <span style=color:#f92672>podManagementPolicy</span>: <span style=color:#ae81ff>OrderedReady</span>
-  <span style=color:#f92672>template</span>:
-    <span style=color:#f92672>metadata</span>:
-      <span style=color:#f92672>labels</span>:
-        <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka</span>
-    <span style=color:#f92672>spec</span>:
-      <span style=color:#f92672>affinity</span>:
-        <span style=color:#f92672>podAntiAffinity</span>:
-          <span style=color:#f92672>requiredDuringSchedulingIgnoredDuringExecution</span>:
-            - <span style=color:#f92672>labelSelector</span>:
-                <span style=color:#f92672>matchExpressions</span>:
-                  - <span style=color:#f92672>key</span>: <span style=color:#e6db74>&#34;app&#34;</span>
-                    <span style=color:#f92672>operator</span>: <span style=color:#ae81ff>In</span>
-                    <span style=color:#f92672>values</span>:
-                      - <span style=color:#ae81ff>kafka</span>
-              <span style=color:#f92672>topologyKey</span>: <span style=color:#e6db74>&#34;kubernetes.io/hostname&#34;</span>
-      <span style=color:#f92672>securityContext</span>:
-        <span style=color:#f92672>fsGroup</span>: <span style=color:#ae81ff>1000</span>
-        <span style=color:#f92672>runAsUser</span>: <span style=color:#ae81ff>1000</span>
-      <span style=color:#f92672>containers</span>:
-        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka</span>
-          <span style=color:#f92672>imagePullPolicy</span>: <span style=color:#ae81ff>Always</span>
-          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>debezium/kafka:1.3</span>
-          <span style=color:#f92672>ports</span>:
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>9092</span>
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>9093</span>
-          <span style=color:#f92672>resources</span>:
-            <span style=color:#f92672>requests</span>:
-              <span style=color:#f92672>cpu</span>: <span style=color:#ae81ff>100m</span>
-              <span style=color:#f92672>memory</span>: <span style=color:#ae81ff>1500Mi</span>
-          <span style=color:#f92672>env</span>:
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>ZOOKEEPER_CONNECT</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;zookeeper-0.zookeeper-hs:2181,zookeeper-1.zookeeper-hs:2181,zookeeper-2.zookeeper-hs:2181&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>LOG_LEVEL</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;INFO&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;2&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>KAFKA_LISTENER_SECURITY_PROTOCOL_MAP</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;PLAINTEXT:PLAINTEXT,EXTERNAL_PLAINTEXT:PLAINTEXT&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>KAFKA_INTER_BROKER_LISTENER_NAME</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;PLAINTEXT&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>KAFKA_LISTENERS</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;PLAINTEXT://0.0.0.0:9092,EXTERNAL_PLAINTEXT://0.0.0.0:9093&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>POD_IP</span>
-              <span style=color:#f92672>valueFrom</span>:
-                <span style=color:#f92672>fieldRef</span>:
-                  <span style=color:#f92672>fieldPath</span>: <span style=color:#ae81ff>status.podIP</span>
-          <span style=color:#f92672>command</span>:
-            - <span style=color:#ae81ff>bash</span>
-            - -<span style=color:#ae81ff>ec</span>
-            - |<span style=color:#e6db74>
-</span><span style=color:#e6db74>              export INDEX=${HOSTNAME##*-}
-</span><span style=color:#e6db74>              export BROKER_ID=$((INDEX + 1))
-</span><span style=color:#e6db74>              PORT=$((INDEX + 9093))
-</span><span style=color:#e6db74>              export JMX_PORT=$((INDEX + 9999))
-</span><span style=color:#e6db74>              export KAFKA_ADVERTISED_LISTENERS=&#34;PLAINTEXT://${POD_IP}:9092,EXTERNAL_PLAINTEXT://${LB_IP}:${PORT}&#34;
-</span><span style=color:#e6db74>              exec /docker-entrypoint.sh start</span>              
-          <span style=color:#f92672>volumeMounts</span>:
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-data</span>
-              <span style=color:#f92672>mountPath</span>: <span style=color:#ae81ff>/kafka/data</span>
-  <span style=color:#f92672>volumeClaimTemplates</span>:
-    - <span style=color:#f92672>metadata</span>:
-        <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-data</span>
-      <span style=color:#f92672>spec</span>:
-        <span style=color:#f92672>accessModes</span>: [ <span style=color:#e6db74>&#34;ReadWriteOnce&#34;</span> ]
-        <span style=color:#f92672>storageClassName</span>: <span style=color:#ae81ff>alicloud-disk-efficiency</span>
-        <span style=color:#f92672>resources</span>:
-          <span style=color:#f92672>requests</span>:
-            <span style=color:#f92672>storage</span>: <span style=color:#ae81ff>20Gi</span>
-
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Service</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-{index}</span>
-  <span style=color:#f92672>annotations</span>:
-    <span style=color:#75715e># 参考阿里云LB Service 配置 自动创建 好几种 LB类型，这边是内网LB</span>
-    <span style=color:#f92672>service.beta.kubernetes.io/alicloud-loadbalancer-address-type</span>: <span style=color:#ae81ff>intranet</span>
-    <span style=color:#f92672>service.beta.kubernetes.io/alicloud-loadbalancer-id</span>: {<span style=color:#ae81ff>LB实例ID}</span>
-    <span style=color:#f92672>service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners</span>: <span style=color:#e6db74>&#39;true&#39;</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>externalTrafficPolicy</span>: <span style=color:#ae81ff>Local</span>
-  <span style=color:#f92672>type</span>: <span style=color:#ae81ff>LoadBalancer</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>statefulset.kubernetes.io/pod-name</span>: <span style=color:#ae81ff>kafka-{index}</span>
-  <span style=color:#f92672>ports</span>:
-    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>external</span>
-      <span style=color:#f92672>port</span>: {{ <span style=color:#ae81ff>9093</span> <span style=color:#ae81ff>+ index }}</span>
-      <span style=color:#f92672>protocol</span>: <span style=color:#ae81ff>TCP</span>
-      <span style=color:#f92672>targetPort</span>: <span style=color:#ae81ff>9093</span>
-    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>jmx</span>
-      <span style=color:#f92672>port</span>: {{ <span style=color:#ae81ff>9999</span> <span style=color:#ae81ff>+ index }}</span>
-      <span style=color:#f92672>protocol</span>: <span style=color:#ae81ff>TCP</span>
-      <span style=color:#f92672>targetPort</span>: {{ <span style=color:#ae81ff>9999</span> <span style=color:#ae81ff>+ index }}</span>
-    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>internal</span>
-      <span style=color:#f92672>port</span>: <span style=color:#ae81ff>9092</span>
-      <span style=color:#f92672>protocol</span>: <span style=color:#ae81ff>TCP</span>
-      <span style=color:#f92672>targetPort</span>: <span style=color:#ae81ff>9092</span>
----
-<span style=color:#f92672>piVersion</span>: <span style=color:#ae81ff>networking.k8s.io/v1beta1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Ingress</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-manager</span>
-  <span style=color:#f92672>annotations</span>:
-    <span style=color:#f92672>nginx.ingress.kubernetes.io/enable-global-auth</span>: <span style=color:#e6db74>&#34;false&#34;</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>rules</span>:
-    - <span style=color:#f92672>host</span>: <span style=color:#ae81ff>kafka-manager.{域名}.com</span>
-      <span style=color:#f92672>http</span>:
-        <span style=color:#f92672>paths</span>:
-          - <span style=color:#f92672>path</span>: <span style=color:#ae81ff>/</span>
-            <span style=color:#f92672>backend</span>:
-              <span style=color:#f92672>serviceName</span>: <span style=color:#ae81ff>kafka-manager</span>
-              <span style=color:#f92672>servicePort</span>: <span style=color:#ae81ff>80</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Service</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-manager</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-manager</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>ports</span>:
-    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>http</span>
-      <span style=color:#f92672>port</span>: <span style=color:#ae81ff>80</span>
-      <span style=color:#f92672>targetPort</span>: <span style=color:#ae81ff>9000</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-manager</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>apps/v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Deployment</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-manager</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-manager</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>replicas</span>: <span style=color:#ae81ff>1</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>matchLabels</span>:
-      <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-manager</span>
-  <span style=color:#f92672>template</span>:
-    <span style=color:#f92672>metadata</span>:
-      <span style=color:#f92672>labels</span>:
-        <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-manager</span>
-    <span style=color:#f92672>spec</span>:
-      <span style=color:#f92672>containers</span>:
-        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-manager</span>
-          <span style=color:#f92672>imagePullPolicy</span>: <span style=color:#ae81ff>Always</span>
-          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>dockerkafka/kafka-manager</span>
-          <span style=color:#f92672>ports</span>:
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>9000</span>
-          <span style=color:#f92672>env</span>:
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>ZK_HOSTS</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;zookeeper-0.zookeeper-hs:2181,zookeeper-1.zookeeper-hs:2181,zookeeper-2.zookeeper-hs:2181&#34;</span>
-          <span style=color:#f92672>resources</span>:
-            <span style=color:#f92672>requests</span>:
-              <span style=color:#f92672>cpu</span>: <span style=color:#ae81ff>40m</span>
-              <span style=color:#f92672>memory</span>: <span style=color:#ae81ff>500Mi</span>
-</code></pre></div><p>参考文档 <a href=https://github.com/debezium/docker-images/blob/master/kafka/1.4/README.md>https://github.com/debezium/docker-images/blob/master/kafka/1.4/README.md</a></p><h3 id=33-kafka-schema-registry-构建>3.3 kafka schema-registry 构建</h3><ul><li>Docker 基础镜像环境启动脚本 <a href=https://github.com/confluentinc/schema-registry-images/blob/master/schema-registry/include/etc/confluent/docker/>https://github.com/confluentinc/schema-registry-images/blob/master/schema-registry/include/etc/confluent/docker/</a></li><li>先启动 pod 再映射 service，否则启动报错, 在这个项目里面有个 SCHEMA_REGISTRY_PORT,在基础启动脚本里面会主动退出</li><li>配置 ZK 的话，在kafka listener 里面要有类型 PLAINTEXT， 集群内网外网环境配置了 KAFKA_LISTENER_SECURITY_PROTOCOL_MAP，按照正常的Kafka是正常的，但是 schema-registry 实现的是没有去找的，未做映射，只要没有 PLAINTEXT 就报错退出，启动失败</li></ul><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>apps/v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Deployment</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>schema-registry</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>schema-registry</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>replicas</span>: <span style=color:#ae81ff>1</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>matchLabels</span>:
-      <span style=color:#f92672>app</span>: <span style=color:#ae81ff>schema-registry</span>
-  <span style=color:#f92672>template</span>:
-    <span style=color:#f92672>metadata</span>:
-      <span style=color:#f92672>labels</span>:
-        <span style=color:#f92672>app</span>: <span style=color:#ae81ff>schema-registry</span>
-    <span style=color:#f92672>spec</span>:
-      <span style=color:#f92672>securityContext</span>:
-        <span style=color:#f92672>fsGroup</span>: <span style=color:#ae81ff>1000</span>
-        <span style=color:#f92672>runAsUser</span>: <span style=color:#ae81ff>1000</span>
-      <span style=color:#f92672>containers</span>:
-        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>schema-registry</span>
-          <span style=color:#f92672>imagePullPolicy</span>: <span style=color:#ae81ff>Always</span>
-          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>confluentinc/cp-schema-registry:6.0.0</span>
-          <span style=color:#f92672>ports</span>:
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>8081</span>
-          <span style=color:#f92672>env</span>:
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>SCHEMA_REGISTRY_HOST_NAME</span>
-              <span style=color:#f92672>value</span>: <span style=color:#ae81ff>schema-registry</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL</span>
-              <span style=color:#f92672>value</span>: <span style=color:#ae81ff>zookeeper-0.zookeeper-hs:2181,zookeeper-1.zookeeper-hs:2181,zookeeper-2.zookeeper-hs:2181</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS</span>
-              <span style=color:#f92672>value</span>: <span style=color:#ae81ff>kafka-0:9092,kafka-1:9092,kafka-2:9092</span>
-          <span style=color:#f92672>resources</span>:
-            <span style=color:#f92672>requests</span>:
-              <span style=color:#f92672>cpu</span>: <span style=color:#ae81ff>40m</span>
-              <span style=color:#f92672>memory</span>: <span style=color:#ae81ff>500Mi</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Service</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>schema-registry</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>schema-registry</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>ports</span>:
-    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>http</span>
-      <span style=color:#f92672>port</span>: <span style=color:#ae81ff>8081</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>schema-registry</span>
-</code></pre></div><p>参考文档 <a href=https://github.com/confluentinc/cp-all-in-one/blob/latest/cp-all-in-one-cloud/docker-compose.yml>https://github.com/confluentinc/cp-all-in-one/blob/latest/cp-all-in-one-cloud/docker-compose.yml</a></p><h3 id=33-kafka-connect-建设>3.3 kafka connect 建设</h3><ul><li>配置参数 等等 <a href=http://kafka.apache.org/documentation/#connectconfigs>http://kafka.apache.org/documentation/#connectconfigs</a></li></ul><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Service</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>connect</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>connect</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>ports</span>:
-    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>http</span>
-      <span style=color:#f92672>port</span>: <span style=color:#ae81ff>80</span>
-      <span style=color:#f92672>targetPort</span>: <span style=color:#ae81ff>8083</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>connect</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>apps/v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Deployment</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>connect</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>connect</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>replicas</span>: <span style=color:#ae81ff>3</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>matchLabels</span>:
-      <span style=color:#f92672>app</span>: <span style=color:#ae81ff>connect</span>
-  <span style=color:#f92672>template</span>:
-    <span style=color:#f92672>metadata</span>:
-      <span style=color:#f92672>labels</span>:
-        <span style=color:#f92672>app</span>: <span style=color:#ae81ff>connect</span>
-    <span style=color:#f92672>spec</span>:
-      <span style=color:#f92672>containers</span>:
-        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>connect</span>
-          <span style=color:#f92672>imagePullPolicy</span>: <span style=color:#ae81ff>Always</span>
-          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>debezium/connect:1.3</span>
-          <span style=color:#f92672>ports</span>:
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>8083</span>
-          <span style=color:#f92672>env</span>:
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>LOG_LEVEL</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;INFO&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>BOOTSTRAP_SERVERS</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;kafka-0:9092,kafka-1:9092,kafka-2:9092&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>GROUP_ID</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;test_connect&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>CONFIG_STORAGE_TOPIC</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;test_connect_configs&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>OFFSET_STORAGE_TOPIC</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;test_connect_offset&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>STATUS_STORAGE_TOPIC</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;test_connect_status&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>KEY_CONVERTER</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;io.confluent.connect.avro.AvroConverter&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>VALUE_CONVERTER</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;io.confluent.connect.avro.AvroConverter&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>INTERNAL_KEY_CONVERTER</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;org.apache.kafka.connect.json.JsonConverter&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>INTERNAL_VALUE_CONVERTER</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;org.apache.kafka.connect.json.JsonConverter&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_UR</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;http://schema-registry:8081&#34;</span>
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_UR</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;http://schema-registry:8081&#34;</span>
-          <span style=color:#f92672>resources</span>:
-            <span style=color:#f92672>requests</span>:
-              <span style=color:#f92672>cpu</span>: <span style=color:#ae81ff>40m</span>
-              <span style=color:#f92672>memory</span>: <span style=color:#ae81ff>500Mi</span>
-
-<span style=color:#75715e># 使用 kafka-connect-ui构建</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>networking.k8s.io/v1beta1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Ingress</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-  <span style=color:#f92672>annotations</span>:
-    <span style=color:#f92672>nginx.ingress.kubernetes.io/enable-global-auth</span>: <span style=color:#e6db74>&#34;false&#34;</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>rules</span>:
-    - <span style=color:#f92672>host</span>: <span style=color:#ae81ff>kafka-connect.{域名}.com</span>
-      <span style=color:#f92672>http</span>:
-        <span style=color:#f92672>paths</span>:
-          - <span style=color:#f92672>path</span>: <span style=color:#ae81ff>/</span>
-            <span style=color:#f92672>backend</span>:
-              <span style=color:#f92672>serviceName</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-              <span style=color:#f92672>servicePort</span>: <span style=color:#ae81ff>80</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Service</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>ports</span>:
-    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>http</span>
-      <span style=color:#f92672>port</span>: <span style=color:#ae81ff>80</span>
-      <span style=color:#f92672>targetPort</span>: <span style=color:#ae81ff>8000</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
----
-<span style=color:#f92672>apiVersion</span>: <span style=color:#ae81ff>apps/v1</span>
-<span style=color:#f92672>kind</span>: <span style=color:#ae81ff>Deployment</span>
-<span style=color:#f92672>metadata</span>:
-  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-  <span style=color:#f92672>labels</span>:
-    <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-<span style=color:#f92672>spec</span>:
-  <span style=color:#f92672>replicas</span>: <span style=color:#ae81ff>1</span>
-  <span style=color:#f92672>selector</span>:
-    <span style=color:#f92672>matchLabels</span>:
-      <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-  <span style=color:#f92672>template</span>:
-    <span style=color:#f92672>metadata</span>:
-      <span style=color:#f92672>labels</span>:
-        <span style=color:#f92672>app</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-    <span style=color:#f92672>spec</span>:
-      <span style=color:#f92672>containers</span>:
-        - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>kafka-connect-ui</span>
-          <span style=color:#f92672>imagePullPolicy</span>: <span style=color:#ae81ff>Always</span>
-          <span style=color:#f92672>image</span>: <span style=color:#ae81ff>landoop/kafka-connect-ui</span>
-          <span style=color:#f92672>ports</span>:
-            - <span style=color:#f92672>containerPort</span>: <span style=color:#ae81ff>8000</span>
-          <span style=color:#f92672>env</span>:
-            - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>CONNECT_URL</span>
-              <span style=color:#f92672>value</span>: <span style=color:#e6db74>&#34;http://connect&#34;</span>
-          <span style=color:#f92672>resources</span>:
-            <span style=color:#f92672>requests</span>:
-              <span style=color:#f92672>cpu</span>: <span style=color:#ae81ff>40m</span>
-              <span style=color:#f92672>memory</span>: <span style=color:#ae81ff>500Mi</span>
-
-</code></pre></div><p>参考文档</p><ul><li><a href=https://github.com/debezium/docker-images/blob/master/connect/1.4/README.md>https://github.com/debezium/docker-images/blob/master/connect/1.4/README.md</a></li><li><a href=https://github.com/debezium/debezium-examples/blob/master/tutorial/docker-compose-mysql-avro-connector.yaml>https://github.com/debezium/debezium-examples/blob/master/tutorial/docker-compose-mysql-avro-connector.yaml</a></li></ul><h1 id=数据湖篇>数据湖篇</h1><h2 id=1hudi-data-lake>1、Hudi Data Lake？</h2><p>之前构建了基于 <code>Debezium</code> 捕获基本的数据变化，发送至 <code>Kafka</code>, 后面的对接方可以是哪些呢？这些是要处理的&mldr;&mldr;</p><p>Apache Hudi 是构建在 HDFS/S3 等大数据量的存储，旨在解决大数据生态系统中需要<code>插入更新</code>及<code>增量消费</code>的摄取管道和 <code>ETL管道的低效</code>问题。</p><ul><li><p>Near Real-Time Ingestion （近实时获取）</p><p>将数据从外部数据<code>event logs, databases, external sources</code>提取到<code>Hadoop Data Lake</code>。
+confluentinc 参考地址 <a href=https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one>https://github.com/confluentinc/cp-all-in-one/tree/latest/cp-all-in-one</a></p><h3 id=31-k8s基础知识>3.1 K8S基础知识</h3><ul><li>kafka 与 zookeeper 建设为 stateful 状态集群</li><li>schema-registry 主要为了 支持 avro 格式这些不需要写到 kafka 消息头里面，减少消息的大小，额外的服务，属于 kafka 生态，存储依赖 kafka broker保证稳定性。</li><li>k8s steteful 集群 0&mldr;~ n 个 POD</li><li>zookeeper 里面 zoo.cfg 指定的是从 1 开始</li><li>kafka 里面 broker 也是从 1 开始</li></ul><h3 id=32-zookeeper-构建>3.2 zookeeper 构建</h3><ul><li>对应的 docker-entrypoint.sh 需要改写，注重 zoo.cfg 的生成</li><li>开放 2888 端口 3888 端口 2181 端口</li></ul><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#228b22># 使用的 debezium zk 镜像</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#228b22># https://github.com/debezium/docker-images/blob/master/zookeeper/1.4/README.md</span><span style=color:#bbb>
+</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Service<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>zookeeper-hs<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>2888</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>server<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>3888</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>leader-election<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>2181</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>client<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>clusterIP</span>:<span style=color:#bbb> </span>None<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>apps/v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>StatefulSet<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>matchLabels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>serviceName</span>:<span style=color:#bbb> </span>zookeeper-hs<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>replicas</span>:<span style=color:#bbb> </span><span style=color:#b452cd>3</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>updateStrategy</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>type</span>:<span style=color:#bbb> </span>RollingUpdate<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>podManagementPolicy</span>:<span style=color:#bbb> </span>OrderedReady<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>template</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>affinity</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>podAntiAffinity</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>requiredDuringSchedulingIgnoredDuringExecution</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>labelSelector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                </span><span style=color:#8b008b;font-weight:700>matchExpressions</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                  </span>- <span style=color:#8b008b;font-weight:700>key</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;app&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>                    </span><span style=color:#8b008b;font-weight:700>operator</span>:<span style=color:#bbb> </span>In<span style=color:#bbb>
+</span><span style=color:#bbb>                    </span><span style=color:#8b008b;font-weight:700>values</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                      </span>- zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>topologyKey</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;kubernetes.io/hostname&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>securityContext</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>fsGroup</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1000</span><span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>runAsUser</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1000</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>containers</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>imagePullPolicy</span>:<span style=color:#bbb> </span>Always<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>image</span>:<span style=color:#bbb> </span>debezium/zookeeper:1.3<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>2181</span><span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>client<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>2888</span><span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>server<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>3888</span><span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>leader-election<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>cpu</span>:<span style=color:#bbb> </span>50m<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>memory</span>:<span style=color:#bbb> </span>1500Mi<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>command</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- bash<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- -ec<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- |<span style=color:#cd5555>
+</span><span style=color:#cd5555>              if [ ! -d &#34;/zookeeper/zdata/data&#34; ];then
+</span><span style=color:#cd5555>                mkdir /zookeeper/zdata/data
+</span><span style=color:#cd5555>              fi
+</span><span style=color:#cd5555>              if [ ! -d &#34;/zookeeper/zdata/txns&#34; ];then
+</span><span style=color:#cd5555>                mkdir /zookeeper/zdata/txns
+</span><span style=color:#cd5555>              fi
+</span><span style=color:#cd5555>              export INDEX=${HOSTNAME##*-}
+</span><span style=color:#cd5555>              echo $INDEX
+</span><span style=color:#cd5555>              export SERVER_ID=$(( INDEX + 1 ))
+</span><span style=color:#cd5555>              export SERVER_COUNT=3
+</span><span style=color:#cd5555>              export LOG_LEVEL=INFO
+</span><span style=color:#cd5555>              cp -rn $ZK_HOME/conf.orig/* $ZK_HOME/conf
+</span><span style=color:#cd5555>              sed -i -r -e &#34;s|\\$\\{zookeeper.root.logger\\}|$LOG_LEVEL, CONSOLE|g&#34; $ZK_HOME/conf/log4j.properties
+</span><span style=color:#cd5555>              sed -i -r -e &#34;s|\\$\\{zookeeper.console.threshold\\}|$LOG_LEVEL|g&#34; $ZK_HOME/conf/log4j.properties
+</span><span style=color:#cd5555>              echo &#34;&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
+</span><span style=color:#cd5555>              echo &#34;#Server List&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
+</span><span style=color:#cd5555>              for i in $( eval echo {1..$SERVER_COUNT});do
+</span><span style=color:#cd5555>                  export HS_INDEX=$((i - 1))
+</span><span style=color:#cd5555>                  if [ &#34;$SERVER_ID&#34; = &#34;$i&#34; ];then
+</span><span style=color:#cd5555>                      echo &#34;server.$i=0.0.0.0:2888:3888&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
+</span><span style=color:#cd5555>                  else
+</span><span style=color:#cd5555>                      echo &#34;server.$i=zookeeper-$HS_INDEX.zookeeper-hs:2888:3888&#34; &gt;&gt; $ZK_HOME/conf/zoo.cfg
+</span><span style=color:#cd5555>                  fi
+</span><span style=color:#cd5555>              done
+</span><span style=color:#cd5555>              echo ${SERVER_ID} &gt; $ZK_HOME/zdata/data/myid
+</span><span style=color:#cd5555>              sed -i &#34;s|/zookeeper/data|/zookeeper/zdata/data|g&#34; $ZK_HOME/conf/zoo.cfg
+</span><span style=color:#cd5555>              sed -i &#34;s|/zookeeper/txns|/zookeeper/zdata/txns|g&#34; $ZK_HOME/conf/zoo.cfg
+</span><span style=color:#cd5555>              export ZOOCFGDIR=&#34;$ZK_HOME/conf&#34;
+</span><span style=color:#cd5555>              export ZOOCFG=&#34;zoo.cfg&#34;
+</span><span style=color:#cd5555>              exec $ZK_HOME/bin/zkServer.sh start-foreground</span><span style=color:#bbb>              
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>volumeMounts</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>          </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>zk-data<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>mountPath</span>:<span style=color:#bbb> </span>/zookeeper/zdata<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>volumeClaimTemplates</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span>- <span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>zk-data<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>accessModes</span>:<span style=color:#bbb> </span>[<span style=color:#bbb> </span><span style=color:#cd5555>&#34;ReadWriteOnce&#34;</span><span style=color:#bbb> </span>]<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>storageClassName</span>:<span style=color:#bbb> </span>alicloud-disk-efficiency<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>storage</span>:<span style=color:#bbb> </span>20Gi<span style=color:#bbb>
+</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Service<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>zookeeper-hs<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>2888</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>server<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>3888</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>leader-election<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>2181</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>client<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>clusterIP</span>:<span style=color:#bbb> </span>None<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>zookeeper<span style=color:#bbb>
+</span></code></pre></div><p>参考文档 <a href=https://github.com/debezium/docker-images/blob/master/zookeeper/1.3/README.md>https://github.com/debezium/docker-images/blob/master/zookeeper/1.3/README.md</a></p><h3 id=33-kafka-构建>3.3 kafka 构建</h3><ul><li>Kafka BrokerID 要变更，通过 POD 的 Index</li><li>KAFKA_LISTENERS 与 KAFKA_ADVERTISED_LISTENERS 的配置</li></ul><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>apps/v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>StatefulSet<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>matchLabels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>serviceName</span>:<span style=color:#bbb> </span>kafka<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>replicas</span>:<span style=color:#bbb> </span><span style=color:#b452cd>3</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>updateStrategy</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>type</span>:<span style=color:#bbb> </span>RollingUpdate<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>podManagementPolicy</span>:<span style=color:#bbb> </span>OrderedReady<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>template</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>affinity</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>podAntiAffinity</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>requiredDuringSchedulingIgnoredDuringExecution</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>labelSelector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                </span><span style=color:#8b008b;font-weight:700>matchExpressions</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                  </span>- <span style=color:#8b008b;font-weight:700>key</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;app&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>                    </span><span style=color:#8b008b;font-weight:700>operator</span>:<span style=color:#bbb> </span>In<span style=color:#bbb>
+</span><span style=color:#bbb>                    </span><span style=color:#8b008b;font-weight:700>values</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                      </span>- kafka<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>topologyKey</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;kubernetes.io/hostname&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>securityContext</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>fsGroup</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1000</span><span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>runAsUser</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1000</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>containers</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>imagePullPolicy</span>:<span style=color:#bbb> </span>Always<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>image</span>:<span style=color:#bbb> </span>debezium/kafka:1.3<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>9092</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>9093</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>cpu</span>:<span style=color:#bbb> </span>100m<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>memory</span>:<span style=color:#bbb> </span>1500Mi<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>env</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>ZOOKEEPER_CONNECT<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;zookeeper-0.zookeeper-hs:2181,zookeeper-1.zookeeper-hs:2181,zookeeper-2.zookeeper-hs:2181&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>LOG_LEVEL<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;INFO&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;2&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>KAFKA_LISTENER_SECURITY_PROTOCOL_MAP<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;PLAINTEXT:PLAINTEXT,EXTERNAL_PLAINTEXT:PLAINTEXT&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>KAFKA_INTER_BROKER_LISTENER_NAME<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;PLAINTEXT&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>KAFKA_LISTENERS<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;PLAINTEXT://0.0.0.0:9092,EXTERNAL_PLAINTEXT://0.0.0.0:9093&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>POD_IP<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>valueFrom</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                </span><span style=color:#8b008b;font-weight:700>fieldRef</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>                  </span><span style=color:#8b008b;font-weight:700>fieldPath</span>:<span style=color:#bbb> </span>status.podIP<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>command</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- bash<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- -ec<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- |<span style=color:#cd5555>
+</span><span style=color:#cd5555>              export INDEX=${HOSTNAME##*-}
+</span><span style=color:#cd5555>              export BROKER_ID=$((INDEX + 1))
+</span><span style=color:#cd5555>              PORT=$((INDEX + 9093))
+</span><span style=color:#cd5555>              export JMX_PORT=$((INDEX + 9999))
+</span><span style=color:#cd5555>              export KAFKA_ADVERTISED_LISTENERS=&#34;PLAINTEXT://${POD_IP}:9092,EXTERNAL_PLAINTEXT://${LB_IP}:${PORT}&#34;
+</span><span style=color:#cd5555>              exec /docker-entrypoint.sh start</span><span style=color:#bbb>              
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>volumeMounts</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-data<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>mountPath</span>:<span style=color:#bbb> </span>/kafka/data<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>volumeClaimTemplates</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-data<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>accessModes</span>:<span style=color:#bbb> </span>[<span style=color:#bbb> </span><span style=color:#cd5555>&#34;ReadWriteOnce&#34;</span><span style=color:#bbb> </span>]<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>storageClassName</span>:<span style=color:#bbb> </span>alicloud-disk-efficiency<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>storage</span>:<span style=color:#bbb> </span>20Gi<span style=color:#bbb>
+</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Service<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-{index}<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>annotations</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#228b22># 参考阿里云LB Service 配置 自动创建 好几种 LB类型，这边是内网LB</span><span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>service.beta.kubernetes.io/alicloud-loadbalancer-address-type</span>:<span style=color:#bbb> </span>intranet<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>service.beta.kubernetes.io/alicloud-loadbalancer-id</span>:<span style=color:#bbb> </span>{LB实例ID}<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>service.beta.kubernetes.io/alicloud-loadbalancer-force-override-listeners</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#39;true&#39;</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>externalTrafficPolicy</span>:<span style=color:#bbb> </span>Local<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>type</span>:<span style=color:#bbb> </span>LoadBalancer<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>statefulset.kubernetes.io/pod-name</span>:<span style=color:#bbb> </span>kafka-{index}<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>external<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span>{{<span style=color:#bbb> </span><span style=color:#b452cd>9093</span><span style=color:#bbb> </span>+ index }}<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>protocol</span>:<span style=color:#bbb> </span>TCP<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>targetPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>9093</span><span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>jmx<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span>{{<span style=color:#bbb> </span><span style=color:#b452cd>9999</span><span style=color:#bbb> </span>+ index }}<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>protocol</span>:<span style=color:#bbb> </span>TCP<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>targetPort</span>:<span style=color:#bbb> </span>{{<span style=color:#bbb> </span><span style=color:#b452cd>9999</span><span style=color:#bbb> </span>+ index }}<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>internal<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>9092</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>protocol</span>:<span style=color:#bbb> </span>TCP<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>targetPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>9092</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>piVersion</span>:<span style=color:#bbb> </span>networking.k8s.io/v1beta1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Ingress<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>annotations</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>nginx.ingress.kubernetes.io/enable-global-auth</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;false&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>rules</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>host</span>:<span style=color:#bbb> </span>kafka-manager.{域名}.com<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>http</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>paths</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>          </span>- <span style=color:#8b008b;font-weight:700>path</span>:<span style=color:#bbb> </span>/<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>backend</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>serviceName</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>servicePort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>80</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Service<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>http<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>80</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>targetPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>9000</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>apps/v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Deployment<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>replicas</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>matchLabels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>template</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>containers</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>imagePullPolicy</span>:<span style=color:#bbb> </span>Always<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>image</span>:<span style=color:#bbb> </span>dockerkafka/kafka-manager<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>9000</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>env</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>ZK_HOSTS<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;zookeeper-0.zookeeper-hs:2181,zookeeper-1.zookeeper-hs:2181,zookeeper-2.zookeeper-hs:2181&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>cpu</span>:<span style=color:#bbb> </span>40m<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>memory</span>:<span style=color:#bbb> </span>500Mi<span style=color:#bbb>
+</span></code></pre></div><p>参考文档 <a href=https://github.com/debezium/docker-images/blob/master/kafka/1.4/README.md>https://github.com/debezium/docker-images/blob/master/kafka/1.4/README.md</a></p><h3 id=33-kafka-schema-registry-构建>3.3 kafka schema-registry 构建</h3><ul><li>Docker 基础镜像环境启动脚本 <a href=https://github.com/confluentinc/schema-registry-images/blob/master/schema-registry/include/etc/confluent/docker/>https://github.com/confluentinc/schema-registry-images/blob/master/schema-registry/include/etc/confluent/docker/</a></li><li>先启动 pod 再映射 service，否则启动报错, 在这个项目里面有个 SCHEMA_REGISTRY_PORT,在基础启动脚本里面会主动退出</li><li>配置 ZK 的话，在kafka listener 里面要有类型 PLAINTEXT， 集群内网外网环境配置了 KAFKA_LISTENER_SECURITY_PROTOCOL_MAP，按照正常的Kafka是正常的，但是 schema-registry 实现的是没有去找的，未做映射，只要没有 PLAINTEXT 就报错退出，启动失败</li></ul><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>apps/v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Deployment<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>replicas</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>matchLabels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>template</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>securityContext</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>fsGroup</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1000</span><span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>runAsUser</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1000</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>containers</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>imagePullPolicy</span>:<span style=color:#bbb> </span>Always<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>image</span>:<span style=color:#bbb> </span>confluentinc/cp-schema-registry:6.0.0<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>8081</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>env</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>SCHEMA_REGISTRY_HOST_NAME<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span>zookeeper-0.zookeeper-hs:2181,zookeeper-1.zookeeper-hs:2181,zookeeper-2.zookeeper-hs:2181<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span>kafka-0:9092,kafka-1:9092,kafka-2:9092<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>cpu</span>:<span style=color:#bbb> </span>40m<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>memory</span>:<span style=color:#bbb> </span>500Mi<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Service<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>http<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>8081</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>schema-registry<span style=color:#bbb>
+</span></code></pre></div><p>参考文档 <a href=https://github.com/confluentinc/cp-all-in-one/blob/latest/cp-all-in-one-cloud/docker-compose.yml>https://github.com/confluentinc/cp-all-in-one/blob/latest/cp-all-in-one-cloud/docker-compose.yml</a></p><h3 id=33-kafka-connect-建设>3.3 kafka connect 建设</h3><ul><li>配置参数 等等 <a href=http://kafka.apache.org/documentation/#connectconfigs>http://kafka.apache.org/documentation/#connectconfigs</a></li></ul><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Service<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>http<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>80</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>targetPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>8083</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>apps/v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Deployment<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>replicas</span>:<span style=color:#bbb> </span><span style=color:#b452cd>3</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>matchLabels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>template</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>containers</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>connect<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>imagePullPolicy</span>:<span style=color:#bbb> </span>Always<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>image</span>:<span style=color:#bbb> </span>debezium/connect:1.3<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>8083</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>env</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>LOG_LEVEL<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;INFO&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>BOOTSTRAP_SERVERS<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;kafka-0:9092,kafka-1:9092,kafka-2:9092&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>GROUP_ID<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;test_connect&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>CONFIG_STORAGE_TOPIC<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;test_connect_configs&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>OFFSET_STORAGE_TOPIC<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;test_connect_offset&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>STATUS_STORAGE_TOPIC<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;test_connect_status&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>KEY_CONVERTER<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;io.confluent.connect.avro.AvroConverter&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>VALUE_CONVERTER<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;io.confluent.connect.avro.AvroConverter&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>INTERNAL_KEY_CONVERTER<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;org.apache.kafka.connect.json.JsonConverter&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>INTERNAL_VALUE_CONVERTER<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;org.apache.kafka.connect.json.JsonConverter&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_UR<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;http://schema-registry:8081&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_UR<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;http://schema-registry:8081&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>cpu</span>:<span style=color:#bbb> </span>40m<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>memory</span>:<span style=color:#bbb> </span>500Mi<span style=color:#bbb>
+</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#228b22># 使用 kafka-connect-ui构建</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>networking.k8s.io/v1beta1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Ingress<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>annotations</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>nginx.ingress.kubernetes.io/enable-global-auth</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;false&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>rules</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>host</span>:<span style=color:#bbb> </span>kafka-connect.{域名}.com<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>http</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>paths</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>          </span>- <span style=color:#8b008b;font-weight:700>path</span>:<span style=color:#bbb> </span>/<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>backend</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>serviceName</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>servicePort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>80</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Service<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>http<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>port</span>:<span style=color:#bbb> </span><span style=color:#b452cd>80</span><span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>targetPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>8000</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#008b45;text-decoration:underline>---</span><span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>apiVersion</span>:<span style=color:#bbb> </span>apps/v1<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>kind</span>:<span style=color:#bbb> </span>Deployment<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb></span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>replicas</span>:<span style=color:#bbb> </span><span style=color:#b452cd>1</span><span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>selector</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>matchLabels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>  </span><span style=color:#8b008b;font-weight:700>template</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>metadata</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>labels</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span><span style=color:#8b008b;font-weight:700>app</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>    </span><span style=color:#8b008b;font-weight:700>spec</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>      </span><span style=color:#8b008b;font-weight:700>containers</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>        </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>imagePullPolicy</span>:<span style=color:#bbb> </span>Always<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>image</span>:<span style=color:#bbb> </span>landoop/kafka-connect-ui<span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>ports</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>containerPort</span>:<span style=color:#bbb> </span><span style=color:#b452cd>8000</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>env</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span>- <span style=color:#8b008b;font-weight:700>name</span>:<span style=color:#bbb> </span>CONNECT_URL<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>value</span>:<span style=color:#bbb> </span><span style=color:#cd5555>&#34;http://connect&#34;</span><span style=color:#bbb>
+</span><span style=color:#bbb>          </span><span style=color:#8b008b;font-weight:700>resources</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>            </span><span style=color:#8b008b;font-weight:700>requests</span>:<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>cpu</span>:<span style=color:#bbb> </span>40m<span style=color:#bbb>
+</span><span style=color:#bbb>              </span><span style=color:#8b008b;font-weight:700>memory</span>:<span style=color:#bbb> </span>500Mi<span style=color:#bbb>
+</span><span style=color:#bbb>
+</span></code></pre></div><p>参考文档</p><ul><li><a href=https://github.com/debezium/docker-images/blob/master/connect/1.4/README.md>https://github.com/debezium/docker-images/blob/master/connect/1.4/README.md</a></li><li><a href=https://github.com/debezium/debezium-examples/blob/master/tutorial/docker-compose-mysql-avro-connector.yaml>https://github.com/debezium/debezium-examples/blob/master/tutorial/docker-compose-mysql-avro-connector.yaml</a></li></ul><h1 id=数据湖篇>数据湖篇</h1><h2 id=1hudi-data-lake>1、Hudi Data Lake？</h2><p>之前构建了基于 <code>Debezium</code> 捕获基本的数据变化，发送至 <code>Kafka</code>, 后面的对接方可以是哪些呢？这些是要处理的&mldr;&mldr;</p><p>Apache Hudi 是构建在 HDFS/S3 等大数据量的存储，旨在解决大数据生态系统中需要<code>插入更新</code>及<code>增量消费</code>的摄取管道和 <code>ETL管道的低效</code>问题。</p><ul><li><p>Near Real-Time Ingestion （近实时获取）</p><p>将数据从外部数据<code>event logs, databases, external sources</code>提取到<code>Hadoop Data Lake</code>。
 对于<code>RDBMS</code>摄取，<code>Hudi</code>通过<code>Upserts</code>提供了更快的负载，</p></li><li><p>Near Real-time Analytics （近实时分析）</p><p><code>Hadoop上</code>的交互式SQL解决方案（如<code>Presto</code>和<code>SparkSQL</code>）。通过<code>Hudi</code>将数据的更新时间缩短至几分钟，还可以对存储在<code>DFS</code>中的多个大小更大的表进行实时分析。
 而且，<code>Hudi</code> 没有外部依赖项（如<code>HBase</code>群集），因此可以在不增加运营开销的情况下，对更新鲜的分析进行更快的分析。</p></li><li><p>Incremental Processing Pipelines （增量处理管道）</p></li><li><p>Data Dispersal From DFS （分散数据）</p></li></ul><p><img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/hudi-lake.png alt=Hudi架构></p><h2 id=2timeline>2、Timeline</h2><p>Hudi的核心是维护<code>timeline</code>在不同<code>instants</code>时间上对表上执行的所有操作中一个操作，这有助于提供表的即时视图，
 同时还有效地支持按到达顺序对数据进行检索。</p><p>Hudi瞬间包含以下组件</p><ul><li>Instant action ：在表格上执行的操作类型</li><li>Instant time ：即时时间通常是一个时间戳记（例如：20190117010349），该时间戳记以动作开始时间的顺序单调增加。</li><li>state ：即时状态</li></ul><p>Hudi保证在<code>timeline</code>上执行的操作基于当前时间是原子性和时间轴上一致的。</p><p>执行的关键动作包括</p><ul><li>COMMITS - 提交记录 一批记录原子写入表中 提交表示将一批记录原子写入表中。</li><li>CLEANS - 后台清除表中不需要的文件旧版本记录。</li><li>DELTA_COMMIT - 增量提交是指将一批记录原子写入<code>MergeOnRead</code>类型表中，其中一些/所有 数据 可以只写到增量日志中。</li><li>COMPACTION - 调和<code>Hudi</code>中不同数据结构的后台活动，例如：将更新从基于行的日志文件移动到列格式。在内部，压缩表现为时间轴上的特殊提交</li><li>ROLLBACK - 表示提交/增量提交不成功且已回滚，删除了在写入过程中产生的任何部分文件</li><li>SAVEPOINT - 将某些文件组标记为“已保存”，以便清理程序不会删除它们。在发生灾难/数据恢复的情况下，它有助于将表还原到时间轴上的某个点。</li></ul><p>任何给定的瞬间都可以处于以下状态之一</p><ul><li>REQUESTED -表示已经安排了动作，但尚未开始</li><li>INFLIGHT -表示当前正在执行该操作</li><li>COMPLETED -表示在时间表上完成了一项操作
-<img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/hudi_c.png alt=COW></li></ul><h2 id=3hudi-的存储类型>3、Hudi 的存储类型</h2><ul><li><p>COW Copy On Write 快照查询 + 增量查询</p><p>数据仅仅以 列文件格式 parquet 存储，每次写操作后数据的同步 Merge 以更新版本并重写文件，COW表中数据使用是最新的</p></li></ul><p><img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/hudi_cow.png alt=COW></p><ul><li><p>MOR merge on read 快照查询 + 增量查询 + 读取优化</p><p>数据以 列文件格式 parquet 和 基于 行文件格式 avro 组合存储。每次写入操作将增量创建文件。然后 compact 以生成 列文件 的最新版</p></li></ul><p><img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/hudi_mor.png alt=MOR></p><h4><a href=https://pinkhello.github.io/>Back to Home</a></h4></div></div><footer class=container><hr class=soften><p><a href=https://pinkhello.github.io/>hugo.386 theme</a> |
-&copy;
-<a href=https://pinkhello.github.io/ target=_blank>一杯哈希不加盐</a>
-<span id=thisyear>2020</span>
-| Built on <a href=//gohugo.io target=_blank>Hugo</a></p><p class=text-center><a href=https://github.com/PinkHello>GitHub</a></p></footer></body><link rel=stylesheet href=/css/bootstrap.css><link rel=stylesheet href=/css/bootstrap-responsive.css><link rel=stylesheet href=/css/style.css><script src=/js/jquery.js></script><script src=/js/bootstrap-386.js></script><script src=/js/bootstrap-transition.js></script><script src=/js/bootstrap-alert.js></script><script src=/js/bootstrap-modal.js></script><script src=/js/bootstrap-dropdown.js></script><script src=/js/bootstrap-scrollspy.js></script><script src=/js/bootstrap-tab.js></script><script src=/js/bootstrap-tooltip.js></script><script src=/js/bootstrap-popover.js></script><script src=/js/bootstrap-button.js></script><script src=/js/bootstrap-collapse.js></script><script src=/js/bootstrap-carousel.js></script><script src=/js/bootstrap-typeahead.js></script><script src=/js/bootstrap-affix.js></script><script>_386={fastLoad:false,onePass:false,speedFactor:1};function ThisYear(){document.getElementById('thisyear').innerHTML=new Date().getFullYear();};</script></html>
+<img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/hudi_c.png alt=COW></li></ul><h2 id=3hudi-的存储类型>3、Hudi 的存储类型</h2><ul><li><p>COW Copy On Write 快照查询 + 增量查询</p><p>数据仅仅以 列文件格式 parquet 存储，每次写操作后数据的同步 Merge 以更新版本并重写文件，COW表中数据使用是最新的</p></li></ul><p><img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/hudi_cow.png alt=COW></p><ul><li><p>MOR merge on read 快照查询 + 增量查询 + 读取优化</p><p>数据以 列文件格式 parquet 和 基于 行文件格式 avro 组合存储。每次写入操作将增量创建文件。然后 compact 以生成 列文件 的最新版</p></li></ul><p><img src=/Kafka%E4%B8%8EDebezium%E6%9E%84%E5%BB%BACDC%E7%AE%A1%E9%81%93/hudi_mor.png alt=MOR></p><hr width=100% id=EOF><p style=color:#777>最后修改于 2021-02-10</p></div></div><nav class=post-pagination><a class=newer-posts href=https://pinkhello.github.io/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/>下回<br>14 工作纪实2020</a>
+<a class=older-posts href=https://pinkhello.github.io/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/>上回<br>12 聊聊蝙蝠Chat</a></nav><div class=post-comment-wrapper><div id=gitalk-container></div></div></div></div></div></div><div id=single-column-footer>Hugo Theme <a href=https://github.com/amazingrise/hugo-theme-diary>Diary</a> by <a href=https://amazingrise.net>Rise</a><br>移植自 <a href=https://mak1t0.cc/ target=_blank rel="noreferrer noopener">Makito</a>'s <a href=https://github.com/SumiMakito/hexo-theme-journal/ target=_blank rel="noreferrer noopener">Journal.</a><br><br>&copy;
+一杯哈希不加盐, All Rights Reserved</div></div><script>let app;app=new Vue({el:'#app',data:{scrollY:0,navOpacity:0,isDrawerOpen:false,mounted:false,isDarkMode:false},methods:{sgn(t,x){let k=1./(1.-2*t);if(x<=t)return 0;else if(x>=1-t)return 1;else{return k*(x-t);}},handleScroll(){this.scrollY=window.scrollY;this.navOpacity=this.sgn(.0,Math.min(1,Math.max(0,window.scrollY/(this.pageHeadHeight()-this.navBarHeight()*0.8))));const{navBar,navBackground,navTitle,extraContainer,streamContainer}=this.$refs;if(this.navOpacity>=1){navBackground.style.opacity=1;navTitle.style.opacity=1;}else{navBackground.style.opacity=0;navTitle.style.opacity=0;}},handleResize(){const{navBar,navBackground,navTitle,extraContainer,streamContainer}=this.$refs;extraContainer.style.left=(streamContainer.offsetWidth-extraContainer.offsetWidth)+'px';},navBarHeight(){return this.$refs.navBar.offsetHeight;},pageHeadHeight(){return this.$refs.pageHead.offsetHeight;},toggleDrawer(){this.isDrawerOpen=!this.isDrawerOpen;document.getElementsByTagName('html')[0].style.overflow=this.isDrawerOpen?'hidden':'unset';},closeDrawer(){this.isDrawerOpen=false;document.getElementsByTagName('html')[0].style.overflow=this.isDrawerOpen?'hidden':'unset';},toggleDarkMode(){this.isDarkMode=!this.isDarkMode;if(this.isDarkMode==true){document.cookie="night=1;path=/";document.body.classList.add("night");}else{document.cookie="night=0;path=/";document.body.classList.remove("night");}}},created(){window.addEventListener('scroll',this.handleScroll);window.addEventListener('resize',this.handleResize);window._nonDesktop=function(){let check=false;(function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check=true;})(navigator.userAgent||navigator.vendor||window.opera);return check;};var night=document.cookie.replace(/(?:(?:^|.*;\s*)night\s*\=\s*([^;]*).*$)|^.*$/,"$1");if(night==""){if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches){this.toggleDarkMode();}}else{if(night=="1"){this.toggleDarkMode();}}},mounted(){this.handleScroll();this.handleResize();this.mounted=true;},destroyed(){window.removeEventListener('scroll',this.handleScroll);window.removeEventListener('resize',this.handleResize);}});</script><script src=https://pinkhello.github.io//js/journal.js></script></body></html>

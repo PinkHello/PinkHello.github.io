@@ -1,0 +1,1067 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Wed, 10 Feb 2021 19:36:33 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>06 高性能队列Disruptor</title><link>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</link><pubDate>Wed, 10 Feb 2021 08:35:29 +0800</pubDate><guid>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ -&lt;h1 id="背景">背景&lt;/h1>
+&lt;p>&lt;code>Disruptor&lt;/code> 是 外汇交易公司&lt;code>LMAX&lt;/code>开发的高性能队列、研发是为了解决内存队列延迟问题。
+&lt;code>Disruptor&lt;/code> 一般用于线程间的消息传递。
+&lt;a href="http://lmax-exchange.github.io/disruptor/">Disruptor GitHub 地址&lt;/a>&lt;/p>
+&lt;h1 id="disruptor-介绍">&lt;code>Disruptor&lt;/code> 介绍&lt;/h1>
+&lt;p>理解 &lt;code>Disruptor&lt;/code> 最好的方式，选择一个最接近熟悉的样本进行比较。在这个前提下，可以选择 &lt;code>Java&lt;/code> 中的 &lt;code>BlockingQueue&lt;/code>.
+和队列相似，&lt;code>Disruptor&lt;/code> 也是在同一个进程中不同的线程之间进行传递数据的（例如消息或者事件），同时 &lt;code>Disruptor&lt;/code> 提供了一些将关键功能和队列分开的特性：&lt;/p>
+&lt;ul>
+&lt;li>向消费者发送多播事件&lt;/li>
+&lt;li>消息者依赖关系图&lt;/li>
+&lt;li>预先为事件分配内存&lt;/li>
+&lt;li>可选的（无锁）&lt;/li>
+&lt;/ul>
+&lt;h1 id="disruptor-核心概念">&lt;code>Disruptor&lt;/code> 核心概念&lt;/h1>
+&lt;p>在我们理解&lt;code>Disruptor&lt;/code>如何工作之前，了解下核心概念&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java">Ring Buffer&lt;/a>
+环形数组设计，为了避免垃圾回收，采用的数组结构，从3.0开始，环形缓冲区主要存储和更新在&lt;code>Disruptor&lt;/code>中移动的数据（事件）&lt;/li>
+&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/Sequence.java">Sequence&lt;/a>
+&lt;code>Disruptor&lt;/code> 每个消费者(&lt;code>EventProcessor&lt;/code>)维护一个 &lt;code>Sequence&lt;/code>，并发的大多数代码都依赖 &lt;code>Sequence&lt;/code> 值的改动，所以 &lt;code>Sequence&lt;/code> 支持 &lt;code>AtomicLong&lt;/code> 的大部分也行, 唯一不同的是 &lt;code>Sequence&lt;/code> 包含额外的功能来阻止&lt;code>Sequence&lt;/code>和其他值之间的伪共享(&lt;code>false sharing&lt;/code>)&lt;/li>
+&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/Sequencer.java">Sequencer&lt;/a>&lt;br>
+&lt;code>Disruptor&lt;/code> 核心逻辑, 两个实现: 单生产者和多生产者。他们实现了生产者与消费者之间的快速传递的并发算法。&lt;/li>
+&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SequenceBarrier.java">Sequence Barrier&lt;/a>
+由 &lt;code>Sequencer&lt;/code> 生成，包含此 &lt;code>Sequencer&lt;/code> 发布的 &lt;code>Sequence&lt;/code> 指针以及依赖的其他消费者的 &lt;code>Sequence&lt;/code>。包含了消费者检查是否有可用的事件的代码。&lt;/li>
+&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/WaitStrategy.java">Wait Strategy&lt;/a>
+消费者等待事件的策略，这个事件由生产者放入，决定了消费者怎么等待生产者将事件放入 &lt;code>Disruptor&lt;/code>&lt;/li>
+&lt;li>Event 生产者与消费者传递的事件，完全由用户定义&lt;/li>
+&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/EventProcessor.java">EventProcessor&lt;/a>
+处理事件的主要循环（&lt;code>main event loop&lt;/code>），包含了一个 &lt;code>Sequeuece&lt;/code>. 有一个具体的实现类 &lt;code>BatchEventProcessor&lt;/code>&lt;/li>
+&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/EventHandler.java">EventHandler&lt;/a>
+用户实现的接口，代表一个消费者。处理事件。&lt;/li>
+&lt;li>Producer 生产者、先获得占位，然后提交事件。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/Disruptor%E8%AE%BE%E8%AE%A1%E7%BB%84%E4%BB%B6%E5%9B%BE.jpg" alt="Disruptor设计组件图">&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>事件广播(&lt;code>Multicast Events&lt;/code>)&lt;/p>
+&lt;p>事件广播是 &lt;code>Disruptor&lt;/code> 与 &lt;code>Queue&lt;/code> 最大的区别，当你有多个消费者监听一个 &lt;code>Disruptor&lt;/code>, 所有的事件将会发布到这个所有的消费者。
+&lt;code>Disruptor&lt;/code> 这一特性被用来需要对同一数据进行多个并行操作的情况。
+如在LMAX系统中有三个操作可以同时进行：日志（将数据持久到日志文件中），复制（将数据发送到其他的机器上，以确保存在数据远程副本），业务逻辑处理。
+也可以使用&lt;code>WokrerPool&lt;/code>来并行处理不同的事件。&lt;/p>
+&lt;p>如上图。可以看到有3个事件处理程序正在侦听&lt;code>Disrupto&lt;/code>r（&lt;code>JournalConsumer&lt;/code>，&lt;code>ReplicationConsumer&lt;/code> 和 &lt;code>ApplicationConsumer&lt;/code>），
+这些事件处理程序中的每个将接收&lt;code>Disruptor&lt;/code>中所有可用的消息（按相同顺序）。这允许这些消费者中的每一个并行工作。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>消费者依赖关系图(&lt;code>Consumer Dependency Graph&lt;/code>)&lt;/p>
+&lt;p>为了支持实现业务并行处理流程，&lt;code>Disruptor&lt;/code> 提供了多个消费者之间的协作功能。回到上面的例子中，我们可以将 &lt;code>journalling&lt;/code> 和 &lt;code>replication&lt;/code> 消费完成他们的业务，后再继续执行业务逻辑流程。
+我们称呼这个功能为 &lt;code>gating&lt;/code> , &lt;code>gating&lt;/code> 发生在两种场景下:&lt;/p>
+&lt;ul>
+&lt;li>确保 &lt;code>Producer&lt;/code> 不能运行超过 &lt;code>Consumer&lt;/code> ，可以通多调用 &lt;code>RingBuffer.addGatingConsumers()&lt;/code> 来增加相关的消费者来完成&lt;/li>
+&lt;li>之前所说的场景，通过必须先完成的&lt;code>Consumer&lt;/code> 的 &lt;code>Sequence&lt;/code>的&lt;code>SequenceBarrier&lt;/code>来实现。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>事件预分配(&lt;code>Event Preallocation&lt;/code>)&lt;/p>
+&lt;p>&lt;code>Disruptor&lt;/code> 的一个目标就是在低延时环境下，减少或异常内存的占用。（在JAVA环境下，需要较少GC停顿的次数）（C/C++环境下，大量的内存分配也是一个问题）&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>可选择的无锁(&lt;code>Optionally Lock-free&lt;/code>)&lt;/p>
+&lt;p>无锁的 &lt;code>Disruptor&lt;/code> 的低延迟的无锁的特性实现细节是都是基于 内存屏障 和 CAS 操作实现的，只有一个场景 &lt;code>BlockingWaitStrategy&lt;/code> 中使用的 &lt;code>Lock&lt;/code>
+是为了使用 &lt;code>Lock&lt;/code> 里面的 &lt;code>Condition&lt;/code>, 方便消费者线程被 &lt;code>Park&lt;/code> 时候等待新的事件来触发。许多低延迟系统使用自旋（&lt;code>busy-wait&lt;/code>）来避免使用 &lt;code>Condition&lt;/code>造成的抖动
+然而，太多的 &lt;code>busy-wait&lt;/code> 会导致性能下降，特别在CPU资源受限的情况下。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h1 id="disruptor-几个核心的设计">&lt;code>Disruptor&lt;/code> 几个核心的设计&lt;/h1>
+&lt;h2 id="sequence-设计">&lt;code>Sequence&lt;/code> 设计&lt;/h2>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/Sequence.jpg" alt="Sequence 设计">&lt;/p>
+&lt;p>Sequence 真正计数是 &lt;code>value&lt;/code> 采用缓冲行防止 &lt;code>false sharing&lt;/code>。在&lt;code>value&lt;/code>的前后有7个 &lt;code>long&lt;/code> 型的填充值，做&lt;code>CPU cache line&lt;/code>填充防止伪共享。&lt;/p>
+&lt;h2 id="ringbuffer-设计">&lt;code>RingBuffer&lt;/code> 设计&lt;/h2>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/RingBuffer.jpg" alt="RingBuffer 设计">&lt;/p>
+&lt;p>&lt;code>RingBuffer&lt;/code> 是一个环（首尾相接），可以用作不同的上下文（线程）间传递数据的 &lt;code>Buffer&lt;/code>环形设计，每个元素都有个坐标，取得元素通过取mod操作。
+是数组设计、非链表。&lt;/p>
+&lt;p>一般是&lt;code>2^N&lt;/code>次方，这样 sequence &amp;amp; (array length - 1 ) = array index。哈希Map也是这种位运算做的。&lt;/p>
+&lt;p>&lt;code>RingBuffer&lt;/code> 特点&lt;/p>
+&lt;ul>
+&lt;li>数组实现、快速访问&lt;/li>
+&lt;li>元素是覆盖式的，不主动清除&lt;/li>
+&lt;li>神奇的缓存行（缓存是由缓存行组成的，通常64个字节、一个JAVA long 类型 8 字节）&lt;/li>
+&lt;/ul>
+&lt;h2 id="消费者依赖设计">消费者依赖设计&lt;/h2>
+&lt;h2 id="缓存内存加载过程">缓存内存加载过程&lt;/h2>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-1.jpg" alt="缓存加载过程">
+&lt;img src="https://pinkhello.github.io/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-2.jpg" alt="缓存加载过程">
+&lt;img src="https://pinkhello.github.io/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-3.jpg" alt="缓存加载过程">&lt;/p>
+&lt;p>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java">神奇的解决方式&amp;mdash;&amp;ndash; 缓存行填充&lt;/a>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> p1, p2, p3, p4, p5, p6, p7; &lt;span style="color:#228b22">// cache line padding
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">volatile&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> cursor = INITIAL_CURSOR_VALUE;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> p8, p9, p10, p11, p12, p13, p14; &lt;span style="color:#228b22">// cache line padding
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="disruptor-使用demo">&lt;code>Disruptor&lt;/code> 使用Demo&lt;/h1>
+&lt;p>&lt;code>TransactionOrder&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">TransactionOrder&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String id;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">double&lt;/span> price;
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>TransactionHandler&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">TransactionHandler&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> EventHandler&amp;lt;TransactionOrder&amp;gt;, WorkHandler&amp;lt;TransactionOrder&amp;gt; {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">onEvent&lt;/span>(TransactionOrder transactionOrder, &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> sequence, &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> endOfBatch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">onEvent&lt;/span>(transactionOrder);
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">onEvent&lt;/span>(TransactionOrder transactionOrder) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+&lt;span style="color:#228b22">//具体的消费逻辑
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> transactionOrder.&lt;span style="color:#658b00">setId&lt;/span>(UUID.&lt;span style="color:#658b00">randomUUID&lt;/span>().&lt;span style="color:#658b00">toString&lt;/span>());
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo1&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo1&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> ExecutionException, InterruptedException {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
+&lt;span style="color:#228b22">//createSingleProducer 创建单生产者的 RingBuffer
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> RingBuffer&amp;lt;TransactionOrder&amp;gt; ringBuffer =
+RingBuffer.&lt;span style="color:#658b00">createSingleProducer&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
+}
+}, BUFFER_SIZE, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> YieldingWaitStrategy());
+&lt;span style="color:#228b22">//创建线程池
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
+&lt;span style="color:#228b22">//创建 SequenceBarrier
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> SequenceBarrier sequenceBarrier = ringBuffer.&lt;span style="color:#658b00">newBarrier&lt;/span>();
+&lt;span style="color:#228b22">//创建消息处理器
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> BatchEventProcessor&amp;lt;TransactionOrder&amp;gt; eventProcessor =
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> BatchEventProcessor&amp;lt;TransactionOrder&amp;gt;(ringBuffer, sequenceBarrier, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler());
+&lt;span style="color:#228b22">//这一部分是让 RingBuffer根据消费者状态进行gating, 只有一个消费者的话可以省略
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">addGatingSequences&lt;/span>(eventProcessor.&lt;span style="color:#658b00">getSequence&lt;/span>());
+&lt;span style="color:#228b22">//把消息处理器提交到线程池
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> service.&lt;span style="color:#658b00">submit&lt;/span>(eventProcessor);
+Future&amp;lt;?&amp;gt; future = service.&lt;span style="color:#658b00">submit&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Callable&amp;lt;Void&amp;gt;() {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Void &lt;span style="color:#008b45">call&lt;/span>() &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> seq;
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> i = 0; i&amp;lt;10000; i++) {
+seq = ringBuffer.&lt;span style="color:#658b00">next&lt;/span>(); &lt;span style="color:#228b22">//ringbuffer 的一个可用区块
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">get&lt;/span>(seq).&lt;span style="color:#658b00">setPrice&lt;/span>(Math.&lt;span style="color:#658b00">random&lt;/span>() *9999); &lt;span style="color:#228b22">// 给这个区块放入数据
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">publish&lt;/span>(seq); &lt;span style="color:#228b22">//发布数据使得 consumer 可以获取该数据
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> }
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+});
+future.&lt;span style="color:#658b00">get&lt;/span>(); &lt;span style="color:#228b22">//等待生产者结束
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+eventProcessor.&lt;span style="color:#658b00">halt&lt;/span>(); &lt;span style="color:#228b22">//通知事件
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+service.&lt;span style="color:#658b00">shutdown&lt;/span>(); &lt;span style="color:#228b22">//终止线程
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo2&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo2&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
+EventFactory&amp;lt;TransactionOrder&amp;gt; eventFactory = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
+}
+};
+RingBuffer&amp;lt;TransactionOrder&amp;gt; ringBuffer = RingBuffer.&lt;span style="color:#658b00">createSingleProducer&lt;/span>(eventFactory, BUFFER_SIZE);
+SequenceBarrier sequenceBarrier = ringBuffer.&lt;span style="color:#658b00">newBarrier&lt;/span>();
+ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
+WorkHandler&amp;lt;TransactionOrder&amp;gt; workHandler = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler();
+WorkerPool&amp;lt;TransactionOrder&amp;gt; workerPool =
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> WorkerPool&amp;lt;TransactionOrder&amp;gt;(ringBuffer, sequenceBarrier, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> IgnoreExceptionHandler(),
+workHandler);
+&lt;span style="color:#228b22">//序列协调者
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">addGatingSequences&lt;/span>(workerPool.&lt;span style="color:#658b00">getWorkerSequences&lt;/span>());
+workerPool.&lt;span style="color:#658b00">start&lt;/span>(service);
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> i=0; i&amp;lt;8; i++) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> seq = ringBuffer.&lt;span style="color:#658b00">next&lt;/span>();
+ringBuffer.&lt;span style="color:#658b00">get&lt;/span>(seq).&lt;span style="color:#658b00">setPrice&lt;/span>(Math.&lt;span style="color:#658b00">random&lt;/span>() * 9999);
+ringBuffer.&lt;span style="color:#658b00">publish&lt;/span>(seq);
+}
+workerPool.&lt;span style="color:#658b00">halt&lt;/span>();
+service.&lt;span style="color:#658b00">shutdown&lt;/span>();
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo3&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo3&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> InterruptedException {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> start = System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>();
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
+ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
+Disruptor&amp;lt;TransactionOrder&amp;gt; disruptor = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Disruptor&amp;lt;TransactionOrder&amp;gt;(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
+}
+}, BUFFER_SIZE, service, ProducerType.&lt;span style="color:#658b00">SINGLE&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> BusySpinWaitStrategy());
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * 菱形操作
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#228b22">//使用 disruptor 创建消费组 C1 与 C2
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> EventHandlerGroup&amp;lt;TransactionOrder&amp;gt; eventHandlerGroup =
+disruptor.&lt;span style="color:#658b00">handleEventsWith&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler(), &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionVasConsumer());
+&lt;span style="color:#228b22">//C3
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> TransactionJmsNotifyHandler jmsNotifyHandler = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionJmsNotifyHandler();
+&lt;span style="color:#228b22">//声明在 C1 和 C2 完事后 执行 JMS消息发送操作（C3）
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> eventHandlerGroup.&lt;span style="color:#658b00">then&lt;/span>(jmsNotifyHandler);
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * 顺序执行
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#228b22">// disruptor.handleEventsWith(new TransactionHandler())
+&lt;/span>&lt;span style="color:#228b22">// .then(new TransactionVasConsumer())
+&lt;/span>&lt;span style="color:#228b22">// .then(new TransactionJmsNotifyHandler());
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * 六边形操作
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#228b22">// TransactionHandler h1 = new TransactionHandler();
+&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h2 = new TransactionHandler();
+&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h3 = new TransactionHandler();
+&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h4 = new TransactionHandler();
+&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h5 = new TransactionHandler();
+&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h6 = new TransactionHandler();
+&lt;/span>&lt;span style="color:#228b22">// disruptor.handleEventsWith(h1, h2);
+&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h1).handleEventsWith(h4);
+&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h2).handleEventsWith(h5);
+&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h4, h5).handleEventsWith(h3);
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">//启动
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> disruptor.&lt;span style="color:#658b00">start&lt;/span>();
+CountDownLatch latch = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> CountDownLatch(1);
+&lt;span style="color:#228b22">//生产者准备
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> service.&lt;span style="color:#658b00">submit&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionPubllisher(disruptor, latch));
+latch.&lt;span style="color:#658b00">await&lt;/span>(); &lt;span style="color:#228b22">//等待生产者完事
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+disruptor.&lt;span style="color:#658b00">shutdown&lt;/span>();
+service.&lt;span style="color:#658b00">shutdown&lt;/span>();
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;总耗时:&amp;#34;&lt;/span>+ (System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>() - start));
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>05 OAuth2.0 那点事</title><link>https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</link><pubDate>Wed, 10 Feb 2021 08:32:02 +0800</pubDate><guid>https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ -&lt;h2 id="oauth20-是什么">&lt;code>OAuth2.0&lt;/code> 是什么?&lt;/h2>
+&lt;p>&lt;code>OAuth2.0&lt;/code> Framework RFC 6749 [https://tools.ietf.org/html/rfc6749]&lt;/p>
+&lt;p>&lt;code>OAuth&lt;/code> 就是一种授权机制，它介于客户端与资源所有者的授权层，为了分离不同的角色。
+在资源所有者同意并向客户端颁发令牌后，客户端携带令牌可以访问部分或全部资源。&lt;/p>
+&lt;p>&lt;!-- raw HTML omitted -->OAuth2.0&lt;!-- raw HTML omitted --> 是&lt;!-- raw HTML omitted -->OAuth&lt;!-- raw HTML omitted --> 协议的一个版本，为&lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted -->版本。有意思的是 &lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted --> 与 &lt;!-- raw HTML omitted -->1.0&lt;!-- raw HTML omitted --> 并不兼容。&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h2 id="oauth20-授权方式">&lt;code>OAuth2.0&lt;/code> 授权方式&lt;/h2>
+&lt;p>获取授权的过程&lt;/p>
+&lt;ul>
+&lt;li>授权码(&lt;!-- raw HTML omitted -->authorization-code&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;li>隐藏式(&lt;!-- raw HTML omitted -->implicit&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;li>密码(&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;li>客户端凭证(&lt;!-- raw HTML omitted -->client credentials&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;/ul>
+&lt;p>不管哪种方式，都需要在第三方应用申请令牌之前，需要在系统中申请身份唯一标识: 客户端ID &lt;!-- raw HTML omitted -->Client ID&lt;!-- raw HTML omitted --> 和 客户端秘钥 &lt;!-- raw HTML omitted -->Client Secret&lt;!-- raw HTML omitted -->.
+这样能确保Token不被恶意使用。&lt;/p>
+&lt;p>授权重要的参数和指标:&lt;/p>
+&lt;ul>
+&lt;li>&lt;!-- raw HTML omitted -->response_type&lt;!-- raw HTML omitted --> 响应类型: &lt;!-- raw HTML omitted -->code&lt;!-- raw HTML omitted -->(要求返回授权码),&lt;!-- raw HTML omitted -->token&lt;!-- raw HTML omitted -->(要求返回授权Token)&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->client_id&lt;!-- raw HTML omitted --> 客户端身份标识&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->client_secret&lt;!-- raw HTML omitted --> 客户端秘钥&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->redirect_uri&lt;!-- raw HTML omitted --> 重定向地址&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->scope&lt;!-- raw HTML omitted --> 授权范围, &lt;!-- raw HTML omitted -->read&lt;!-- raw HTML omitted --> 只读权限, &lt;!-- raw HTML omitted -->all&lt;!-- raw HTML omitted --> 全部权限&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted --> 授权方式 &lt;!-- raw HTML omitted -->authorization_code&lt;!-- raw HTML omitted -->(授权码)、&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->(密码)、&lt;!-- raw HTML omitted -->client_credentials&lt;!-- raw HTML omitted -->
+(凭证)、&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->(更新令牌)&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->state&lt;!-- raw HTML omitted --> 应用程序传递的一个随机数，防止 &lt;!-- raw HTML omitted -->CSRF&lt;!-- raw HTML omitted --> 攻击&lt;/li>
+&lt;/ul>
+&lt;h3 id="授权码httpswwwoauthcomoauth2-serversaccess-tokensauthorization-code-request-authorization-code-request">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/" title="authorization-code-request">授权码&lt;/a>&lt;/h3>
+&lt;p>在访问第三方应用先申请一个授权码，然后再用授权码获取令牌.这种方式也是最常用的流程，安全性也是最高的，适用于有后端的&lt;!-- raw HTML omitted -->Web&lt;!-- raw HTML omitted -->应用。授权码通过前端传送，令牌存储在后端。所有的和资源服务器的交互都在服务端完成，避免了令牌的泄露。
+授权码和令牌的在 浏览器和客户端&lt;!-- raw HTML omitted -->WEB&lt;!-- raw HTML omitted -->应用以及资源服务器的交互流程大致如下:
+&lt;img src="https://pinkhello.github.io/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/auth_code.png" alt="authorization-code">&lt;/p>
+&lt;ul>
+&lt;li>1.2.3.4 用户选择 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 登陆 &lt;!-- raw HTML omitted -->yelp.com&lt;!-- raw HTML omitted -->&lt;/li>
+&lt;li>3.4 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 请求用户授权 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 权限&lt;/li>
+&lt;li>5.6 用户同意后返回授权码
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;/li>
+&lt;li>7.8 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 通过授权码 会向 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted -->发起请求&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;/li>
+&lt;li>9 验证必要参数，返回 &lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->&lt;/li>
+&lt;li>10.11 操作请求&lt;/li>
+&lt;/ul>
+&lt;h3 id="隐藏式httpsauth0comblogoauth2-implicit-grant-and-spa-oauth2-implicit-grant-and-spa">&lt;a href="https://auth0.com/blog/oauth2-implicit-grant-and-spa/" title="oauth2-implicit-grant-and-spa">隐藏式&lt;/a>&lt;/h3>
+&lt;p>&lt;img src="https://pinkhello.github.io/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/implicit.png" alt="implicit">&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h3 id="密码式httpswwwoauthcomoauth2-serversaccess-tokenspassword-grant-password-grant">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/password-grant/" title="password-grant">密码式&lt;/a>&lt;/h3>
+&lt;p>顾名思议,在自己的系统输入第三方系统的账号密码,自己的系统拿账号密码去申请令牌，响应题里面返回token&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h3 id="凭证式httpswwwoauthcomoauth2-serversaccess-tokensclient-credentials-client-credentials">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/client-credentials/" title="client-credentials">凭证式&lt;/a>&lt;/h3>
+&lt;p>凭证式和密码很相似，主要给没有前端输入的项目或者命令行&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h2 id="令牌的使用和更新">令牌的使用和更新&lt;/h2>
+&lt;h3 id="令牌的使用">&lt;a href="">令牌的使用&lt;/a>&lt;/h3>
+&lt;p>令牌的拿到了，就可以调用Google的API进行请求数据了，
+一般讲 Token 放入请求头 Authorization.&lt;/p>
+&lt;h3 id="令牌的更新httpswwwoauthcomoauth2-serversaccess-tokensrefreshing-access-tokens-refreshing-access-tokens">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/refreshing-access-tokens/" title="refreshing-access-tokens">令牌的更新&lt;/a>&lt;/h3>
+&lt;p>&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted --> 是有时效性的，一旦过期就需要重新获取，但是重走一遍授权流程，不仅麻烦而且用户体验也不好，那如何让用户使用的优雅呢？&lt;/p>
+&lt;p>一般在颁发令牌的时候，颁发两个&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->, 一个授权&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->,一个&lt;!-- raw HTML omitted -->Refresh Token&lt;!-- raw HTML omitted -->,
+在更新&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->时候,将&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted -->指定为&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->,
+参数&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->是用于更新&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->的&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h1 id="总结">总结&lt;/h1>
+&lt;h1 id="安利">安利&lt;/h1>
+&lt;ul>
+&lt;li>Client
+&lt;ul>
+&lt;li>Go &lt;a href="https://godoc.org/golang.org/x/oauth2">https://godoc.org/golang.org/x/oauth2&lt;/a>&lt;/li>
+&lt;li>Java
+&lt;ul>
+&lt;li>&lt;a href="https://spring.io/projects/spring-social/">https://spring.io/projects/spring-social/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://spring.io/projects/spring-security/">https://spring.io/projects/spring-security/&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Server
+&lt;ul>
+&lt;li>Go
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/go-oauth2/oauth2">https://github.com/go-oauth2/oauth2&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://github.com/zalando/gin-oauth2">https://github.com/zalando/gin-oauth2&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Java &lt;a href="https://github.com/zalando/tokens">https://github.com/zalando/tokens&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;p>参考&lt;/p>
+&lt;ul>
+&lt;li>jsonwebtoken.io &lt;a href="https://www.jsonwebtoken.io/">https://www.jsonwebtoken.io/&lt;/a>&lt;/li>
+&lt;li>oauth.net &lt;a href="https://oauth.net/2/">https://oauth.net/2/&lt;/a>&lt;/li>
+&lt;li>aliyun.com
+&lt;ul>
+&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N">https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT">https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri">https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+- https://pinkhello.github.io/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ -&lt;p>1、什么叫RPC?&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;p>&lt;img src="https://pinkhello.github.io/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1%E8%BF%87%E7%A8%8B.jpg" alt="RPC调用服务过程">&lt;/p>
+&lt;p>RPC构成&lt;/p>
+&lt;ul>
+&lt;li>RPC Consumer&lt;/li>
+&lt;li>RPC Provider&lt;/li>
+&lt;li>ConfigServer&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>1、&lt;code>Provider&lt;/code> 启动 &lt;code>ConfigServer&lt;/code> 注册服务&lt;/li>
+&lt;li>2、&lt;code>Consumer&lt;/code> 启动 &lt;code>ConfigServer&lt;/code> 订阅服务，&lt;/li>
+&lt;li>3、发起调用 &lt;code>Consumer&lt;/code> &amp;mdash;&amp;gt; &lt;code>Provider&lt;/code>&lt;/li>
+&lt;li>4、响应调用 &lt;code>Consumer&lt;/code> &amp;lt;&amp;mdash; &lt;code>Provider&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>2、什么是 &lt;code>Netty&lt;/code> ? &lt;a href="https://netty.io/">https://netty.io/&lt;/a>&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;p>&lt;img src="https://pinkhello.github.io/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/netty%E6%A1%86%E6%9E%B6%E5%9B%BE.png" alt="netty框架图">&lt;/p>
+&lt;p>3、现有的开源的项目是否使用了 &lt;code>Netty&lt;/code> ?&lt;/p>
+&lt;ul>
+&lt;li>Dubbo&lt;/li>
+&lt;li>Grpc&lt;/li>
+&lt;li>Spark&lt;/li>
+&lt;li>&amp;hellip;.&lt;/li>
+&lt;/ul>
+&lt;p>4、&lt;code>RPC Provider&lt;/code> 启动&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Netty Server&lt;/code> 方式启动&lt;/li>
+&lt;li>&lt;code>Rpc&lt;/code> 服务的注册
+&lt;img src="https://pinkhello.github.io/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E4%B8%8ENetty%E7%BB%93%E5%90%88Provider%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B.png" alt="RPC与Netty结合Provider调用过程">&lt;/li>
+&lt;/ul>
+&lt;p>5、&lt;code>RPC Consumer&lt;/code> 启动&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Netty Client&lt;/code> 方式启动&lt;/li>
+&lt;li>&lt;code>RPC&lt;/code> 泛化调用、通过字节码基于反射来实现远程调度&lt;/li>
+&lt;li>&lt;code>Consumer&lt;/code> 服务订阅&lt;/li>
+&lt;li>启动时建立长连接
+&lt;img src="https://pinkhello.github.io/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E4%B8%8ENetty%E7%BB%93%E5%90%88Consumer%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B.png" alt="RPC与Netty结合Consumer调用过程">&lt;/li>
+&lt;/ul>
+&lt;p>6、从第四可以看出，多个 &lt;code>Provider&lt;/code> 是由一个 &lt;code>NettyServer&lt;/code> 提供的，通过 &lt;code>HandlerMap&lt;/code> 映射找到对应的 &lt;code>Ioc Bean&lt;/code>，完成服务调用&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">服务端
+EventLoopGroup bossGroup = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup(1);
+EventLoopGroup workerGroup = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup();
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+ServerBootstrap b = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ServerBootstrap();
+b.&lt;span style="color:#658b00">group&lt;/span>(bossGroup, workerGroup)
+.&lt;span style="color:#658b00">channel&lt;/span>(NioServerSocketChannel.&lt;span style="color:#658b00">class&lt;/span>)
+.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_BACKLOG&lt;/span>, 100)
+.&lt;span style="color:#658b00">handler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> LoggingHandler(LogLevel.&lt;span style="color:#658b00">INFO&lt;/span>))
+.&lt;span style="color:#658b00">childHandler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ChannelInitializer&amp;lt;SocketChannel&amp;gt;() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">initChannel&lt;/span>(SocketChannel ch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+ChannelPipeline p = ch.&lt;span style="color:#658b00">pipeline&lt;/span>();
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcEncoder(RpcRequest.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcDecoder(RpcResponse.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcHandler());
+}});
+&lt;span style="color:#228b22">// Start the server.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ChannelFuture f = b.&lt;span style="color:#658b00">bind&lt;/span>(PORT).&lt;span style="color:#658b00">sync&lt;/span>();
+&lt;span style="color:#228b22">// Wait until the server socket is closed.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> f.&lt;span style="color:#658b00">channel&lt;/span>().&lt;span style="color:#658b00">closeFuture&lt;/span>().&lt;span style="color:#658b00">sync&lt;/span>();
+} &lt;span style="color:#8b008b;font-weight:bold">finally&lt;/span> {
+&lt;span style="color:#228b22">// Shut down all event loops to terminate all threads.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> bossGroup.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
+workerGroup.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.github.io/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/Netty%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E5%AE%A2%E6%88%B7%E7%AB%AFTCP%E9%93%BE%E6%8E%A5%E4%B8%8A%E7%9A%84%E8%AF%B7%E6%B1%82.jpg" alt="Netty如何处理客户端TCP链接上的请求">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/NettyReactor%E5%B7%A5%E4%BD%9C%E6%A1%86%E6%9E%B6%E5%9B%BE.jpg" alt="NettyReactor工作框架图">&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>BossGroup&lt;/code> -&amp;gt; 处理客户端的请求&lt;/li>
+&lt;li>&lt;code>EventGroup&lt;/code> —&amp;gt; 处理IO &lt;code>Read/Write&lt;/code> 操作、执行任务系统Task、定时任务&lt;/li>
+&lt;li>&lt;code>ChildChannelHandler&lt;/code> 方式是对 &lt;code>ChannelPipeline&lt;/code> 的设置、&lt;/li>
+&lt;li>&lt;code>ChannelPipeline&lt;/code> 是相当于任务链的模式, 是一串 &lt;code>ChannelHandler&lt;/code> 的实例&lt;/li>
+&lt;li>&lt;code>ChannelHandlerContext&lt;/code> 是 &lt;code>ChannelPipeline&lt;/code> 和 &lt;code>ChannelHandler&lt;/code> 的关系&lt;/li>
+&lt;li>每个链接对于 &lt;code>Sever&lt;/code> 端都会创建一个 &lt;code>Channel&lt;/code> ，可以将 &lt;code>Channel&lt;/code> 理解为 &lt;code>Connection&lt;/code> （其实真正的是 &lt;code>Connection&lt;/code> 属于 &lt;code>Channel&lt;/code> 的一部分）&lt;/li>
+&lt;li>每个 &lt;code>Channel&lt;/code> 都有一个自己的唯一的 &lt;code>ChannelPipeline&lt;/code> 操作，对于其他的 &lt;code>Channel&lt;/code> 的 &lt;code>ChannelPipeline&lt;/code> 是隔离的&lt;/li>
+&lt;li>&lt;code>RPC Handler&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 服务处理的 &lt;code>Handler&lt;/code> 实现&lt;/li>
+&lt;li>&lt;code>RPC Encoder&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 序列化的编码的 &lt;code>Handler&lt;/code> 实现&lt;/li>
+&lt;li>&lt;code>RPC Decoder&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 序列化的解码的 &lt;code>Handler&lt;/code> 实现&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">客户端
+EventLoopGroup group = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup();
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+Bootstrap b = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Bootstrap();
+b.&lt;span style="color:#658b00">group&lt;/span>(group)
+.&lt;span style="color:#658b00">channel&lt;/span>(NioSocketChannel.&lt;span style="color:#658b00">class&lt;/span>)
+.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">TCP_NODELAY&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>)
+.&lt;span style="color:#658b00">handler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ChannelInitializer&amp;lt;SocketChannel&amp;gt;() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">initChannel&lt;/span>(SocketChannel ch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+ChannelPipeline p = ch.&lt;span style="color:#658b00">pipeline&lt;/span>();
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcEncoder(RpcResponse.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcDecoder(RpcRequest.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcClientHandler());
+}});
+&lt;span style="color:#228b22">// Start the client.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ChannelFuture f = b.&lt;span style="color:#658b00">connect&lt;/span>(HOST, PORT).&lt;span style="color:#658b00">sync&lt;/span>();
+&lt;span style="color:#228b22">// Wait until the connection is closed.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> f.&lt;span style="color:#658b00">channel&lt;/span>().&lt;span style="color:#658b00">closeFuture&lt;/span>().&lt;span style="color:#658b00">sync&lt;/span>();
+} &lt;span style="color:#8b008b;font-weight:bold">finally&lt;/span> {
+&lt;span style="color:#228b22">// Shut down the event loop to terminate all threads.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> group.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>7、&lt;code>RPC&lt;/code> 序列化&lt;/p>
+&lt;ul>
+&lt;li>二进制数据&lt;/li>
+&lt;li>Hessian&lt;/li>
+&lt;li>Avro&lt;/li>
+&lt;li>ProtoBuffer (Protobuf)&lt;/li>
+&lt;li>JSON&lt;/li>
+&lt;li>XML&lt;/li>
+&lt;/ul>
+&lt;p>8、关于 &lt;code>RPC&lt;/code> 的实现思考与技术讨论&lt;/p>
+&lt;ul>
+&lt;li>业务方法、因为是收到请求消息而触发的后续动作调用，不做额外设置，肯定是使用的 &lt;code>WorkGroup&lt;/code> 里面的线程操作的。
+而作为业务层，不应该与底层关联，应该切割开来，势必会引入真的业务侧线程池。
+那么如何引用、怎么引用？(关于 业务线程池 与 &lt;code>WorkGroup&lt;/code> 的 &lt;code>EvenLoop&lt;/code> 的思考 )&lt;/li>
+&lt;li>关于 &lt;code>RPC&lt;/code> 调用大部分是同步的调用，而 &lt;code>Netty&lt;/code> 底层是完全异步事件机制，在RPC框架层面如何实现同步的调用方式的？&lt;/li>
+&lt;li>基于 &lt;code>TCP&lt;/code> 的长链接调用，在 &lt;code>RPC&lt;/code> 上你会想到其他的哪些东东？&lt;/li>
+&lt;li>在此环境下，我没有介绍 &lt;code>RPC&lt;/code> 服务于 IOC容器的结合，可以思考一下，如何做到 注解机制、&lt;code>JAVA CONFIG&lt;/code> 机制、&lt;code>XML SCHEMA&lt;/code> 机制来做?
+&lt;ul>
+&lt;li>GUICE&lt;/li>
+&lt;li>SPRING&lt;/li>
+&lt;li>SPI&lt;/li>
+&lt;li>&amp;hellip;.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+- https://pinkhello.github.io/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>03 String为什么设计成final</title><link>https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Wed, 10 Feb 2021 08:19:51 +0800</pubDate><guid>https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">String&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> java.&lt;span style="color:#658b00">io&lt;/span>.&lt;span style="color:#658b00">Serializable&lt;/span>, Comparable&amp;lt;String&amp;gt;, CharSequence {
+&lt;span style="color:#228b22">/** The value is used for character storage. */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">char&lt;/span> value[];
+&lt;span style="color:#228b22">/** Cache the hash code for the string */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> hash; &lt;span style="color:#228b22">// Default to 0
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">/** use serialVersionUID from JDK 1.0.2 for interoperability */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> serialVersionUID = -6849794470754667710L;
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Class String is special cased within the Serialization Stream Protocol.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * A String instance is written into an ObjectOutputStream according to
+&lt;/span>&lt;span style="color:#228b22"> * &amp;lt;a href=&amp;#34;{@docRoot}/../platform/serialization/spec/output.html&amp;#34;&amp;gt;
+&lt;/span>&lt;span style="color:#228b22"> * Object Serialization Specification, Section 6.2, &amp;#34;Stream Elements&amp;#34;&amp;lt;/a&amp;gt;
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ObjectStreamField[] serialPersistentFields =
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ObjectStreamField[0];
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>String&lt;/code> 如何保证 不可变的呢？&lt;/p>
+&lt;blockquote>
+&lt;p>字符数组使用了 &lt;code>final&lt;/code> 修饰，这也只是表示了 字符数组的引用地址不可变，并不代表内容不可变。
+其使用 &lt;code>private&lt;/code> 修饰，外部没有入口达到变动，从而保证了 String 的不可变性&lt;/p>
+&lt;/blockquote>
+&lt;p>为什么保证 &lt;code>String&lt;/code> 是 &lt;code>final&lt;/code> 的呢？特点：&lt;/p>
+&lt;blockquote>
+&lt;ul>
+&lt;li>因为只有保证 &lt;code>String&lt;/code> 是 &lt;code>final&lt;/code> 的呢 &lt;strong>只有当字符串不可变的，字符串池才可能实现&lt;/strong>;字符串池的实现可以节省很多的 &lt;code>Heap&lt;/code>空间，因为不同的字符串变量都指向池中的同一个字符串.&lt;/li>
+&lt;li>假如字符串可变，那么&lt;code>String&lt;/code> &lt;code>interning&lt;/code> 不能实现，那么变量改变了这个字符串的值，那么其他指向这个值的变量的值也改变了。 （安全问题来了，用户名密码，端口、IP等）&lt;/li>
+&lt;li>字符串不可变，多线程安全，同一个字符串实例可以被对歌线程共享，不需要考虑同步问题&lt;/li>
+&lt;li>上面看出，在字符串不可变的情况下，创建的时候 &lt;code>hashcode&lt;/code>也被缓存了，不需要重新计算。一部分性能问题可以很好的选择字符串&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h1 id="string-在-jvm-层理解-拓展">&lt;code>String&lt;/code> 在 &lt;code>JVM&lt;/code> 层理解 拓展&lt;/h1>
+&lt;p>&lt;code>JVM&lt;/code> 层面有 虚拟机栈、本地方法栈、堆、程序计数器、元数据区(方法区)
+&lt;img src="https://pinkhello.github.io/String%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final%E5%BD%A2%E6%80%81/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA.png" alt="运行时数据区">&lt;/p>
+&lt;ul>
+&lt;li>字符串创建形式&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s1 = &lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>;
+String s2 = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>);
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>编译期间 &amp;ldquo;1&amp;rdquo; 作为常量进入字符串常量池（这时候是静态常量池）;&lt;/li>
+&lt;li>当编译 &lt;code>s1&lt;/code> 时候，将 &lt;code>s1&lt;/code> 推进局部变量区（栈帧内部）; 先判断 &amp;ldquo;1&amp;rdquo; 在字符串常量池在不在，不存在的话创建常量 &amp;ldquo;1&amp;rdquo; 加入常量池，并直接将 &lt;code>s1&lt;/code> 指向字符串常量池的对象 &amp;ldquo;1&amp;rdquo; 地址；&lt;/li>
+&lt;li>当代码运行 &lt;code>s2&lt;/code> 时候，使用的 &lt;code>new&lt;/code> 字段，&lt;code>JVM&lt;/code> 先检查字符串常量在常量池存不存在，如果已经存在，直接在堆中复制改对象的副本，并且将 &lt;code>s2&lt;/code> 指向堆中的刚刚创建的对象地址。
+如果不存在，则会实例化该字符串 &amp;ldquo;1&amp;rdquo; 并且将其放到常量池中（这时候是运行时常量池）,然后在堆中复制刚刚加入常量池对象的副本创建出新的对象，并将 &lt;code>s2&lt;/code> 指向它&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>&amp;lsquo;+&amp;lsquo;号连接的字符串&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s1 = &lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>+&lt;span style="color:#cd5555">&amp;#34;2&amp;#34;&lt;/span>+&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>;
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>编译期间就能确定，直接作为 &amp;ldquo;123&amp;rdquo; 的常量进入常量池;&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s2 = &lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>+&lt;span style="color:#cd5555">&amp;#34;2&amp;#34;&lt;/span>+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>)+&lt;span style="color:#cd5555">&amp;#34;4&amp;#34;&lt;/span>;
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>当 &amp;lsquo;+&amp;rsquo; 中间有变量时候，也只能在运行期才能确定，但是在编译期间会尽量的将字符串常量连接起来，形成新的字符串常量;&lt;/li>
+&lt;li>反编译后 &lt;code>String s2 = new StringBuilder(&amp;quot;12&amp;quot;).append(new String(&amp;quot;3&amp;quot;&amp;quot;)).append(&amp;quot;4&amp;quot;).toString()&lt;/code>;&lt;/li>
+&lt;li>也就是说用 &amp;lsquo;+&amp;rsquo; 连接中间有变量的时候，&amp;ldquo;13&amp;rdquo;, &amp;ldquo;3&amp;rdquo;, &amp;ldquo;4&amp;rdquo; 在常量池中，在堆中有 &lt;code>StringBuilder(&amp;quot;1234&amp;quot;)&lt;/code>, &lt;code>String(&amp;quot;4&amp;quot;)&lt;/code>,以及&lt;code>toString&lt;/code>后产生的&lt;code>String&lt;/code>对象&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s3 = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>) + &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>);
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>&amp;ldquo;3&amp;rdquo; 在常量池中（编译的时候）&lt;/li>
+&lt;li>运行时，在堆中产生 &amp;ldquo;3&amp;rdquo; 的副本两个 &lt;code>String&lt;/code> 对象，并产生 &lt;code>StringBuilder(&amp;quot;11&amp;quot;)&lt;/code> 对象以及 &lt;code>toString&lt;/code> 的 &lt;code>String&lt;/code> 对象&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+- https://pinkhello.github.io/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>02 关于final的思考</title><link>https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate><guid>https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ -&lt;h2 id="关于final的思考">关于&lt;code>final&lt;/code>的思考&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>final&lt;/code> 是声明数据域最终的,不可以修改的，常见的 是类的 序列化&lt;code>ID&lt;/code>&lt;/li>
+&lt;li>&lt;code>String&lt;/code> 类，其数据域都是 &lt;code>final&lt;/code> 的&lt;/li>
+&lt;/ul>
+&lt;h3 id="修改-final-修饰的属性">修改 &lt;code>final&lt;/code> 修饰的属性&lt;/h3>
+&lt;p>反射修改 &lt;code>final&lt;/code> 修饰的数据域【非常成功的修改了】&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String name = &lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+Field field = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;name&amp;#34;&lt;/span>);
+field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+field.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(field.&lt;span style="color:#658b00">get&lt;/span>(test));
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">name&lt;/span>);
+}
+}
+输出
+Hello, WORLD!
+hello world
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>第一个输出是因为说明运行成功，修改&lt;code>final&lt;/code>修饰的对象的属性成功修改；&lt;/p>
+&lt;p>但是第二个输出，表明了我直接使用 &lt;code>name&lt;/code> 的属性却还是输出端额原来的值.&lt;/p>
+&lt;p>反编译后的代码&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String name = &lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#008b45">Test&lt;/span>() {
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+Field field = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;name&amp;#34;&lt;/span>);
+field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+field.&lt;span style="color:#658b00">set&lt;/span>(test, &lt;span style="color:#cd5555">&amp;#34;HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(field.&lt;span style="color:#658b00">get&lt;/span>(test));
+PrintStream var10000 = System.&lt;span style="color:#658b00">out&lt;/span>;
+test.&lt;span style="color:#658b00">getClass&lt;/span>();
+var10000.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>);
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看出 使用对象.属性的已经被替换了，这是由于&lt;code>JVM&lt;/code> 的内联优化（方法调用(参数压栈,跳转到方法处执行,再调回,处理栈参数,处理返回值)）导致的，会直接替换掉使用 final 修饰的字段。【当然也可以关闭内联优化】&lt;/p>
+&lt;h3 id="修改使用-final-修饰的-static-类属性">修改使用 &lt;code>final&lt;/code> 修饰的 &lt;code>static&lt;/code> 类属性&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> String NAME = &lt;span style="color:#cd5555">&amp;#34;static hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+&lt;span style="color:#228b22">//修改NAME
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Field sfield = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>);
+sfield.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+sfield.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;STATIC HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(sfield.&lt;span style="color:#658b00">get&lt;/span>(test));
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">NAME&lt;/span>);
+}
+}
+输出异常 Can not set &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>修改&lt;code>Field&lt;/code>中的&lt;code>modifiers&lt;/code>数据域，清除代表&lt;code>final&lt;/code>的那个bit，才可以成功修改。&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> String NAME = &lt;span style="color:#cd5555">&amp;#34;static hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+&lt;span style="color:#228b22">//修改NAME
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Field sfield = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>);
+Field modifiers = sfield.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;modifiers&amp;#34;&lt;/span>);
+modifiers.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+modifiers.&lt;span style="color:#658b00">setInt&lt;/span>(sfield, sfield.&lt;span style="color:#658b00">getModifiers&lt;/span>() &amp;amp; ~Modifier.&lt;span style="color:#658b00">FINAL&lt;/span>);&lt;span style="color:#228b22">//fianl标志位置0
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+sfield.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+sfield.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;STATIC HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(sfield.&lt;span style="color:#658b00">get&lt;/span>(test));
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">NAME&lt;/span>);
+}
+}
+输出
+STATIC HELLO, WORLD!
+&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> hello world
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.github.io/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>01 一致性哈希算法</title><link>https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate><guid>https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ -&lt;h1 id="分布式均衡寻址算法">分布式均衡寻址算法&lt;/h1>
+&lt;p>在分布式集群中，对机器的添加删除，或者机器故障后自动脱落集群的操作是分布式集群管理的基本功能。&lt;/p>
+&lt;blockquote>
+&lt;p>在集群环境中，判断分布式寻址算法好坏的原则：&lt;/p>
+&lt;ul>
+&lt;li>平衡性（Balance）&lt;/li>
+&lt;li>单调性（Monotonicity）&lt;/li>
+&lt;li>分散性（Spread）&lt;/li>
+&lt;li>负载（Load）&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="hashobjectn">Hash(Object)%N&lt;/h2>
+&lt;p>集群N台机器，根据N取模，路由到对应的机器，但是缺点在于，对于机器的添加删除，已经缓存的数据都失效、严重违反单调性，
+大量的缓存重建&lt;/p>
+&lt;blockquote>
+&lt;p>假设0-3个节点、20个数据:
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash.png" alt="哈希数据">&lt;/p>
+&lt;p>进行取模后分布:
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash1.png" alt="哈希取模后分布">&lt;/p>
+&lt;p>扩容后:
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash3.png" alt="扩容后">
+当前只有4个数据能命中。命中率 4/20 = 20% ,命中率底下，并且有大量缓存需要重建&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="一致性hash--dht-">一致性Hash ( DHT )&lt;/h2>
+&lt;blockquote>
+&lt;p>公共哈希函数和哈希环
+Hash算法设计: 采取取模方式，按常用的 Hash 算法将对应的 Key 哈希到一个具有 2^32 次方的桶空间中，即 0 ~ (2^32)-1 的数字空间。想想一下，将数字首位相连，组成一个闭合的环形。
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash4.png" alt="环形Hash空间">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>对象(Object)映射到哈希环
+把对象映射到 0-2^32-1 空间里，假设有4个对象 object1-4 ，映射进hash环状
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash5.png" alt="对象映射环形Hash空间">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>缓存(Cache)映射到哈希环
+下面将 Cache 映射进 Hash 空间，假设现在有三个cache：&lt;/p>
+&lt;blockquote>
+&lt;p>基本思想就是 Object 和 Cache 都映射到同一 Hash 数值空间中，并且使用相同的 Hash算法，可以使用 Cache 的 IP地址或者其他因子）&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash6.png" alt="Cache映射环形Hash空间">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>对象（Object映射到缓存(Cache)节点
+每个 Cache 的 Key 顺时针，找到第一个 Cache 节点就是存储位置:
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash7.png" alt="找到Cache存储位置">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>移除一个缓存节点
+移除一个 CacheB 节点, 这时候 key4 无法找寻到 Cache，key4将继续使用一致性Hash算法算出最新的 CacheC, 以后存储与读取都在 CacheC 上。
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash8.png" alt="移除CacheB节点">&lt;/p>
+&lt;blockquote>
+&lt;p>移除节点后的影响范围在该节点逆时针计算到遇到的第一个cache节点之间的数据节点。&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>增加一个缓存节点
+增加一个 Cache节点
+&lt;img src="https://pinkhello.github.io/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash9.png" alt="新增Cache节点">&lt;/p>
+&lt;blockquote>
+&lt;p>影响范围为：添加节点逆时针遇到的第一个cache节点之间的数据节点&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>虚拟Cache节点
+物理上不可能部署节点有限，所以需要虚拟出足够多的虚拟节点，最终达到数据在哈希换上均匀分布&lt;/p>
+&lt;blockquote>
+&lt;p>假如只有两个节点,每个节点都复制成3倍，结果看上去部署了6个节点。可以想象当复制倍数是 2^32 时候，就达到绝对的均匀，通常可取的复制倍数为32 或者更高&lt;/p>
+&lt;/blockquote>
+&lt;p>虚拟节点哈希值计算方法调整为 对 &amp;ldquo;节点IP（或机器名）+虚拟节点的序号（1~N）&amp;rdquo; 作哈希&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="redis-cluster">Redis Cluster&lt;/h1>
+&lt;p>Redis Cluster 是 Redis 官方出品的分布式解决方案&lt;/p>
+&lt;p>Redis Cluster 由多个 Redis 实例组成的整体，数据按照 &lt;em>槽(slot)&lt;/em> 存储分布在多个实例上，通过 Gossip 协议来进行节点通信。&lt;/p>
+&lt;p>redis 为什么使用 16384 slots? &lt;a href="https://github.com/antirez/redis/issues/2576">redis 作者给出答案&lt;/a>&lt;/p>
+&lt;h1 id="一致性hash算法的java实现与检验">一致性hash算法的JAVA实现与检验&lt;/h1>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">ConsistentHashing&lt;/span> {
+&lt;span style="color:#228b22">// 物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> Set&amp;lt;String&amp;gt; physicalNodes = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeSet&amp;lt;String&amp;gt;() {
+{
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.101&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.102&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.103&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.104&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.105&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.106&amp;#34;&lt;/span>);
+}
+};
+&lt;span style="color:#228b22">//虚拟节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> VIRTUAL_COPIES = 1; &lt;span style="color:#228b22">// 物理节点至虚拟节点的复制倍数
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> TreeMap&amp;lt;Long, String&amp;gt; virtualNodes = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeMap&amp;lt;&amp;gt;(); &lt;span style="color:#228b22">// 哈希值 =&amp;gt; 物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">// 32位的 Fowler-Noll-Vo 哈希算法
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> Long &lt;span style="color:#008b45">FNVHash&lt;/span>(String key) {
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> p = 16777619;
+Long hash = 2166136261L;
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0, num = key.&lt;span style="color:#658b00">length&lt;/span>(); idx &amp;lt; num; ++idx) {
+hash = (hash ^ key.&lt;span style="color:#658b00">charAt&lt;/span>(idx)) * p;
+}
+hash += hash &amp;lt;&amp;lt; 13;
+hash ^= hash &amp;gt;&amp;gt; 7;
+hash += hash &amp;lt;&amp;lt; 3;
+hash ^= hash &amp;gt;&amp;gt; 17;
+hash += hash &amp;lt;&amp;lt; 5;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (hash &amp;lt; 0) {
+hash = Math.&lt;span style="color:#658b00">abs&lt;/span>(hash);
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> hash;
+}
+&lt;span style="color:#228b22">// 根据物理节点，构建虚拟节点映射表
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#008b45">ConsistentHashing&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (String nodeIp : physicalNodes) {
+addPhysicalNode(nodeIp);
+}
+}
+&lt;span style="color:#228b22">// 添加物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">addPhysicalNode&lt;/span>(String nodeIp) {
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0; idx &amp;lt; VIRTUAL_COPIES; ++idx) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(nodeIp + &lt;span style="color:#cd5555">&amp;#34;#&amp;#34;&lt;/span> + idx);
+virtualNodes.&lt;span style="color:#658b00">put&lt;/span>(hash, nodeIp);
+}
+}
+&lt;span style="color:#228b22">// 删除物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">removePhysicalNode&lt;/span>(String nodeIp) {
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0; idx &amp;lt; VIRTUAL_COPIES; ++idx) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(nodeIp + &lt;span style="color:#cd5555">&amp;#34;#&amp;#34;&lt;/span> + idx);
+virtualNodes.&lt;span style="color:#658b00">remove&lt;/span>(hash);
+}
+}
+&lt;span style="color:#228b22">// 查找对象映射的节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> String &lt;span style="color:#008b45">getObjectNode&lt;/span>(String object) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(object);
+SortedMap&amp;lt;Long, String&amp;gt; tailMap = virtualNodes.&lt;span style="color:#658b00">tailMap&lt;/span>(hash); &lt;span style="color:#228b22">// 所有大于 hash 的节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Long key = tailMap.&lt;span style="color:#658b00">isEmpty&lt;/span>() ? virtualNodes.&lt;span style="color:#658b00">firstKey&lt;/span>() : tailMap.&lt;span style="color:#658b00">firstKey&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> virtualNodes.&lt;span style="color:#658b00">get&lt;/span>(key);
+}
+&lt;span style="color:#228b22">// 统计对象与节点的映射关系
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">dumpObjectNodeMap&lt;/span>(String label, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> objectMin, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> objectMax) {
+&lt;span style="color:#228b22">// 统计
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Map&amp;lt;String, Integer&amp;gt; objectNodeMap = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeMap&amp;lt;&amp;gt;(); &lt;span style="color:#228b22">// IP =&amp;gt; COUNT
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> object = objectMin; object &amp;lt;= objectMax; ++object) {
+String nodeIp = getObjectNode(Integer.&lt;span style="color:#658b00">toString&lt;/span>(object));
+Integer count = objectNodeMap.&lt;span style="color:#658b00">get&lt;/span>(nodeIp);
+objectNodeMap.&lt;span style="color:#658b00">put&lt;/span>(nodeIp, (count == &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> ? 0 : count + 1));
+}
+&lt;span style="color:#228b22">// 打印
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">double&lt;/span> totalCount = objectMax - objectMin + 1;
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;======== &amp;#34;&lt;/span> + label + &lt;span style="color:#cd5555">&amp;#34; ========&amp;#34;&lt;/span>);
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (Map.&lt;span style="color:#658b00">Entry&lt;/span>&amp;lt;String, Integer&amp;gt; entry : objectNodeMap.&lt;span style="color:#658b00">entrySet&lt;/span>()) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> percent = (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span>) (100 * entry.&lt;span style="color:#658b00">getValue&lt;/span>() / totalCount);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;IP=&amp;#34;&lt;/span> + entry.&lt;span style="color:#658b00">getKey&lt;/span>() + &lt;span style="color:#cd5555">&amp;#34;: RATE=&amp;#34;&lt;/span> + percent + &lt;span style="color:#cd5555">&amp;#34;%&amp;#34;&lt;/span>);
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) {
+ConsistentHashing ch = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ConsistentHashing();
+&lt;span style="color:#228b22">// 初始情况
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;初始情况&amp;#34;&lt;/span>, 0, 65536);
+&lt;span style="color:#228b22">// 删除物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">removePhysicalNode&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;192.168.1.105&amp;#34;&lt;/span>);
+ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;删除物理节点&amp;#34;&lt;/span>, 0, 65536);
+&lt;span style="color:#228b22">// 添加物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">addPhysicalNode&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;192.168.1.107&amp;#34;&lt;/span>);
+ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;添加物理节点&amp;#34;&lt;/span>, 0, 65536);
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>复制倍数为 1 时的均衡性（VIRTUAL_COPIES = 1）&lt;/p>
+&lt;pre>&lt;code> ======== 初始情况 ========
+IP=192.168.1.101: RATE=28%
+IP=192.168.1.102: RATE=3%
+IP=192.168.1.103: RATE=28%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.105: RATE=16%
+IP=192.168.1.106: RATE=2%
+======== 删除物理节点 ========
+IP=192.168.1.101: RATE=45%
+IP=192.168.1.102: RATE=3%
+IP=192.168.1.103: RATE=28%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.106: RATE=2%
+======== 添加物理节点 ========
+IP=192.168.1.101: RATE=45%
+IP=192.168.1.102: RATE=3%
+IP=192.168.1.103: RATE=25%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.106: RATE=2%
+IP=192.168.1.107: RATE=3%
+&lt;/code>&lt;/pre>&lt;p>复制倍数为 32 时的均衡性（VIRTUAL_COPIES = 32）&lt;/p>
+&lt;pre>&lt;code> ======== 初始情况 ========
+IP=192.168.1.101: RATE=17%
+IP=192.168.1.102: RATE=12%
+IP=192.168.1.103: RATE=23%
+IP=192.168.1.104: RATE=12%
+IP=192.168.1.105: RATE=12%
+IP=192.168.1.106: RATE=21%
+======== 删除物理节点 ========
+IP=192.168.1.101: RATE=17%
+IP=192.168.1.102: RATE=12%
+IP=192.168.1.103: RATE=25%
+IP=192.168.1.104: RATE=23%
+IP=192.168.1.106: RATE=21%
+======== 添加物理节点 ========
+IP=192.168.1.101: RATE=16%
+IP=192.168.1.102: RATE=12%
+IP=192.168.1.103: RATE=14%
+IP=192.168.1.104: RATE=23%
+IP=192.168.1.106: RATE=15%
+IP=192.168.1.107: RATE=17%
+&lt;/code>&lt;/pre>&lt;p>复制倍数为 1M 时的均衡性（VIRTUAL_COPIES = 1048576）&lt;/p>
+&lt;pre>&lt;code> ======== 初始情况 ========
+IP=192.168.1.101: RATE=16%
+IP=192.168.1.102: RATE=16%
+IP=192.168.1.103: RATE=16%
+IP=192.168.1.104: RATE=16%
+IP=192.168.1.105: RATE=16%
+IP=192.168.1.106: RATE=16%
+======== 删除物理节点 ========
+IP=192.168.1.101: RATE=19%
+IP=192.168.1.102: RATE=19%
+IP=192.168.1.103: RATE=20%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.106: RATE=19%
+======== 添加物理节点 ========
+IP=192.168.1.101: RATE=16%
+IP=192.168.1.102: RATE=16%
+IP=192.168.1.103: RATE=16%
+IP=192.168.1.104: RATE=16%
+IP=192.168.1.106: RATE=16%
+IP=192.168.1.107: RATE=16%
+&lt;/code>&lt;/pre>- https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
+&lt;h2 id="前言">前言&lt;/h2>
+&lt;p>对于 &lt;code>ThreadLocal&lt;/code> 的使用，并不难，这次主要讲述 &lt;code>ThreadLocal&lt;/code> 的实现方式以及原理&lt;/p>
+&lt;h2 id="threadlocal-是什么">&lt;code>ThreadLocal&lt;/code> 是什么&lt;/h2>
+&lt;p>&lt;code>ThreadLocal&lt;/code> 为解决多线程并发问题提供的一种新的思路。&lt;/p>
+&lt;p>当使用 &lt;code>ThreadLocal&lt;/code> 维护变量的时候，&lt;code>ThreadLocal&lt;/code> 为每个使用该变量的线程提供独立的变量副本，所以每个线程都可以独立修改自己的副本，而不会修改到其他人的变量副本。&lt;/p>
+&lt;p>从线程角度看，&lt;code>Local&lt;/code> 即本地意思，目标变量就像是线程的本地变量。&lt;/p>
+&lt;h3 id="原理">原理&lt;/h3>
+&lt;p>&lt;code>ThreadLocal&lt;/code> 是连接 &lt;code>Thread&lt;/code> 与 &lt;code>ThreadLocalMap&lt;/code> 粘合剂，是用来处理 &lt;code>Thread&lt;/code> 的 &lt;code>ThreadLocalMap&lt;/code> 属性，
+包括 &lt;em>initialValue()&lt;/em> 变量，&lt;em>set&lt;/em> 对应的变量，&lt;em>get&lt;/em> 对应的变量。&lt;/p>
+&lt;p>&lt;code>ThreadLocalMap&lt;/code> 用来存储数据，采用类似&lt;code>HashMap&lt;/code>的机制，存储了以&lt;code>ThreadLocal&lt;/code>为&lt;code>Key&lt;/code>，目标数据为&lt;code>Value&lt;/code>的&lt;code>Entry&lt;/code>键值对数组结构。&lt;/p>
+&lt;p>&lt;code>Thread&lt;/code> 有个 &lt;em>ThreadLocalMap&lt;/em> 的属性，存储的数据存放在此处。&lt;/p>
+&lt;h3 id="threadthreadlocal-threadlocalmap的关系">&lt;code>Thread&lt;/code>、&lt;code>ThreadLocal&lt;/code>、 &lt;code>ThreadLocalMap&lt;/code>的关系&lt;/h3>
+&lt;p>&lt;code>ThreadLocalMap&lt;/code> 是 &lt;code>ThreadLocal&lt;/code> 的内部类，有 &lt;code>ThreadLocal&lt;/code>创建，&lt;code>Thread&lt;/code>有 &lt;code>ThreadLocal.ThreadLocalMap&lt;/code> 类型的属性，源码如下&lt;/p>
+&lt;h4 id="thread">Thread&lt;/h4>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Thread&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> Runnable {
+&lt;span style="color:#228b22">/*
+&lt;/span>&lt;span style="color:#228b22"> * ThreadLocal values pertaining to this thread. This map is maintained
+&lt;/span>&lt;span style="color:#228b22"> * by the ThreadLocal class.
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+ThreadLocal.&lt;span style="color:#658b00">ThreadLocalMap&lt;/span> threadLocals = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+&lt;span style="color:#228b22">/*
+&lt;/span>&lt;span style="color:#228b22"> * InheritableThreadLocal values pertaining to this thread. This map is
+&lt;/span>&lt;span style="color:#228b22"> * maintained by the InheritableThreadLocal class.
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+ThreadLocal.&lt;span style="color:#658b00">ThreadLocalMap&lt;/span> inheritableThreadLocals = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="threadlocal-和-threadlocalmap">&lt;code>ThreadLocal&lt;/code> 和 &lt;code>ThreadLocalMap&lt;/code>&lt;/h4>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">ThreadLocal&lt;/span>&amp;lt;T&amp;gt; {
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * ThreadLocalMap is a customized hash map suitable only for
+&lt;/span>&lt;span style="color:#228b22"> * maintaining thread local values. No operations are exported
+&lt;/span>&lt;span style="color:#228b22"> * outside of the ThreadLocal class. The class is package private to
+&lt;/span>&lt;span style="color:#228b22"> * allow declaration of fields in class Thread. To help deal with
+&lt;/span>&lt;span style="color:#228b22"> * very large and long-lived usages, the hash table entries use
+&lt;/span>&lt;span style="color:#228b22"> * WeakReferences for keys. However, since reference queues are not
+&lt;/span>&lt;span style="color:#228b22"> * used, stale entries are guaranteed to be removed only when
+&lt;/span>&lt;span style="color:#228b22"> * the table starts running out of space.
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">ThreadLocalMap&lt;/span> {
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * The entries in this hash map extend WeakReference, using
+&lt;/span>&lt;span style="color:#228b22"> * its main ref field as the key (which is always a
+&lt;/span>&lt;span style="color:#228b22"> * ThreadLocal object). Note that null keys (i.e. entry.get()
+&lt;/span>&lt;span style="color:#228b22"> * == null) mean that the key is no longer referenced, so the
+&lt;/span>&lt;span style="color:#228b22"> * entry can be expunged from table. Such entries are referred to
+&lt;/span>&lt;span style="color:#228b22"> * as &amp;#34;stale entries&amp;#34; in the code that follows.
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Entry&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> WeakReference&amp;lt;ThreadLocal&amp;lt;?&amp;gt;&amp;gt; {
+&lt;span style="color:#228b22">/** The value associated with this ThreadLocal. */&lt;/span>
+Object value;
+Entry(ThreadLocal&amp;lt;?&amp;gt; k, Object v) {
+&lt;span style="color:#8b008b;font-weight:bold">super&lt;/span>(k);
+value = v;
+}
+}
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="threadlocal-为-thread-的-threadlocalmap-进行赋值">&lt;code>ThreadLocal&lt;/code> 为 &lt;code>Thread&lt;/code> 的 &lt;code>ThreadLocalMap&lt;/code> 进行赋值&lt;/h4>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Create the map associated with a ThreadLocal. Overridden in
+&lt;/span>&lt;span style="color:#228b22"> * InheritableThreadLocal.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @param t the current thread
+&lt;/span>&lt;span style="color:#228b22"> * @param firstValue value for the initial entry of the map
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">createMap&lt;/span>(Thread t, T firstValue) {
+t.&lt;span style="color:#658b00">threadLocals&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ThreadLocalMap(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>, firstValue);
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;em>ThreadLocal&lt;/em> 直接创建一个 &lt;em>ThreadLocalMap&lt;/em> 出来，以当前 &lt;em>ThreadLocal&lt;/em> 的对象为 &lt;em>key&lt;/em> ，以目标值为 &lt;em>value&lt;/em> 存入&lt;/li>
+&lt;/ul>
+&lt;h5 id="threadlocal-核心的方法">&lt;code>ThreadLocal&lt;/code> 核心的方法&lt;/h5>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Sets the current thread&amp;#39;s copy of this thread-local variable
+&lt;/span>&lt;span style="color:#228b22"> * to the specified value. Most subclasses will have no need to
+&lt;/span>&lt;span style="color:#228b22"> * override this method, relying solely on the {@link #initialValue}
+&lt;/span>&lt;span style="color:#228b22"> * method to set the values of thread-locals.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @param value the value to be stored in the current thread&amp;#39;s copy of
+&lt;/span>&lt;span style="color:#228b22"> * this thread-local.
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">set&lt;/span>(T value) {
+Thread t = Thread.&lt;span style="color:#658b00">currentThread&lt;/span>();
+ThreadLocalMap map = getMap(t);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (map != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>)
+map.&lt;span style="color:#658b00">set&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>, value);
+&lt;span style="color:#8b008b;font-weight:bold">else&lt;/span>
+createMap(t, value);
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>set(T)&lt;/code> 设置当前线程的局部变量，以当前的 &lt;code>ThreadLocal&lt;/code> 对象 为键，目标变量对象为值存入当前线程的 &lt;code>ThreadLocalMap&lt;/code> 对象中&lt;/li>
+&lt;li>在获取当前线程的 &lt;code>ThreadLocalMap&lt;/code> 的时候，不存在的时候会创建一个 &lt;code>ThreadLocalMap&lt;/code> ，也就是说，&lt;code>Thread&lt;/code> 的&lt;code>ThreadLocal.ThreadLocalMap&lt;/code> 对象是由 &lt;code>ThreadLocal&lt;/code> 实例化处理的&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Returns the value in the current thread&amp;#39;s copy of this
+&lt;/span>&lt;span style="color:#228b22"> * thread-local variable. If the variable has no value for the
+&lt;/span>&lt;span style="color:#228b22"> * current thread, it is first initialized to the value returned
+&lt;/span>&lt;span style="color:#228b22"> * by an invocation of the {@link #initialValue} method.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @return the current thread&amp;#39;s value of this thread-local
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> T &lt;span style="color:#008b45">get&lt;/span>() {
+Thread t = Thread.&lt;span style="color:#658b00">currentThread&lt;/span>();
+ThreadLocalMap map = getMap(t);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (map != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+ThreadLocalMap.&lt;span style="color:#658b00">Entry&lt;/span> e = map.&lt;span style="color:#658b00">getEntry&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (e != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+&lt;span style="color:#707a7c">@SuppressWarnings&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;unchecked&amp;#34;&lt;/span>)
+T result = (T)e.&lt;span style="color:#658b00">value&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> result;
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> setInitialValue();
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>get()&lt;/code> 为从 &lt;code>ThreadLocalMap&lt;/code> 中获取值，如果 &lt;code>ThreadLocalMap&lt;/code> 不存在，则走 &lt;code>setInitialValue&lt;/code> 方式，否则取出之前设置的值&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Get the map associated with a ThreadLocal. Overridden in
+&lt;/span>&lt;span style="color:#228b22"> * InheritableThreadLocal.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @param t the current thread
+&lt;/span>&lt;span style="color:#228b22"> * @return the map
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+ThreadLocalMap &lt;span style="color:#008b45">getMap&lt;/span>(Thread t) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> t.&lt;span style="color:#658b00">threadLocals&lt;/span>;
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Returns the current thread&amp;#39;s &amp;#34;initial value&amp;#34; for this
+&lt;/span>&lt;span style="color:#228b22"> * thread-local variable. This method will be invoked the first
+&lt;/span>&lt;span style="color:#228b22"> * time a thread accesses the variable with the {@link #get}
+&lt;/span>&lt;span style="color:#228b22"> * method, unless the thread previously invoked the {@link #set}
+&lt;/span>&lt;span style="color:#228b22"> * method, in which case the {@code initialValue} method will not
+&lt;/span>&lt;span style="color:#228b22"> * be invoked for the thread. Normally, this method is invoked at
+&lt;/span>&lt;span style="color:#228b22"> * most once per thread, but it may be invoked again in case of
+&lt;/span>&lt;span style="color:#228b22"> * subsequent invocations of {@link #remove} followed by {@link #get}.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * This implementation simply returns {@code null}; if the
+&lt;/span>&lt;span style="color:#228b22"> * programmer desires thread-local variables to have an initial
+&lt;/span>&lt;span style="color:#228b22"> * value other than {@code null}, {@code ThreadLocal} must be
+&lt;/span>&lt;span style="color:#228b22"> * subclassed, and this method overridden. Typically, an
+&lt;/span>&lt;span style="color:#228b22"> * anonymous inner class will be used.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @return the initial value for this thread-local
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">protected&lt;/span> T &lt;span style="color:#008b45">initialValue&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>initialValue()&lt;/code> 返回了该线程变量的初始值，是一个保护方法，为了让子类覆盖此方法，&lt;/li>
+&lt;li>此方法只执行一次，是一个延迟方法，在调用 &lt;code>set&lt;/code> 或 &lt;code>get&lt;/code> 的时候创建出来&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Creates a thread local variable. The initial value of the variable is
+&lt;/span>&lt;span style="color:#228b22"> * determined by invoking the {@code get} method on the {@code Supplier}.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @param the type of the thread local&amp;#39;s value
+&lt;/span>&lt;span style="color:#228b22"> * @param supplier the supplier to be used to determine the initial value
+&lt;/span>&lt;span style="color:#228b22"> * @return a new thread local variable
+&lt;/span>&lt;span style="color:#228b22"> * @throws NullPointerException if the specified supplier is null
+&lt;/span>&lt;span style="color:#228b22"> * @since 1.8
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &amp;lt;S&amp;gt; ThreadLocal&amp;lt;S&amp;gt; &lt;span style="color:#008b45">withInitial&lt;/span>(Supplier&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> S&amp;gt; supplier) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> SuppliedThreadLocal&amp;lt;&amp;gt;(supplier);
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Variant of set() to establish initialValue. Used instead
+&lt;/span>&lt;span style="color:#228b22"> * of set() in case user has overridden the set() method.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @return the initial value
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> T &lt;span style="color:#008b45">setInitialValue&lt;/span>() {
+T value = initialValue();
+Thread t = Thread.&lt;span style="color:#658b00">currentThread&lt;/span>();
+ThreadLocalMap map = getMap(t);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (map != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>)
+map.&lt;span style="color:#658b00">set&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>, value);
+&lt;span style="color:#8b008b;font-weight:bold">else&lt;/span>
+createMap(t, value);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> value;
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Removes the current thread&amp;#39;s value for this thread-local
+&lt;/span>&lt;span style="color:#228b22"> * variable. If this thread-local variable is subsequently
+&lt;/span>&lt;span style="color:#228b22"> * {@linkplain #get read} by the current thread, its value will be
+&lt;/span>&lt;span style="color:#228b22"> * reinitialized by invoking its {@link #initialValue} method,
+&lt;/span>&lt;span style="color:#228b22"> * unless its value is {@linkplain #set set} by the current thread
+&lt;/span>&lt;span style="color:#228b22"> * in the interim. This may result in multiple invocations of the
+&lt;/span>&lt;span style="color:#228b22"> * {@code initialValue} method in the current thread.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * @since 1.5
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">remove&lt;/span>() {
+ThreadLocalMap m = getMap(Thread.&lt;span style="color:#658b00">currentThread&lt;/span>());
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (m != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>)
+m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>);
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>remove()&lt;/code> 方法获取当前线程的副本变量，来指定移除对应的值;&lt;/li>
+&lt;li>此方法为 1.5 引入，旨在协助&lt;code>jvm&lt;/code>进行有效的快速 &lt;code>gc&lt;/code>；&lt;/li>
+&lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
+&lt;/ul>
+- https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>Links</title><link>https://pinkhello.github.io/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.github.io/links/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/links/ -- https://pinkhello.github.io/links/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>About</title><link>https://pinkhello.github.io/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.github.io/about/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/about/ -&lt;h1 id="联系方式">联系方式&lt;/h1>
+&lt;blockquote>
+&lt;p>Github: &lt;a href="https://github.com/pinkhello">https://github.com/pinkhello&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>Blog: &lt;a href="http://pinkhello.github.io">http://pinkhello.github.io&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>Email: &lt;a href="mailto:lee123lee123@163.com">lee123lee123@163.com&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="个人标签">个人标签&lt;/h1>
+&lt;p>&lt;code>Go&lt;/code>、&lt;code>Java&lt;/code>、&lt;code>Python&lt;/code>、&lt;code>后端开发&lt;/code>、&lt;code>架构&lt;/code>、&lt;code>大数据&lt;/code>、&lt;code>分布式系统&lt;/code>&lt;/p>
+&lt;h1 id="个人项目">个人项目&lt;/h1>
+&lt;blockquote>
+&lt;p>&lt;a href="https://github.com/PinkHello/GoPush">GoPush&lt;/a>&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>&lt;a href="https://github.com/PinkHello/spring-boot-starter-dubbo">spring-boot-starter-dubbo&lt;/a>&lt;/p>
+&lt;/blockquote>
+- https://pinkhello.github.io/about/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
