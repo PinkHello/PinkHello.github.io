@@ -246,15 +246,5 @@ Thread、ThreadLocal、 ThreadLocalMap的关系 ThreadLocalMap 是 ThreadLocal �
 Thread public class Thread implements Runnable { /* * ThreadLocal values pertaining to this thread. This map is maintained * by the ThreadLocal class.</description>
     </item>
     
-    <item>
-      <title>helloworld</title>
-      <link>https://pinkhello.github.io/posts/helloworld/</link>
-      <pubDate>Tue, 09 Feb 2021 22:10:17 +0800</pubDate>
-      
-      <guid>https://pinkhello.github.io/posts/helloworld/</guid>
-      <description>说明  hello world
- 这是内容</description>
-    </item>
-    
   </channel>
 </rss>
