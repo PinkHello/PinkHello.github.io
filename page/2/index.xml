@@ -1,4 +1,81 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Wed, 10 Feb 2021 19:36:33 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>06 高性能队列Disruptor</title><link>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</link><pubDate>Wed, 10 Feb 2021 08:35:29 +0800</pubDate><guid>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ -&lt;h1 id="背景">背景&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Thu, 11 Feb 2021 10:50:42 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>07 Fabric使用</title><link>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:40:46 +0800</pubDate><guid>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/ -&lt;h2 id="docker-加入systemctl环境并启动docker">docker 加入systemctl环境并启动docker&lt;/h2>
+&lt;p>快速安装docker&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">curl -sSL https://get.daocloud.io/docker | sh
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">systemctl &lt;span style="color:#658b00">enable&lt;/span> docker
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">systemctl start docker
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="docker-compose-安装">docker-compose 安装&lt;/h2>
+&lt;p>走外网或者 &lt;code>github&lt;/code> 太慢,可以使用内部加速&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash"> curl -L &lt;span style="color:#cd5555">&amp;#34;https://github.com/docker/compose/releases/download/X.XX.X/docker-compose-&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>uname -s&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>&lt;span style="color:#cd5555">-&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>uname -m&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span> -o /usr/local/bin/docker-compose
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash"> curl -L https://get.daocloud.io/docker/compose/releases/download/1.26.2/docker-compose-&lt;span style="color:#cd5555">`&lt;/span>uname -s&lt;span style="color:#cd5555">`&lt;/span>-&lt;span style="color:#cd5555">`&lt;/span>uname -m&lt;span style="color:#cd5555">`&lt;/span> &amp;gt; /usr/local/bin/docker-compose
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="fabric-自动运维">fabric 自动运维&lt;/h2>
+&lt;h3 id="python-虚拟环境安装">python 虚拟环境安装&lt;/h3>
+&lt;p>&lt;a href="https://www.liaoxuefeng.com/wiki/1016959663602400/1019273143120480">参考&lt;/a>&lt;/p>
+&lt;p>创建一个独立的虚拟环境&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#658b00">cd&lt;/span> 目标目录
+virtualenv --no-site-packages venv
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>激活虚拟环境&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#658b00">source&lt;/span> venv/bin/activate
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="python-pip-安装-fabric">python pip 安装 Fabric&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip install fabric3
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="python-pip-导出依赖">python pip 导出依赖&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip freeze &amp;gt; requirements.txt
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="其他python-pip-导入安装">其他python pip 导入安装&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip install -r requirements.txt
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="fabric-文档-fabfiles-文档httpsfabric-chsreadthedocsiozh_cnchsusagefabfileshtml">&lt;a href="https://fabric-chs.readthedocs.io/zh_CN/chs/usage/fabfiles.html">Fabric 文档 fabfiles 文档&lt;/a>&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-python" data-lang="python">&lt;span style="color:#228b22"># encoding=utf-8&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">fabric.api&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> *
+&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">fabric.context_managers&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> *
+env.user = &lt;span style="color:#cd5555">&amp;#39;root&amp;#39;&lt;/span>
+env.gateway = &lt;span style="color:#cd5555">&amp;#39;192.168.1.118&amp;#39;&lt;/span>
+env.hosts = [&lt;span style="color:#cd5555">&amp;#39;10.10.2.6&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;10.10.2.7&amp;#39;&lt;/span>]
+env.passwords = {
+&lt;span style="color:#cd5555">&amp;#39;root@10.10.2.6:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_2&amp;#39;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#39;root@10.10.2.7:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_2&amp;#39;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#39;root@192.168.1.118:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_1&amp;#39;&lt;/span>
+}
+jump_server = &lt;span style="color:#cd5555">&amp;#39;jump_server&amp;#39;&lt;/span>
+astra_server = &lt;span style="color:#cd5555">&amp;#39;astra_server&amp;#39;&lt;/span>
+&lt;span style="color:#228b22"># 指定 role 角色组&lt;/span>
+env.roledefs= {
+jump_server: [&lt;span style="color:#cd5555">&amp;#39;192.168.1.118&amp;#39;&lt;/span>],
+astra_server: [&lt;span style="color:#cd5555">&amp;#39;10.10.2.6&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;10.10.2.7&amp;#39;&lt;/span>]
+}
+&lt;span style="color:#228b22"># 测试&lt;/span>
+&lt;span style="color:#707a7c">@task&lt;/span>
+&lt;span style="color:#707a7c">@roles&lt;/span>(jump_server)
+&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">test&lt;/span>():
+run(&lt;span style="color:#cd5555">&amp;#39;ls -la &amp;amp;&amp;amp; pwd&amp;#39;&lt;/span>)
+&lt;span style="color:#228b22"># 登录私有仓库&lt;/span>
+&lt;span style="color:#707a7c">@task&lt;/span>
+&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
+&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">docker_login&lt;/span>():
+run(&lt;span style="color:#cd5555">&amp;#39;docker login -u USERNAME -p PASSWORD docker-registery.xxx.com&amp;#39;&lt;/span>)
+&lt;span style="color:#228b22"># 测试&lt;/span>
+&lt;span style="color:#707a7c">@task&lt;/span>
+&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
+&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">docker_ps&lt;/span>():
+run(&lt;span style="color:#cd5555">&amp;#39;docker ps&amp;#39;&lt;/span>)
+&lt;span style="color:#228b22"># 上传docker-compose&lt;/span>
+&lt;span style="color:#707a7c">@task&lt;/span>
+&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
+&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">put_docker_compose&lt;/span>():
+&lt;span style="color:#228b22"># 上传失败，照样往下执行 with settings(warn_only=True)&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">with&lt;/span> settings(warn_only=True):
+result = put(&lt;span style="color:#cd5555">&amp;#39;deploy/prod/docker-compose.yml&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;~/docker-compose.yml&amp;#39;&lt;/span>)
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> result.failed:
+abort(&lt;span style="color:#cd5555">&amp;#39;Aborting file put task!&amp;#39;&lt;/span>)
+&lt;span style="color:#228b22"># 重新docker-compose部署&lt;/span>
+&lt;span style="color:#707a7c">@task&lt;/span>
+&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
+&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">restart_docker_compose&lt;/span>():
+run(&lt;span style="color:#cd5555">&amp;#39;docker-compose stop &amp;amp;&amp;amp; docker-compose up -d&amp;#39;&lt;/span>)
+&lt;span style="color:#707a7c">@task&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">deploy&lt;/span>():
+docker_login()
+docker_ps()
+put_docker_compose()
+restart_docker_compose()
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>06 高性能队列Disruptor</title><link>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</link><pubDate>Wed, 10 Feb 2021 08:35:29 +0800</pubDate><guid>https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ -&lt;h1 id="背景">背景&lt;/h1>
 &lt;p>&lt;code>Disruptor&lt;/code> 是 外汇交易公司&lt;code>LMAX&lt;/code>开发的高性能队列、研发是为了解决内存队列延迟问题。
 &lt;code>Disruptor&lt;/code> 一般用于线程间的消息传递。
 &lt;a href="http://lmax-exchange.github.io/disruptor/">Disruptor GitHub 地址&lt;/a>&lt;/p>

@@ -1,4 +1,42 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Wed, 10 Feb 2021 19:36:33 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>16 Hexo迁移Hugo</title><link>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</link><pubDate>Wed, 10 Feb 2021 19:36:33 +0800</pubDate><guid>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ -&lt;h1 id="为什么迁移-hugo">为什么迁移 &lt;code>Hugo&lt;/code>&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Thu, 11 Feb 2021 10:50:42 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
+&lt;p>在容器之前, 火爆云计算市场的是 &lt;code>PAAS&lt;/code>, &lt;code>PAAS&lt;/code>已经深入人心. 那时候突然有一家公司 dotCloud 剑走偏锋, 直接开源出了 &lt;code>Docker&lt;/code> 项目，并且直接面向的社区。 这样的做法直接将当时的&lt;code>PAAS&lt;/code>流主要公司打的屁滚尿流。&lt;/p>
+&lt;p>回头看, &lt;code>PAAS&lt;/code> 最核心的是隔离环境,或者叫 &lt;code>沙盒&lt;/code>,在我看来也就是 &lt;code>容器&lt;/code>. 而 &lt;code>Docker&lt;/code> 项目和 &lt;code>Cloud Foundry&lt;/code> 的容器没有太大的不同,但是它为什么能针对 &lt;code>PAAS&lt;/code>进行了一场快速的闪电战呢？&lt;/p>
+&lt;blockquote>
+&lt;p>对的, 就是 &lt;code>Docker&lt;/code> 镜像, 这个小小的创新, 迅速改变了云计算的发展轨迹! &lt;code>Docker&lt;/code> 镜像解决的是 &lt;code>打包&lt;/code> 问题。也许有人说&lt;code>Docker&lt;/code> 镜像就是一个压缩包。但是就是这个压缩包包含了完整的操作系统文件和目录, 包含了整个应用所需要的依赖，一包在手, 你可以轻易的运行你的&lt;code>沙盒&lt;/code>,并且本地环境与云端环境高度一致（这是最宝贵的）。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;code>Docker&lt;/code>给&lt;code>PAAS&lt;/code>进行了致命打击, 提供了便利的打包机制, 面向后端开发者来说, 屏蔽了机器、内核等技术细节, 避免了在不同环境间的差异引入的试错成本。是一次解放生产力的革命。当然很多开发者用脚投票, 了结了&lt;code>PAAS&lt;/code>时代。&lt;/p>
+&lt;h1 id="docker-三大利器">&lt;code>Docker&lt;/code> 三大利器&lt;/h1>
+&lt;ul>
+&lt;li>&lt;code>Docker&lt;/code>项目的高调开源, 解决了打包和发布困扰运维的技术难题，同时它也第一次纯后端的概念通过友好的设计和封装交付到了开发者的手里。&lt;/li>
+&lt;li>&lt;code>Swarm&lt;/code>,&lt;code>Docker&lt;/code>是创建和启停容器的工具,那么&lt;code>Swarm&lt;/code>是为了向平台化发展而提出的。它提供了完整的整体对外提供集群管理功能,它的亮点是完全使用&lt;code>Docker&lt;/code>原本的管理容器的API来完成集群管理&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># Swarm多机环境下，指令会被Swarm拦截处理，后面通过调度算法找到合适的Docker Daemon运行&lt;/span>
+docker run -H &lt;span style="color:#cd5555">&amp;#34;Swarm集群API&amp;#34;&lt;/span> &lt;span style="color:#cd5555">&amp;#34;我的容器&amp;#34;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>Compose&lt;/code>(Fig)项目, 这是第一次在开发者面前提出 &lt;code>容器编排&lt;/code>(Container Orchestration)概念。&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>应用容器 A, 数据库容器B, 负载均衡容器C, Compose 允许 A、B、C 三个容器定义在配置文件中, 并指定关联关系. 只需要执行 (fig/docker-compose up)&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="容器化群雄并起与尘埃落定">容器化群雄并起与尘埃落定&lt;/h1>
+&lt;p>容器开启火爆模式, 大量围绕 &lt;code>Docker&lt;/code> 项目的网络、存储、监控、&lt;code>CI/CD&lt;/code>、UI 等涌现了诸如 &lt;code>Rancher&lt;/code>、&lt;code>Tutum&lt;/code> 等在开源和商业上取得成功的创业公司。
+在 &lt;code>Docker&lt;/code> 、 &lt;code>Google&lt;/code>、&lt;code>CoreOS&lt;/code>、&lt;code>ReaHat&lt;/code> 等公司在云计算大打出手的时候，落在下风的 &lt;code>Google&lt;/code>、&lt;code>CoreOS&lt;/code>、&lt;code>RedHat&lt;/code> 开始忽悠 &lt;code>Docker&lt;/code> 将 &lt;code>Libcontainer&lt;/code> 项目捐出、组建一个完全独立中立的基金会管理，以 &lt;code>RunC&lt;/code>（改名的 &lt;code>Libcontainer&lt;/code> ）为依据，大家共同制定一套容器和镜像的标准和规范。这套标准和规范就是 &lt;code>OCI&lt;/code>(&lt;code>Open Container Initiative&lt;/code>),
+&lt;code>OCI&lt;/code> 的提出，将容器运行时和镜像的实现从&lt;code>Docker&lt;/code>项目只完全剥离开来。（好一招围魏救赵，改善&lt;code>Docker&lt;/code>公司一家独大，其他公司不依赖与&lt;code>Docker&lt;/code>项目）
+这是第一步，后面就是容器之上的平台层，就是 &lt;code>PAAS&lt;/code> 层了,后来&lt;code>Google&lt;/code>、&lt;code>RedHat&lt;/code> 等基础设施玩家，共同发起 &lt;code>CNCF&lt;/code>(&lt;code>Cloud Native Computing Foundation&lt;/code>) 基金会。以 &lt;code>Kubernetes&lt;/code> 项目为基础，建立由开源基础设施厂商领导的按照基金会方式运营的平台级社区。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Kubernetes&lt;/code> 项目必须能够在容器编排领域取得足够大的竞争优势&lt;/li>
+&lt;li>&lt;code>CNCF&lt;/code> 社区必须以 &lt;code>Kubernetes&lt;/code> 项目为核心，覆盖更多的常见&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>Kubernetes&lt;/code> 当初为什么被认为设计思想过于超前，就是因为 Google 在容器化多年的沉淀和升华（&lt;code>Borg&lt;/code> 和 &lt;code>Omega&lt;/code> 特性、落在 &lt;code>K8S&lt;/code> 上就是 &lt;code>Pod&lt;/code>、&lt;code>Sidecar&lt;/code> 的功能和设计模式）
+&lt;code>Kubernetes&lt;/code> 当初没有选择和 &lt;code>Swarm&lt;/code> 展开同质化竞争，而是提出太多的设计理念和号召力，很快构建了不同的容器编排的管理的生态理念。超过了&lt;code>Swarm&lt;/code>项目。有了这个后，又将容器监控事实标准 &lt;code>prometheus&lt;/code>融入其中，后面又新增了 &lt;code>Fluentd&lt;/code>、&lt;code>OpenTracing&lt;/code>、&lt;code>CNDI&lt;/code> 等诸多容器生态工具和项目。后面又一记补刀：整个社区进行推进&lt;code>民主化&lt;/code>架构, 从 API 到 容器运行时的 每一层,
+&lt;code>Kubernetes&lt;/code> 项目都为开发者暴露出了可以扩展的插件机制, 鼓励社区用户通过代码的方式介入 &lt;code>Kubernetes&lt;/code> 项目的每一个阶段。这个操作针对 &lt;code>Docker&lt;/code> 来说是致命的,整个容器社区催生了大量的、基于 &lt;code>Kubernetes API&lt;/code> 的做扩展的和二次开发创新的&lt;/p>
+&lt;ul>
+&lt;li>微服务治理项目 &lt;code>Istio&lt;/code>&lt;/li>
+&lt;li>状态应用部署架构 &lt;code>Operator&lt;/code>&lt;/li>
+&lt;li>&amp;hellip;&lt;/li>
+&lt;/ul>
+&lt;p>经过一些列骚操作后，K8S 大行其道，编排之争落下帷幕，容器社区的后续繁荣完全以 &lt;code>Kubernetes&lt;/code> 项目为核心的百家争鸣, 从 &lt;code>Rancher&lt;/code>项目 的历史迭代过程中也能看出这个精彩纷呈的展现。&lt;/p>
+- https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>16 Hexo迁移Hugo</title><link>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</link><pubDate>Wed, 10 Feb 2021 19:36:33 +0800</pubDate><guid>https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ -&lt;h1 id="为什么迁移-hugo">为什么迁移 &lt;code>Hugo&lt;/code>&lt;/h1>
 &lt;ul>
 &lt;li>&lt;code>Hugo&lt;/code> 使用比 &lt;code>Hexo&lt;/code> 简单, 只有单独的一个二进制文件&lt;/li>
 &lt;li>苦于 &lt;code>Hexo&lt;/code> 的 &lt;code>NodeModule&lt;/code> 管理&lt;/li>
@@ -1840,81 +1878,4 @@ org.gradle.daemon=true
 # https://juejin.im/post/6844904101126553614
 systemProp.org.gradle.internal.publish.checksums.insecure=true
 &lt;/code>&lt;/pre>&lt;h2 id="5gitlab-ci-模板化下次分享">5、gitlab-ci 模板化，下次分享~~~~&lt;/h2>
-- https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>07 Fabric使用</title><link>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:40:46 +0800</pubDate><guid>https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/ -&lt;h2 id="docker-加入systemctl环境并启动docker">docker 加入systemctl环境并启动docker&lt;/h2>
-&lt;p>快速安装docker&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">curl -sSL https://get.daocloud.io/docker | sh
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">systemctl &lt;span style="color:#658b00">enable&lt;/span> docker
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">systemctl start docker
-&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="docker-compose-安装">docker-compose 安装&lt;/h2>
-&lt;p>走外网或者 &lt;code>github&lt;/code> 太慢,可以使用内部加速&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash"> curl -L &lt;span style="color:#cd5555">&amp;#34;https://github.com/docker/compose/releases/download/X.XX.X/docker-compose-&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>uname -s&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>&lt;span style="color:#cd5555">-&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>uname -m&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span> -o /usr/local/bin/docker-compose
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash"> curl -L https://get.daocloud.io/docker/compose/releases/download/1.26.2/docker-compose-&lt;span style="color:#cd5555">`&lt;/span>uname -s&lt;span style="color:#cd5555">`&lt;/span>-&lt;span style="color:#cd5555">`&lt;/span>uname -m&lt;span style="color:#cd5555">`&lt;/span> &amp;gt; /usr/local/bin/docker-compose
-&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="fabric-自动运维">fabric 自动运维&lt;/h2>
-&lt;h3 id="python-虚拟环境安装">python 虚拟环境安装&lt;/h3>
-&lt;p>&lt;a href="https://www.liaoxuefeng.com/wiki/1016959663602400/1019273143120480">参考&lt;/a>&lt;/p>
-&lt;p>创建一个独立的虚拟环境&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#658b00">cd&lt;/span> 目标目录
-virtualenv --no-site-packages venv
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>激活虚拟环境&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#658b00">source&lt;/span> venv/bin/activate
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="python-pip-安装-fabric">python pip 安装 Fabric&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip install fabric3
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="python-pip-导出依赖">python pip 导出依赖&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip freeze &amp;gt; requirements.txt
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="其他python-pip-导入安装">其他python pip 导入安装&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip install -r requirements.txt
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="fabric-文档-fabfiles-文档httpsfabric-chsreadthedocsiozh_cnchsusagefabfileshtml">&lt;a href="https://fabric-chs.readthedocs.io/zh_CN/chs/usage/fabfiles.html">Fabric 文档 fabfiles 文档&lt;/a>&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-python" data-lang="python">&lt;span style="color:#228b22"># encoding=utf-8&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">fabric.api&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> *
-&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">fabric.context_managers&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> *
-env.user = &lt;span style="color:#cd5555">&amp;#39;root&amp;#39;&lt;/span>
-env.gateway = &lt;span style="color:#cd5555">&amp;#39;192.168.1.118&amp;#39;&lt;/span>
-env.hosts = [&lt;span style="color:#cd5555">&amp;#39;10.10.2.6&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;10.10.2.7&amp;#39;&lt;/span>]
-env.passwords = {
-&lt;span style="color:#cd5555">&amp;#39;root@10.10.2.6:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_2&amp;#39;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#39;root@10.10.2.7:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_2&amp;#39;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#39;root@192.168.1.118:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_1&amp;#39;&lt;/span>
-}
-jump_server = &lt;span style="color:#cd5555">&amp;#39;jump_server&amp;#39;&lt;/span>
-astra_server = &lt;span style="color:#cd5555">&amp;#39;astra_server&amp;#39;&lt;/span>
-&lt;span style="color:#228b22"># 指定 role 角色组&lt;/span>
-env.roledefs= {
-jump_server: [&lt;span style="color:#cd5555">&amp;#39;192.168.1.118&amp;#39;&lt;/span>],
-astra_server: [&lt;span style="color:#cd5555">&amp;#39;10.10.2.6&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;10.10.2.7&amp;#39;&lt;/span>]
-}
-&lt;span style="color:#228b22"># 测试&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(jump_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">test&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;ls -la &amp;amp;&amp;amp; pwd&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 登录私有仓库&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">docker_login&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;docker login -u USERNAME -p PASSWORD docker-registery.xxx.com&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 测试&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">docker_ps&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;docker ps&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 上传docker-compose&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">put_docker_compose&lt;/span>():
-&lt;span style="color:#228b22"># 上传失败，照样往下执行 with settings(warn_only=True)&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">with&lt;/span> settings(warn_only=True):
-result = put(&lt;span style="color:#cd5555">&amp;#39;deploy/prod/docker-compose.yml&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;~/docker-compose.yml&amp;#39;&lt;/span>)
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> result.failed:
-abort(&lt;span style="color:#cd5555">&amp;#39;Aborting file put task!&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 重新docker-compose部署&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">restart_docker_compose&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;docker-compose stop &amp;amp;&amp;amp; docker-compose up -d&amp;#39;&lt;/span>)
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">deploy&lt;/span>():
-docker_login()
-docker_ps()
-put_docker_compose()
-restart_docker_compose()
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.github.io/posts/07-fabric%E4%BD%BF%E7%94%A8/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
