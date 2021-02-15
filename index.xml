@@ -1,4 +1,119 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Thu, 11 Feb 2021 10:50:42 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Mon, 15 Feb 2021 10:16:34 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>18 回望K8S 白话容器</title><link>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Mon, 15 Feb 2021 10:16:34 +0800</pubDate><guid>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;h1 id="进程开启">进程开启&lt;/h1>
+&lt;p>容器, 到底是什么?&lt;/p>
+&lt;blockquote>
+&lt;p>前面提出: 容器是一种沙盒技术. 就是一个集装箱, 把应用装起来的技术. 这样, 应用与应用之间有了边界不至于互相干扰; 有了这些集装箱, 也方便搬来搬去.&lt;/p>
+&lt;/blockquote>
+&lt;p>码农都知道可执行的二进制文件是代码的可执行镜像(executable image). 一旦程序执行起来, 内存数据、寄存器的值、堆栈的指令、打开的文件等这些集合汇集成一个程序的计算机执行环境总和: 进程.&lt;/p>
+&lt;p>&lt;code>进程&lt;/code>: 静态表现是程序, 动态表现计算机的数据和状态的总和。&lt;/p>
+&lt;p>容器的核心功能, 就是通过约束和修改进程的动态表现, 从而为其创造一个&amp;quot;边界&amp;quot;.&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Cgroups 技术&lt;/code> 制造约束的主要手段&lt;/li>
+&lt;li>&lt;code>Namespace 技术&lt;/code> 修改进程视图的主要方法&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>docker run&lt;/code> , &lt;code>-it&lt;/code> 告诉 &lt;code>Docker&lt;/code> 启动容器后, 需要分配一个文本输入/输出环境, 也就是 &lt;code>TTY&lt;/code>, 跟容器的标准输入相关联, 这样我们就可以和这个&lt;code>Docker&lt;/code>容器进行交互了。而 &lt;code>/bin/sh&lt;/code> 就是我们在 &lt;code>Docker&lt;/code> 容器里运行的程序.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; docker run -it busybox /bin/sh
+/ &lt;span style="color:#228b22">#&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>帮我启动一个容器, 在容器里执行 &lt;code>/bin/sh&lt;/code>, 并且给我分配一个命令行终端跟这个容器进行交互, 在这个执行环境下可以完全执行&lt;code>LINUX&lt;/code>命令,且与宿主机完全隔离在不同的世界中.&lt;/p>
+&lt;p>&lt;code>Docker&lt;/code>对被隔离应用的进程空间做了手脚, 使得这些进程只能看到重新计算的进程编号, 可是实际上, 他们在宿主机的操作系统里, 还是原来的第&lt;code>N&lt;/code>号进程. 这种技术就是&lt;code>Linux&lt;/code>内部的&lt;code>Namespace&lt;/code>机制。&lt;/p>
+&lt;p>&lt;code>Namespace&lt;/code> 的使用方式也非常有意思：它其实只是 &lt;code>Linux&lt;/code> 创建新进程的一个可选参数。我们知道，在 &lt;code>Linux&lt;/code> 系统中创建线程的系统调用是 &lt;code>clone()&lt;/code>，比如：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">int &lt;span style="color:#00688b">pid&lt;/span> = clone(main_function, stack_size, SIGCHLD, NULL);
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个系统调用就会创建一个新的进程，并且返回的它的进程号 pid。&lt;/p>
+&lt;p>当调用 clone() 系统调用创建一个新进程时，就可以在参数中指定 CLONE_NEWPID 参数，比如：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">int &lt;span style="color:#00688b">pid&lt;/span> = clone(main_function, stack_size, CLONE_NEWPID | SIGCHLD, NULL);
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这时，新创建的这个进程就会看到一个全新的进程空间，在这个进程空间里，他的&lt;code>PID&lt;/code>是&lt;code>1&lt;/code>，之所以说看到，是因为是一个障眼法，在宿主机真实的进程空间里，这个&lt;code>PID&lt;/code>还是真实的数值.当多次执行&lt;code>clone()&lt;/code>调用, 会创建多个 &lt;code>PID Namespace&lt;/code>, 每个 Namespace 里的应用进程，都会认为自己是当前容器里的第&lt;code>1&lt;/code>号进程，看不仅&lt;code>宿主机&lt;/code>的也看不到其他的&lt;code>Namespace&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>备注:
+Linux提供了不同的Namespace，去应对不同的进程上下文&lt;/p>
+&lt;ul>
+&lt;li>PID Namespace&lt;/li>
+&lt;li>Mount Namespace&lt;/li>
+&lt;li>IPC Namespace&lt;/li>
+&lt;li>UTS Namespace&lt;/li>
+&lt;li>Network Namespace&lt;/li>
+&lt;li>User Namespace&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>Docker容器，就是在创建容器进程时候，指定了这个进程所需要启用的一组 Namespace 参数, 这样, 容器就只能 看到 当前 Namespace 所限定的 资源、文件、设备、状态 或者 配置。所以说, 容器，其实是一种特殊的进程。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E5%9B%9E%E6%9C%9BK8S/%E5%AE%B9%E5%99%A8%E4%B8%8E%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86.jpg" alt="容器与虚拟机工作原理">&lt;/p>
+&lt;p>可以看出图中 &lt;code>Hypervisor&lt;/code> 是虚拟机主要部分。它通过硬件虚拟化功能，模拟出了运行一个操作系统需要的各种硬件，比如 CPU、内存、I/O设备等。 这样，用户的进程可以在这个虚拟的机器中，只能看到虚拟环境的文件和目录以及设备，起到隔离的作用。
+而右边的图，&lt;code>Docker Engine&lt;/code>替换了&lt;code>Hypervisor&lt;/code>,但是有个核心一点&lt;code>Docker Engine&lt;/code>并不少&lt;code>轻量级&lt;/code>虚拟化技术。&lt;/p>
+&lt;p>在&lt;code>Linux&lt;/code>的&lt;code>Namespace&lt;/code>工作方式后, 在使用&lt;code>Docker&lt;/code>的时候,&lt;code>Docker&lt;/code>并没有一个真正的&lt;code>Docker容器&lt;/code>运行在宿主机里面，而是&lt;code>Docker&lt;/code>启动还是原来的应用进程，只不过在创建这些进程时候，加上了各种&lt;code>Namespace&lt;/code>参数，使得这些进程觉得自己是在各自的&lt;code>PID Namespace&lt;/code>是第一号进程，并且只能看到各自&lt;code>Mount Namespace&lt;/code>里挂在的目录和文件、只能访问各自&lt;code>Network Namespace&lt;/code>里的网络设备.&lt;/p>
+&lt;h1 id="隔离和限制">隔离和限制&lt;/h1>
+&lt;p>前面提到实现 &lt;code>隔离&lt;/code> 的手段: Namespace. Namespace 技术实际修改了应用进程看待整个计算机的&amp;quot;视图&amp;quot;，即它的&amp;quot;视线&amp;quot;被操作系统做了限制，只能&amp;quot;看到&amp;quot;某些知道的内容.&lt;/p>
+&lt;p>为什么需要&lt;code>隔离&lt;/code>&lt;/p>
+&lt;ul>
+&lt;li>首先，既然容器只是运行在宿主机上的一种特殊的进程，那么多个容器之间使用的就还是同一个宿主机的操作系统内核。&lt;/li>
+&lt;li>在Linux内核中，还有许多资源和对象是不能被 Namespace 化的，最典型的例子是：时间
+&lt;blockquote>
+&lt;p>容器中使用 settimeofday(2) 系统调用修改了时间，整个宿主机的时间都会被随之修改。这样肯定与预期不符&lt;/p>
+&lt;/blockquote>
+&lt;/li>
+&lt;/ul>
+&lt;p>上述是为什么要&lt;code>隔离&lt;/code>，下面说为什么要&lt;code>限制&lt;/code>这个问题。&lt;/p>
+&lt;blockquote>
+&lt;p>在宿主机上,启动多个容器都是在宿主机上的特殊进程,但是在不同的进程之间, 资源（CPU、内存）还是可能被其他进程（或者容器）占用的。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;code>Linux Cgroups&lt;/code>全称&lt;code>Linux Control Group&lt;/code> 就是 Linux 内核中用来为进程设置资源限制的一个重要功能, 限制一个进程组能够使用的资源上限, 包括 CPU、内存、磁盘、网络带宽 等等。此外 Cgroups 还能够对进程进行优先级设置、审计，以及将进程挂起和恢复操作。&lt;/p>
+&lt;p>在&lt;code>Linux&lt;/code>中,&lt;code>Cgroups&lt;/code>给用户暴露出来的操作接口是文件系统，即它以文件和目录的方式组织在操作系统的 &lt;code>/sys/fs/cgroup&lt;/code> 路径下&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># Ubuntu 下 mount 指令展示出来&lt;/span>
+&amp;gt; mount -t cgroup
+cpuset on /sys/fs/cgroup/cpuset &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,cpuset)
+cpu on /sys/fs/cgroup/cpu &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,cpu)
+cpuacct on /sys/fs/cgroup/cpuacct &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,cpuacct)
+blkio on /sys/fs/cgroup/blkio &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,blkio)
+memory on /sys/fs/cgroup/memory &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,memory)
+...
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看到在 &lt;code>/sys/fs/cgroup&lt;/code> 下面又很多诸如&lt;code>cpuset&lt;/code>、&lt;code>cpu&lt;/code>、&lt;code>memory&lt;/code>这样的子目,也叫子系统.这些都是可以被&lt;code>Cgroups&lt;/code>进行限制的资源种类,而在子系统对应的资源种类下, 你就可以看到该类资源具体可以被限制的方法。比如, 对&lt;code>CPU&lt;/code>子系统来说，我们就可以看到几个配置文件，这个指令是：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; ls /sys/fs/cgroup/cpu
+cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_release
+cgroup.procs cpu.cfs_quota_us cpu.rt_runtime_us cpu.stat tasks
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>输出中&lt;code>cfs_period&lt;/code>和&lt;code>cfs_quota&lt;/code>这样的关键词。组合使用,限制进程在长度为&lt;code>cfs_period&lt;/code>的一段时间内,只能被分配到总量为&lt;code>cfs_quota&lt;/code>的&lt;code>CPU&lt;/code>时间&lt;/p>
+&lt;p>如何使用cgroups呢？&lt;/p>
+&lt;p>在对应的子系统的下面创建一个目录，比如限制CPU进入 /sys/fs/cgroups/cpu 目录下&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; &lt;span style="color:#658b00">cd&lt;/span> /sys/fs/cgroups/cpu
+&amp;gt; mkdir container
+&amp;gt; ls container/
+cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_releasecgroup.procs cpu.cfs_quota_us cpu.rt_runtime_us cpu.stat tasks
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个目录就称为一个控制组，操作系统自动在新创建的 container 目录下，自动生成该子系统的对应的资源限制文件.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看 container 控制组的 CPU quota 还没有任何限制：-1，CPU period 则是默认的 100 ms (100000 us)&lt;/span>
+&amp;gt; cat /sys/fs/cgroup/cpu/container/cpu.cfs_quota_us
+-1
+&amp;gt; cat /sys/fs/cgroup/cpu/container/cpu.cfs_period_us
+&lt;span style="color:#b452cd">100000&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>向 container 组里的 cfs_quota 文件写入 20 ms（20000 us）&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22">#意味着在每 100 ms 的时间里，被该控制组限制的进程只能使用 20 ms 的 CPU 时间，也就是说这个进程只能使用到 20% 的 CPU 带宽。&lt;/span>
+&amp;gt; &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#b452cd">20000&lt;/span> &amp;gt; /sys/fs/cgroup/cpu/container/cpu.cfs_quota_us
+&lt;span style="color:#228b22"># 现在把需要被限制的进程的 PID 写入 container 组里的 tasks 文件，上面的设置就会对该进程生效了&lt;/span>
+&amp;gt; &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">需要限制的进程PID&lt;/span>&lt;span style="color:#cd5555">}&lt;/span> &amp;gt; /sys/fs/cgroup/cpu/container/tasks
+&lt;span style="color:#228b22"># top 指令查看, 计算机CPU使用率立刻降低到20%&lt;/span>
+&amp;gt; top
+%Cpu0 : 20.3 us, 0.0 sy, 0.0 ni, 79.7 id, 0.0 wa, 0.0 hi, 0.0 si, 0.0 st
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这样, &lt;code>Cgroups&lt;/code> 的每一个子系统都有其独有的资源限制能力&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>cpu&lt;/code>, 为进程设定&lt;code>cpu&lt;/code>使用的限制;&lt;/li>
+&lt;li>&lt;code>blkio&lt;/code>, 为块设备设定 I/O 限制, 一般用户磁盘等设备;&lt;/li>
+&lt;li>&lt;code>cpuset&lt;/code>, 为进程分配单独的 CPU核和对应的内存节点;&lt;/li>
+&lt;li>&lt;code>memory&lt;/code>, 为进程设定内存使用的限制&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>Linux Cgroups&lt;/code>的设计，它就是&lt;code>一个子系统的目录加上一组资源限制文件的组合&lt;/code>。而对于&lt;code>Docker&lt;/code>等&lt;code>Linux&lt;/code>容器项目来说，它们只需要在每个子系统下面，为每个容器创建一个控制组(即创建一个新目录), 然后在启动进程之后，把这个进程的&lt;code>PID&lt;/code>写到对应的控制组的&lt;code>tasks&lt;/code>文件中.&lt;/p>
+&lt;p>那么在Docker容器中，如何启动的时候知道控制组下面的资源如何使用呢？&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># docker run 时的参数指定&lt;/span>
+&amp;gt; docker run -it --cpu-period=&lt;span style="color:#b452cd">100000&lt;/span> --cpu-quota=&lt;span style="color:#b452cd">20000&lt;/span> ubuntu /bin/bash
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>在启动这个容器后，我们可以通过 &lt;code>Cgroups&lt;/code> 文件系统下，&lt;code>CPU&lt;/code>子系统中, &lt;code>docker&lt;/code>这个控制组里的资源限制文件内容来确认：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; cat /sys/fs/cgroup/cpu/docker/5d5c9f67d/cpu.cfs_period_us
+&lt;span style="color:#b452cd">100000&lt;/span>
+&amp;gt; cat /sys/fs/cgroup/cpu/docker/5d5c9f67d/cpu.cfs_quota_us
+&lt;span style="color:#b452cd">20000&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这就意味着这个&lt;code>Docker&lt;/code>容器,只能使用到 &lt;code>20%&lt;/code> 的&lt;code>CPU带宽&lt;/code>&lt;/p>
+&lt;p>核心概念：&lt;/p>
+&lt;blockquote>
+&lt;p>容器就是一个&lt;code>单进程&lt;/code>模型. 一个正在运行的&lt;code>Docker&lt;/code>容器,其实就是启用了多个&lt;code>Linux Namespace&lt;/code>的应用进程,而这个进程能够使用的资源量,则受&lt;code>Cgroups&lt;/code>配置的限制&lt;/p>
+&lt;/blockquote>
+&lt;p>一个容器的本质是一个进程, 用户的应用进程实际上就是容器的&lt;code>PID=1&lt;/code>的进程, 也是其他后续创建所有进程的父进程。这就意味着，在一个容器中，你没有办法同时运行两个不同的应用，除非你能事先找到公共的&lt;code>PID=1&lt;/code>的程序充当两个不同应用的父进程，这就是为什么很多会使用&lt;code>systemd&lt;/code>或者&lt;code>supervisord&lt;/code>代理应用本身作为容器的启动进程。&lt;/p>
+&lt;h1 id="容器镜像">容器镜像&lt;/h1>
+&lt;h1 id="docker容器">&lt;code>Docker&lt;/code>容器&lt;/h1>
+&lt;h1 id="kubernetes-本质">&lt;code>Kubernetes&lt;/code> 本质&lt;/h1>
+- https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
 &lt;p>在容器之前, 火爆云计算市场的是 &lt;code>PAAS&lt;/code>, &lt;code>PAAS&lt;/code>已经深入人心. 那时候突然有一家公司 dotCloud 剑走偏锋, 直接开源出了 &lt;code>Docker&lt;/code> 项目，并且直接面向的社区。 这样的做法直接将当时的&lt;code>PAAS&lt;/code>流主要公司打的屁滚尿流。&lt;/p>
 &lt;p>回头看, &lt;code>PAAS&lt;/code> 最核心的是隔离环境,或者叫 &lt;code>沙盒&lt;/code>,在我看来也就是 &lt;code>容器&lt;/code>. 而 &lt;code>Docker&lt;/code> 项目和 &lt;code>Cloud Foundry&lt;/code> 的容器没有太大的不同,但是它为什么能针对 &lt;code>PAAS&lt;/code>进行了一场快速的闪电战呢？&lt;/p>
 &lt;blockquote>
@@ -1477,405 +1592,4 @@ ln -s -f &lt;span style="color:#00688b">$workPath&lt;/span>/commit-msg &lt;span 
 &lt;li>速度可以灭杀一切抱怨，不能让 &lt;code>cr&lt;/code> 时间过长&lt;/li>
 &lt;li>&lt;code>CR&lt;/code> 发现问题一定要让开发者去修改，不要有以后再修改的想法，这种方式往往是让系统变得更差的原因.&lt;/li>
 &lt;/ul>
-- https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>08 Gradle多模块项目模板化</title><link>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</link><pubDate>Wed, 10 Feb 2021 08:43:21 +0800</pubDate><guid>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ -&lt;h2 id="前言">前言&lt;/h2>
-&lt;p>Maven 冗余， Gradle 简单轻便
-公司原有的 CI/CD 流程，借助 Maven 插件 build Docker Image,改为原生 Docker Runner 原始构建&lt;/p>
-&lt;h2 id="1多模块项目">1、多模块项目&lt;/h2>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">project&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- app&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- src/main/[java|resources] | src/test/[java|resources] &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># classpath&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- Dockerfile &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Dockerfile&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- build.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># APP 模块 gradle 配置&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- sdk &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># SDK 模块 可有可无&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- src/main/java&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- build.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># SDK 的 gradle 配置&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- deploy &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># delpoy 项目 注意 checkstyle 相关配置在这里面&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- checkstyle/**&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#1e889b">**.yml&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- build.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 项目顶级 gradle配置&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- gradle&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- wrapper/** &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># gradle 配置信息&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- check.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># pmd &amp;amp; checkstyle&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- repo.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 仓库定义&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># test.gradle 放这儿，就没有高亮了 =&amp;gt; 暂时维护在 顶层的 build.gradle 中，单独维护，不要和其他配置混在一起。&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- settings.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 配置&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- versions-prod.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 版本定义&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- versions-dev.gradle &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 版本定义&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- .gitignore &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># git忽略文件&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- .gitlab-ci.yml &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># CI/CD&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="2project-下各个gradle文件">2、Project 下各个gradle文件&lt;/h2>
-&lt;p>Project/versions.gradle 可以统一版本管理&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="color:#228b22">//start step
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#00688b;font-weight:bold">def&lt;/span> versions = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Expando()
-&lt;span style="color:#00688b;font-weight:bold">def&lt;/span> deps = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Expando()
-ext.&lt;span style="color:#658b00">versions&lt;/span> = versions
-ext.&lt;span style="color:#658b00">deps&lt;/span> = deps
-&lt;span style="color:#228b22">//set versions
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>versions.&lt;span style="color:#658b00">springboot&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;2.1.16.RELEASE&amp;#34;&lt;/span>
-versions.&lt;span style="color:#658b00">mysql&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;8.0.16&amp;#34;&lt;/span>
-versions.&lt;span style="color:#658b00">guava&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;25.1-jre&amp;#34;&lt;/span>
-versions.&lt;span style="color:#658b00">httpclient&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;4.5.9&amp;#34;&lt;/span>
-versions.&lt;span style="color:#658b00">okhttp3&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;3.8.1&amp;#34;&lt;/span>
-versions.&lt;span style="color:#658b00">apm&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;1.7.0&amp;#34;&lt;/span>
-versions.&lt;span style="color:#658b00">kotlin&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;1.4.10&amp;#34;&lt;/span>
-&lt;span style="color:#228b22">//set dependencies
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-&lt;span style="color:#228b22">// 基础开源包
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>deps.&lt;span style="color:#658b00">mysql&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;mysql:mysql-connector-java:${versions.mysql}&amp;#34;&lt;/span>
-deps.&lt;span style="color:#658b00">guava&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;com.google.guava:guava:${versions.guava}&amp;#34;&lt;/span>
-deps.&lt;span style="color:#658b00">okhttp3&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;com.squareup.okhttp3:okhttp:${versions.okhttp3}&amp;#34;&lt;/span>
-deps.&lt;span style="color:#658b00">apm&lt;/span> = &lt;span style="color:#cd5555">&amp;#34;co.elastic.apm:apm-agent-attach:${versions.apm}&amp;#34;&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/settings.gradle 根配置文件，build 快不快全靠它&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="color:#228b22">//配置插件走国内代理
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>pluginManagement {
-repositories {
-maven {
-url &lt;span style="color:#cd5555">&amp;#39;https://maven.aliyun.com/repository/gradle-plugin&amp;#39;&lt;/span>
-}
-gradlePluginPortal()
-}
-}
-rootProject.&lt;span style="color:#658b00">name&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;project-name&amp;#39;&lt;/span>
-include &lt;span style="color:#cd5555">&amp;#39;:app&amp;#39;&lt;/span>
-include &lt;span style="color:#cd5555">&amp;#39;:sdk&amp;#39;&lt;/span> &lt;span style="color:#228b22">// 没有SDK模块的化不需要这个
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/build.gradle&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">buildscript {
-ext {
-kotlinVersion = &lt;span style="color:#cd5555">&amp;#34;1.4.10&amp;#34;&lt;/span>
-springBootVersion = &lt;span style="color:#cd5555">&amp;#39;2.1.16.RELEASE&amp;#39;&lt;/span>
-springBootGradleVersion = &lt;span style="color:#cd5555">&amp;#39;2.3.3.RELEASE&amp;#39;&lt;/span>
-}
-}
-plugins {
-id &lt;span style="color:#cd5555">&amp;#34;java&amp;#34;&lt;/span>
-id &lt;span style="color:#cd5555">&amp;#34;pmd&amp;#34;&lt;/span>
-id &lt;span style="color:#cd5555">&amp;#34;checkstyle&amp;#34;&lt;/span>
-id &lt;span style="color:#cd5555">&amp;#34;maven-publish&amp;#34;&lt;/span>
-id &lt;span style="color:#cd5555">&amp;#34;org.jetbrains.kotlin.jvm&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;$kotlinVersion&amp;#34;&lt;/span>
-id &lt;span style="color:#cd5555">&amp;#34;org.jetbrains.kotlin.plugin.spring&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;$kotlinVersion&amp;#34;&lt;/span>
-id &lt;span style="color:#cd5555">&amp;#34;org.springframework.boot&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;$springBootVersion&amp;#34;&lt;/span>
-id &lt;span style="color:#cd5555">&amp;#34;io.spring.dependency-management&amp;#34;&lt;/span> version &lt;span style="color:#cd5555">&amp;#34;1.0.9.RELEASE&amp;#34;&lt;/span>
-}
-apply from: file(&lt;span style="color:#cd5555">&amp;#34;versions.gradle&amp;#34;&lt;/span>)
-&lt;span style="color:#228b22">// 为了一如不同的版本环境下的代码配置
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#00688b;font-weight:bold">def&lt;/span> env = System.&lt;span style="color:#658b00">getProperty&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;env&amp;#39;&lt;/span>) ?: &lt;span style="color:#cd5555">&amp;#39;dev&amp;#39;&lt;/span>
-apply from: &lt;span style="color:#cd5555">&amp;#34;${rootDir}/versions-${env}.gradle&amp;#34;&lt;/span>
-allprojects {
-&lt;span style="color:#228b22">// 配置 group
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> group &lt;span style="color:#cd5555">&amp;#34;com.XXX.XXX&amp;#34;&lt;/span>
-&lt;span style="color:#228b22">//配置版本
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> version = findProperty &lt;span style="color:#cd5555">&amp;#39;version&amp;#39;&lt;/span> ?: &lt;span style="color:#cd5555">&amp;#39;1.0.0-SNAPSHOT&amp;#39;&lt;/span>
-bootJar {
-enabled = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
-}
-apply plugin: &lt;span style="color:#cd5555">&amp;#34;java&amp;#34;&lt;/span>
-apply plugin: &lt;span style="color:#cd5555">&amp;#34;idea&amp;#34;&lt;/span>
-apply plugin: &lt;span style="color:#cd5555">&amp;#34;maven-publish&amp;#34;&lt;/span>
-apply plugin: &lt;span style="color:#cd5555">&amp;#34;org.jetbrains.kotlin.jvm&amp;#34;&lt;/span>
-apply plugin: &lt;span style="color:#cd5555">&amp;#34;kotlin-spring&amp;#34;&lt;/span>
-apply plugin: &lt;span style="color:#cd5555">&amp;#34;org.springframework.boot&amp;#34;&lt;/span>
-apply plugin: &lt;span style="color:#cd5555">&amp;#34;io.spring.dependency-management&amp;#34;&lt;/span>
-apply plugin: &lt;span style="color:#cd5555">&amp;#39;jacoco&amp;#39;&lt;/span>
-&lt;span style="color:#228b22">//假如 你的 mapper.xml 或者 grovvy 写在 src/main/java ，打包需要处理到 需要加入的resources，需要手动处理
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// 当然如果 你的 mapper.xml 直接在 src/main/resources 里面 不需要处理，可以直接删除
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> processResources {
-from(&lt;span style="color:#cd5555">&amp;#39;src/main/java&amp;#39;&lt;/span>) {
-include &lt;span style="color:#cd5555">&amp;#39;**/*.xml&amp;#39;&lt;/span>
-include &lt;span style="color:#cd5555">&amp;#39;**/*.groovy&amp;#39;&lt;/span>
-}
-}
-}
-&lt;span style="color:#228b22">// apply from: file(&amp;#34;gradle/repo.gradle&amp;#34;)
-&lt;/span>&lt;span style="color:#228b22">// apply from: file(&amp;#34;gradle/check.gradle&amp;#34;)
-&lt;/span>&lt;span style="color:#228b22">// apply from: file(&amp;#34;gradle/maven-publish.gradle&amp;#34;)
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>apply from: &lt;span style="color:#cd5555">&amp;#39;https://${DownloadPath}/gradle/check-style.gradle&amp;#39;&lt;/span>
-apply from: &lt;span style="color:#cd5555">&amp;#39;https://${DownloadPath}/gradle/maven-repo.gradle&amp;#39;&lt;/span>
-apply from: &lt;span style="color:#cd5555">&amp;#39;https://${DownloadPath}/gradle/maven-publish.gradle&amp;#39;&lt;/span>
-subprojects {
-configurations {
-provided
-}
-sourceSets.&lt;span style="color:#658b00">main&lt;/span>.&lt;span style="color:#658b00">compileClasspath&lt;/span> += configurations.&lt;span style="color:#658b00">provided&lt;/span>
-sourceSets.&lt;span style="color:#658b00">test&lt;/span>.&lt;span style="color:#658b00">compileClasspath&lt;/span> += configurations.&lt;span style="color:#658b00">provided&lt;/span>
-sourceSets.&lt;span style="color:#658b00">test&lt;/span>.&lt;span style="color:#658b00">runtimeClasspath&lt;/span> += configurations.&lt;span style="color:#658b00">provided&lt;/span>
-tasks.&lt;span style="color:#658b00">withType&lt;/span>(JavaCompile) {
-options.&lt;span style="color:#658b00">encoding&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;UTF-8&amp;#39;&lt;/span>
-}
-task &lt;span style="color:#008b45">sourceJar&lt;/span>(type: Jar) {
-from sourceSets.&lt;span style="color:#658b00">main&lt;/span>.&lt;span style="color:#658b00">allJava&lt;/span>
-classifier &lt;span style="color:#cd5555">&amp;#34;sources&amp;#34;&lt;/span>
-}
-task &lt;span style="color:#008b45">javadocJar&lt;/span>(type: Jar, dependsOn: javadoc) {
-from javadoc.&lt;span style="color:#658b00">destinationDir&lt;/span>
-}
-dependencies {
-implementation &lt;span style="color:#cd5555">&amp;#34;com.google.guava:guava:$versions.guava&amp;#34;&lt;/span>
-compileOnly &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
-annotationProcessor &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
-testCompileOnly &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
-testAnnotationProcessor &lt;span style="color:#cd5555">&amp;#39;org.projectlombok:lombok:1.18.4&amp;#39;&lt;/span>
-testImplementation &lt;span style="color:#cd5555">&amp;#34;org.springframework.boot:spring-boot-starter-test:$springBootVersion&amp;#34;&lt;/span>
-testImplementation &lt;span style="color:#cd5555">&amp;#34;org.mockito:mockito-core:2.23.4&amp;#34;&lt;/span>
-testImplementation &lt;span style="color:#cd5555">&amp;#39;junit:junit:4.13&amp;#39;&lt;/span>
-&lt;span style="color:#228b22">// h2
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> testImplementation &lt;span style="color:#cd5555">&amp;#34;com.h2database:h2:1.4.200&amp;#34;&lt;/span>
-&lt;span style="color:#228b22">// redis memery
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> testImplementation &lt;span style="color:#cd5555">&amp;#34;com.github.kstyrc:embedded-redis:0.6&amp;#34;&lt;/span>
-}
-&lt;span style="color:#228b22">// jacoco report
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> jacocoTestReport {
-reports {
-xml.&lt;span style="color:#658b00">enabled&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
-html.&lt;span style="color:#658b00">enabled&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
-}
-}
-check.&lt;span style="color:#658b00">dependsOn&lt;/span> jacocoTestReport
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">
-allprojects {
-apply plugin: &lt;span style="color:#cd5555">&amp;#39;maven-publish&amp;#39;&lt;/span>
-publishing {
-task &lt;span style="color:#008b45">sourceJar&lt;/span>(type: Jar) {
-from sourceSets.&lt;span style="color:#658b00">main&lt;/span>.&lt;span style="color:#658b00">allJava&lt;/span>
-classifier &lt;span style="color:#cd5555">&amp;#34;sources&amp;#34;&lt;/span>
-}
-publications {
-mavenSnapshots(MavenPublication) {
-groupId project.&lt;span style="color:#658b00">group&lt;/span>
-artifactId project.&lt;span style="color:#658b00">name&lt;/span>
-version project.&lt;span style="color:#658b00">version&lt;/span>
-from components.&lt;span style="color:#658b00">java&lt;/span>
-artifact sourceJar
-ext.&lt;span style="color:#658b00">repo&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;Dev&amp;#39;&lt;/span>
-}
-mavenRelease(MavenPublication) {
-groupId project.&lt;span style="color:#658b00">group&lt;/span>
-artifactId project.&lt;span style="color:#658b00">name&lt;/span>
-version project.&lt;span style="color:#658b00">version&lt;/span>
-from components.&lt;span style="color:#658b00">java&lt;/span>
-artifact sourceJar
-ext.&lt;span style="color:#658b00">repo&lt;/span> = &lt;span style="color:#cd5555">&amp;#39;Prod&amp;#39;&lt;/span>
-}
-}
-repositories {
-maven {
-name &lt;span style="color:#cd5555">&amp;#39;Dev&amp;#39;&lt;/span>
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven {
-name &lt;span style="color:#cd5555">&amp;#39;Prod&amp;#39;&lt;/span>
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
-}
-}
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/gradle/repo.gradle 指定私有仓库地址以及验证方式&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">buildscript {
-repositories {
-mavenLocal()
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-public/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://maven.aliyun.com/nexus/content/groups/public/&amp;#34;&lt;/span> }
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://repo.spring.io/milestone&amp;#34;&lt;/span> }
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://oss.sonatype.org/content/repositories/snapshots/&amp;#34;&lt;/span> }
-}
-}
-allprojects {
-repositories {
-mavenLocal()
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-public/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://maven.aliyun.com/nexus/content/groups/public/&amp;#34;&lt;/span> }
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://repo.spring.io/milestone&amp;#34;&lt;/span> }
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://oss.sonatype.org/content/repositories/snapshots/&amp;#34;&lt;/span> }
-}
-}
-subprojects {
-repositories {
-mavenLocal()
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-releases/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-snapshots/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven {
-url &lt;span style="color:#cd5555">&amp;#34;${NEXUS_URL}/repository/maven-public/&amp;#34;&lt;/span>
-authentication {
-header(HttpHeaderAuthentication)
-}
-credentials(HttpHeaderCredentials) {
-name &lt;span style="color:#cd5555">&amp;#34;Authorization&amp;#34;&lt;/span>
-value &lt;span style="color:#cd5555">&amp;#34;Basic ${NEXUS_CAS_HEADER}&amp;#34;&lt;/span>
-}
-}
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://maven.aliyun.com/nexus/content/groups/public/&amp;#34;&lt;/span> }
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://repo.spring.io/milestone&amp;#34;&lt;/span> }
-maven { url &lt;span style="color:#cd5555">&amp;#34;https://oss.sonatype.org/content/repositories/snapshots/&amp;#34;&lt;/span> }
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/gradle/check.gradle&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">subprojects {
-apply plugin: &lt;span style="color:#cd5555">&amp;#39;checkstyle&amp;#39;&lt;/span>
-checkstyle {
-configFile = rootProject.&lt;span style="color:#658b00">file&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;deploy/checkstyle/checkstyle.xml&amp;#39;&lt;/span>)
-showViolations = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
-&lt;span style="color:#228b22">// ignoreFailures = true
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-}
-&lt;span style="color:#228b22">//可以指定排查
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> checkstyleMain {
-exclude &lt;span style="color:#cd5555">&amp;#34;**/*.groovy&amp;#34;&lt;/span>
-}
-apply plugin: &lt;span style="color:#cd5555">&amp;#39;pmd&amp;#39;&lt;/span>
-dependencies {
-pmd &lt;span style="color:#cd5555">&amp;#34;com.alibaba.p3c:p3c-pmd:2.0.0&amp;#34;&lt;/span>
-}
-pmd {
-consoleOutput = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
-ruleSets = [
-&lt;span style="color:#cd5555">&amp;#34;java-ali-comment&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-concurrent&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-constant&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-exception&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-flowcontrol&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-naming&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-oop&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-orm&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-other&amp;#34;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#34;java-ali-set&amp;#34;&lt;/span>
-]
-incrementalAnalysis = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
-}
-pmdMain {
-exclude &lt;span style="color:#cd5555">&amp;#34;**/exclude_package/**&amp;#34;&lt;/span>
-}
-}
-test.&lt;span style="color:#658b00">mustRunAfter&lt;/span> checkstyleMain, checkstyleTest
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/sdk/build.gradle&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">apply from: file(&lt;span style="color:#cd5555">&amp;#34;$rootDir/versions.gradle&amp;#34;&lt;/span>)
-jar {
-enabled = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
-}
-bootJar {
-enabled = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
-}
-dependencies {
-implementation &lt;span style="color:#cd5555">&amp;#39;org.springframework.cloud:spring-cloud-starter-openfeign:2.1.0.RELEASE&amp;#39;&lt;/span>
-......
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>Project/app/build.gradle&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-groovy" data-lang="groovy">apply from: file(&lt;span style="color:#cd5555">&amp;#34;$rootDir/versions.gradle&amp;#34;&lt;/span>)
-bootJar {
-enabled = &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>
-}
-jar {
-enabled = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>
-}
-dependencies {
-implementation deps.&lt;span style="color:#658b00">springboot&lt;/span>.&lt;span style="color:#658b00">starter&lt;/span>
-implementation deps.&lt;span style="color:#658b00">springboot&lt;/span>.&lt;span style="color:#658b00">starter_web&lt;/span>
-implementation deps.&lt;span style="color:#658b00">mysql&lt;/span>
-implementation deps.&lt;span style="color:#658b00">myabtis&lt;/span>.&lt;span style="color:#658b00">myabtis&lt;/span>
-implementation deps.&lt;span style="color:#658b00">myabtis&lt;/span>.&lt;span style="color:#658b00">starter&lt;/span>
-implementation &lt;span style="color:#cd5555">&amp;#39;org.springframework.boot:spring-boot-starter-amqp:2.1.2.RELEASE&amp;#39;&lt;/span>
-implementation &lt;span style="color:#cd5555">&amp;#34;org.springframework.cloud:spring-cloud-starter-openfeign:2.1.0.RELEASE&amp;#34;&lt;/span>
-implementation &lt;span style="color:#cd5555">&amp;#39;com.zaxxer:HikariCP:3.4.1&amp;#39;&lt;/span>
-implementation &lt;span style="color:#cd5555">&amp;#39;com.baomidou:mybatis-plus:2.2.0&amp;#39;&lt;/span>
-implementation &lt;span style="color:#cd5555">&amp;#39;com.github.pagehelper:pagehelper:5.1.2&amp;#39;&lt;/span>
-implementation &lt;span style="color:#cd5555">&amp;#39;org.mongodb:mongo-java-driver:3.8.0&amp;#39;&lt;/span>
-...... &lt;span style="color:#228b22">//剩余映射依赖
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>}
-&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="3-dockerfile-注意-add-文件路径">3、 Dockerfile 注意 ADD 文件路径&lt;/h2>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-dockerfile" data-lang="dockerfile">&lt;span style="color:#8b008b;font-weight:bold">FROM&lt;/span>&lt;span style="color:#cd5555"> {HARBOR_HOST}/BaseImage&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
-&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ADD&lt;/span> ./build/libs/app.jar /app.jar&lt;span style="color:#a61717;background-color:#e3d2d2">
-&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>.... 其他配置&lt;span style="color:#a61717;background-color:#e3d2d2">
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="4project-下添加-gradleproperties-注意在-gitignore-里面添加上它不要传递到公开服务器是你的密码等敏感信息">4、Project/ 下添加 gradle.properties, 注意在 .gitignore 里面添加上它，不要传递到公开服务器，是你的密码等敏感信息&lt;/h2>
-&lt;pre>&lt;code class="language-properties" data-lang="properties"># Nexus 仓库地址
-NEXUS_URL=https://nexus-url
-# 指定为你自己的maven的用户配置 settings.xml 里面的你的配置
-NEXUS_CAS_HEADER=XXXXXXX
-# gradle daemon
-org.gradle.daemon=true
-# 禁用Gradle 6.x 版本 SHA-256和SHA-512校验和的发布
-# https://juejin.im/post/6844904101126553614
-systemProp.org.gradle.internal.publish.checksums.insecure=true
-&lt;/code>&lt;/pre>&lt;h2 id="5gitlab-ci-模板化下次分享">5、gitlab-ci 模板化，下次分享~~~~&lt;/h2>
-- https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
