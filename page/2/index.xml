@@ -1,4 +1,47 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 20:57:38 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>09 使用githook统一codestyle</title><link>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</link><pubDate>Wed, 10 Feb 2021 08:46:52 +0800</pubDate><guid>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ -&lt;h1 id="gradle-优化">gradle 优化&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 22:48:35 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>10 多域名下的SSH</title><link>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</link><pubDate>Wed, 10 Feb 2021 08:52:57 +0800</pubDate><guid>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ -&lt;h1 id="前言">前言&lt;/h1>
+&lt;p>有时候我们，有多个 git 账号（Gitlab、GitHub），这时候如果是同一个账号（邮箱注册），那不会有问题，但是如果不是相同的账号呢，我们在使用 SSH KEY 做免密登录时候，头痛了。&lt;/p>
+&lt;p>这个时候我们需要针对不同的账号，生成不同的 SSH Key，并且配置不同的域名使用不同的Key&lt;/p>
+&lt;h1 id="生成一个-ssh-key">生成一个 SSH KEY&lt;/h1>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">ssh-keygen -t rsa -C &lt;span style="color:#cd5555">&amp;#34;username@email.com&amp;#34;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;blockquote>
+&lt;p>一路 Enter，并且在生成时候指定名字，（不指定名字会使用默认的）得到&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;pre>&lt;code>id_rsa # 私钥
+id_rsa.pub # 公钥
+&lt;/code>&lt;/pre>&lt;h1 id="重复上一个步骤生成多个-私钥和公钥">重复上一个步骤，生成多个 私钥和公钥&lt;/h1>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">github_id_rsa
+github_id_rsa.pub
+gitlab_id_rsa
+gitlab_id_rsa.pub
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="配置相应的域名对应的-ssh-key">配置相应的域名对应的 SSH-KEY&lt;/h1>
+&lt;ul>
+&lt;li>本地目录 &lt;code>~/.ssh/&lt;/code> 下，查阅有没有 &lt;code>config&lt;/code> 文件, 不存在就新建 &lt;code>config&lt;/code> 文件&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">Host github
+HostName github.com
+User UserName
+PreferredAuthentications publickey
+IdentityFile ~/.ssh/github_id_rsa
+Host gitlab
+HostName gitlab.com
+User UserName
+PreferredAuthentications publickey
+IdentityFile ~/.ssh/gitlab_id_rsa
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="将密钥添加进入--ssh-agent-中">将密钥添加进入 SSH-AGENT 中&lt;/h1>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">ssh-add ~/.ssh/github_id_rsa
+ssh-add ~/.ssh/gitlab_id_rsa
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>查看密钥&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">ssh-add -l
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="将生成的-公钥-加入到对应的网站里面-ssh-key-配置">将生成的 公钥 加入到对应的网站里面 SSH KEY 配置&lt;/h1>
+&lt;p>下面就可以使用 &lt;code>git clone git@github.com/****&lt;/code> &lt;code>git clone git@gitlab.com/****&lt;/code>&lt;/p>
+&lt;h1 id="关于-mac-下-每次开机-需要重新-ssh-add-解决办法">关于 Mac 下 每次开机 需要重新 ssh-add 解决办法&lt;/h1>
+&lt;ul>
+&lt;li>添加自启动程序&lt;/li>
+&lt;li>说一个简单的，将 ssh-add ~/.ssh/**id_rsa 添加到 .*shrc 文件里面去&lt;/li>
+&lt;/ul>
+- https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>09 使用githook统一codestyle</title><link>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</link><pubDate>Wed, 10 Feb 2021 08:46:52 +0800</pubDate><guid>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ -&lt;h1 id="gradle-优化">gradle 优化&lt;/h1>
 &lt;ul>
 &lt;li>build 指定 -g cache 缓存&lt;/li>
 &lt;/ul>
@@ -1439,207 +1482,4 @@ IP=192.168.1.103: RATE=16%
 IP=192.168.1.104: RATE=16%
 IP=192.168.1.106: RATE=16%
 IP=192.168.1.107: RATE=16%
-&lt;/code>&lt;/pre>- https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
-&lt;h2 id="前言">前言&lt;/h2>
-&lt;p>对于 &lt;code>ThreadLocal&lt;/code> 的使用，并不难，这次主要讲述 &lt;code>ThreadLocal&lt;/code> 的实现方式以及原理&lt;/p>
-&lt;h2 id="threadlocal-是什么">&lt;code>ThreadLocal&lt;/code> 是什么&lt;/h2>
-&lt;p>&lt;code>ThreadLocal&lt;/code> 为解决多线程并发问题提供的一种新的思路。&lt;/p>
-&lt;p>当使用 &lt;code>ThreadLocal&lt;/code> 维护变量的时候，&lt;code>ThreadLocal&lt;/code> 为每个使用该变量的线程提供独立的变量副本，所以每个线程都可以独立修改自己的副本，而不会修改到其他人的变量副本。&lt;/p>
-&lt;p>从线程角度看，&lt;code>Local&lt;/code> 即本地意思，目标变量就像是线程的本地变量。&lt;/p>
-&lt;h3 id="原理">原理&lt;/h3>
-&lt;p>&lt;code>ThreadLocal&lt;/code> 是连接 &lt;code>Thread&lt;/code> 与 &lt;code>ThreadLocalMap&lt;/code> 粘合剂，是用来处理 &lt;code>Thread&lt;/code> 的 &lt;code>ThreadLocalMap&lt;/code> 属性，
-包括 &lt;em>initialValue()&lt;/em> 变量，&lt;em>set&lt;/em> 对应的变量，&lt;em>get&lt;/em> 对应的变量。&lt;/p>
-&lt;p>&lt;code>ThreadLocalMap&lt;/code> 用来存储数据，采用类似&lt;code>HashMap&lt;/code>的机制，存储了以&lt;code>ThreadLocal&lt;/code>为&lt;code>Key&lt;/code>，目标数据为&lt;code>Value&lt;/code>的&lt;code>Entry&lt;/code>键值对数组结构。&lt;/p>
-&lt;p>&lt;code>Thread&lt;/code> 有个 &lt;em>ThreadLocalMap&lt;/em> 的属性，存储的数据存放在此处。&lt;/p>
-&lt;h3 id="threadthreadlocal-threadlocalmap的关系">&lt;code>Thread&lt;/code>、&lt;code>ThreadLocal&lt;/code>、 &lt;code>ThreadLocalMap&lt;/code>的关系&lt;/h3>
-&lt;p>&lt;code>ThreadLocalMap&lt;/code> 是 &lt;code>ThreadLocal&lt;/code> 的内部类，有 &lt;code>ThreadLocal&lt;/code>创建，&lt;code>Thread&lt;/code>有 &lt;code>ThreadLocal.ThreadLocalMap&lt;/code> 类型的属性，源码如下&lt;/p>
-&lt;h4 id="thread">Thread&lt;/h4>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Thread&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> Runnable {
-&lt;span style="color:#228b22">/*
-&lt;/span>&lt;span style="color:#228b22"> * ThreadLocal values pertaining to this thread. This map is maintained
-&lt;/span>&lt;span style="color:#228b22"> * by the ThreadLocal class.
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-ThreadLocal.&lt;span style="color:#658b00">ThreadLocalMap&lt;/span> threadLocals = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
-&lt;span style="color:#228b22">/*
-&lt;/span>&lt;span style="color:#228b22"> * InheritableThreadLocal values pertaining to this thread. This map is
-&lt;/span>&lt;span style="color:#228b22"> * maintained by the InheritableThreadLocal class.
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-ThreadLocal.&lt;span style="color:#658b00">ThreadLocalMap&lt;/span> inheritableThreadLocals = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="threadlocal-和-threadlocalmap">&lt;code>ThreadLocal&lt;/code> 和 &lt;code>ThreadLocalMap&lt;/code>&lt;/h4>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">ThreadLocal&lt;/span>&amp;lt;T&amp;gt; {
-&lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * ThreadLocalMap is a customized hash map suitable only for
-&lt;/span>&lt;span style="color:#228b22"> * maintaining thread local values. No operations are exported
-&lt;/span>&lt;span style="color:#228b22"> * outside of the ThreadLocal class. The class is package private to
-&lt;/span>&lt;span style="color:#228b22"> * allow declaration of fields in class Thread. To help deal with
-&lt;/span>&lt;span style="color:#228b22"> * very large and long-lived usages, the hash table entries use
-&lt;/span>&lt;span style="color:#228b22"> * WeakReferences for keys. However, since reference queues are not
-&lt;/span>&lt;span style="color:#228b22"> * used, stale entries are guaranteed to be removed only when
-&lt;/span>&lt;span style="color:#228b22"> * the table starts running out of space.
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">ThreadLocalMap&lt;/span> {
-&lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * The entries in this hash map extend WeakReference, using
-&lt;/span>&lt;span style="color:#228b22"> * its main ref field as the key (which is always a
-&lt;/span>&lt;span style="color:#228b22"> * ThreadLocal object). Note that null keys (i.e. entry.get()
-&lt;/span>&lt;span style="color:#228b22"> * == null) mean that the key is no longer referenced, so the
-&lt;/span>&lt;span style="color:#228b22"> * entry can be expunged from table. Such entries are referred to
-&lt;/span>&lt;span style="color:#228b22"> * as &amp;#34;stale entries&amp;#34; in the code that follows.
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Entry&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> WeakReference&amp;lt;ThreadLocal&amp;lt;?&amp;gt;&amp;gt; {
-&lt;span style="color:#228b22">/** The value associated with this ThreadLocal. */&lt;/span>
-Object value;
-Entry(ThreadLocal&amp;lt;?&amp;gt; k, Object v) {
-&lt;span style="color:#8b008b;font-weight:bold">super&lt;/span>(k);
-value = v;
-}
-}
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="threadlocal-为-thread-的-threadlocalmap-进行赋值">&lt;code>ThreadLocal&lt;/code> 为 &lt;code>Thread&lt;/code> 的 &lt;code>ThreadLocalMap&lt;/code> 进行赋值&lt;/h4>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Create the map associated with a ThreadLocal. Overridden in
-&lt;/span>&lt;span style="color:#228b22"> * InheritableThreadLocal.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @param t the current thread
-&lt;/span>&lt;span style="color:#228b22"> * @param firstValue value for the initial entry of the map
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">createMap&lt;/span>(Thread t, T firstValue) {
-t.&lt;span style="color:#658b00">threadLocals&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ThreadLocalMap(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>, firstValue);
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>&lt;em>ThreadLocal&lt;/em> 直接创建一个 &lt;em>ThreadLocalMap&lt;/em> 出来，以当前 &lt;em>ThreadLocal&lt;/em> 的对象为 &lt;em>key&lt;/em> ，以目标值为 &lt;em>value&lt;/em> 存入&lt;/li>
-&lt;/ul>
-&lt;h5 id="threadlocal-核心的方法">&lt;code>ThreadLocal&lt;/code> 核心的方法&lt;/h5>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Sets the current thread&amp;#39;s copy of this thread-local variable
-&lt;/span>&lt;span style="color:#228b22"> * to the specified value. Most subclasses will have no need to
-&lt;/span>&lt;span style="color:#228b22"> * override this method, relying solely on the {@link #initialValue}
-&lt;/span>&lt;span style="color:#228b22"> * method to set the values of thread-locals.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @param value the value to be stored in the current thread&amp;#39;s copy of
-&lt;/span>&lt;span style="color:#228b22"> * this thread-local.
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">set&lt;/span>(T value) {
-Thread t = Thread.&lt;span style="color:#658b00">currentThread&lt;/span>();
-ThreadLocalMap map = getMap(t);
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (map != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>)
-map.&lt;span style="color:#658b00">set&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>, value);
-&lt;span style="color:#8b008b;font-weight:bold">else&lt;/span>
-createMap(t, value);
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>&lt;code>set(T)&lt;/code> 设置当前线程的局部变量，以当前的 &lt;code>ThreadLocal&lt;/code> 对象 为键，目标变量对象为值存入当前线程的 &lt;code>ThreadLocalMap&lt;/code> 对象中&lt;/li>
-&lt;li>在获取当前线程的 &lt;code>ThreadLocalMap&lt;/code> 的时候，不存在的时候会创建一个 &lt;code>ThreadLocalMap&lt;/code> ，也就是说，&lt;code>Thread&lt;/code> 的&lt;code>ThreadLocal.ThreadLocalMap&lt;/code> 对象是由 &lt;code>ThreadLocal&lt;/code> 实例化处理的&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Returns the value in the current thread&amp;#39;s copy of this
-&lt;/span>&lt;span style="color:#228b22"> * thread-local variable. If the variable has no value for the
-&lt;/span>&lt;span style="color:#228b22"> * current thread, it is first initialized to the value returned
-&lt;/span>&lt;span style="color:#228b22"> * by an invocation of the {@link #initialValue} method.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @return the current thread&amp;#39;s value of this thread-local
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> T &lt;span style="color:#008b45">get&lt;/span>() {
-Thread t = Thread.&lt;span style="color:#658b00">currentThread&lt;/span>();
-ThreadLocalMap map = getMap(t);
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (map != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
-ThreadLocalMap.&lt;span style="color:#658b00">Entry&lt;/span> e = map.&lt;span style="color:#658b00">getEntry&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>);
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (e != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
-&lt;span style="color:#707a7c">@SuppressWarnings&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;unchecked&amp;#34;&lt;/span>)
-T result = (T)e.&lt;span style="color:#658b00">value&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> result;
-}
-}
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> setInitialValue();
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>&lt;code>get()&lt;/code> 为从 &lt;code>ThreadLocalMap&lt;/code> 中获取值，如果 &lt;code>ThreadLocalMap&lt;/code> 不存在，则走 &lt;code>setInitialValue&lt;/code> 方式，否则取出之前设置的值&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Get the map associated with a ThreadLocal. Overridden in
-&lt;/span>&lt;span style="color:#228b22"> * InheritableThreadLocal.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @param t the current thread
-&lt;/span>&lt;span style="color:#228b22"> * @return the map
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-ThreadLocalMap &lt;span style="color:#008b45">getMap&lt;/span>(Thread t) {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> t.&lt;span style="color:#658b00">threadLocals&lt;/span>;
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Returns the current thread&amp;#39;s &amp;#34;initial value&amp;#34; for this
-&lt;/span>&lt;span style="color:#228b22"> * thread-local variable. This method will be invoked the first
-&lt;/span>&lt;span style="color:#228b22"> * time a thread accesses the variable with the {@link #get}
-&lt;/span>&lt;span style="color:#228b22"> * method, unless the thread previously invoked the {@link #set}
-&lt;/span>&lt;span style="color:#228b22"> * method, in which case the {@code initialValue} method will not
-&lt;/span>&lt;span style="color:#228b22"> * be invoked for the thread. Normally, this method is invoked at
-&lt;/span>&lt;span style="color:#228b22"> * most once per thread, but it may be invoked again in case of
-&lt;/span>&lt;span style="color:#228b22"> * subsequent invocations of {@link #remove} followed by {@link #get}.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * This implementation simply returns {@code null}; if the
-&lt;/span>&lt;span style="color:#228b22"> * programmer desires thread-local variables to have an initial
-&lt;/span>&lt;span style="color:#228b22"> * value other than {@code null}, {@code ThreadLocal} must be
-&lt;/span>&lt;span style="color:#228b22"> * subclassed, and this method overridden. Typically, an
-&lt;/span>&lt;span style="color:#228b22"> * anonymous inner class will be used.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @return the initial value for this thread-local
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">protected&lt;/span> T &lt;span style="color:#008b45">initialValue&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>&lt;code>initialValue()&lt;/code> 返回了该线程变量的初始值，是一个保护方法，为了让子类覆盖此方法，&lt;/li>
-&lt;li>此方法只执行一次，是一个延迟方法，在调用 &lt;code>set&lt;/code> 或 &lt;code>get&lt;/code> 的时候创建出来&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Creates a thread local variable. The initial value of the variable is
-&lt;/span>&lt;span style="color:#228b22"> * determined by invoking the {@code get} method on the {@code Supplier}.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @param the type of the thread local&amp;#39;s value
-&lt;/span>&lt;span style="color:#228b22"> * @param supplier the supplier to be used to determine the initial value
-&lt;/span>&lt;span style="color:#228b22"> * @return a new thread local variable
-&lt;/span>&lt;span style="color:#228b22"> * @throws NullPointerException if the specified supplier is null
-&lt;/span>&lt;span style="color:#228b22"> * @since 1.8
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &amp;lt;S&amp;gt; ThreadLocal&amp;lt;S&amp;gt; &lt;span style="color:#008b45">withInitial&lt;/span>(Supplier&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> S&amp;gt; supplier) {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> SuppliedThreadLocal&amp;lt;&amp;gt;(supplier);
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Variant of set() to establish initialValue. Used instead
-&lt;/span>&lt;span style="color:#228b22"> * of set() in case user has overridden the set() method.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @return the initial value
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> T &lt;span style="color:#008b45">setInitialValue&lt;/span>() {
-T value = initialValue();
-Thread t = Thread.&lt;span style="color:#658b00">currentThread&lt;/span>();
-ThreadLocalMap map = getMap(t);
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (map != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>)
-map.&lt;span style="color:#658b00">set&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>, value);
-&lt;span style="color:#8b008b;font-weight:bold">else&lt;/span>
-createMap(t, value);
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> value;
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * Removes the current thread&amp;#39;s value for this thread-local
-&lt;/span>&lt;span style="color:#228b22"> * variable. If this thread-local variable is subsequently
-&lt;/span>&lt;span style="color:#228b22"> * {@linkplain #get read} by the current thread, its value will be
-&lt;/span>&lt;span style="color:#228b22"> * reinitialized by invoking its {@link #initialValue} method,
-&lt;/span>&lt;span style="color:#228b22"> * unless its value is {@linkplain #set set} by the current thread
-&lt;/span>&lt;span style="color:#228b22"> * in the interim. This may result in multiple invocations of the
-&lt;/span>&lt;span style="color:#228b22"> * {@code initialValue} method in the current thread.
-&lt;/span>&lt;span style="color:#228b22"> *
-&lt;/span>&lt;span style="color:#228b22"> * @since 1.5
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">remove&lt;/span>() {
-ThreadLocalMap m = getMap(Thread.&lt;span style="color:#658b00">currentThread&lt;/span>());
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (m != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>)
-m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>);
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>&lt;code>remove()&lt;/code> 方法获取当前线程的副本变量，来指定移除对应的值;&lt;/li>
-&lt;li>此方法为 1.5 引入，旨在协助&lt;code>jvm&lt;/code>进行有效的快速 &lt;code>gc&lt;/code>；&lt;/li>
-&lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
-&lt;/ul>
-- https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
+&lt;/code>&lt;/pre>- https://pinkhello.github.io/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>

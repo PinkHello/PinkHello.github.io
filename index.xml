@@ -1,4 +1,101 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 20:57:38 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>19 回望K8S Kubernetes拼图</title><link>https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</link><pubDate>Tue, 16 Feb 2021 20:57:38 +0800</pubDate><guid>https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ -&lt;h1 id="kubernetes-安装">&lt;code>kubernetes&lt;/code> 安装&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 22:48:35 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>20 回望K8S 容器编排与Kubernetes作业管理</title><link>https://pinkhello.github.io/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/</link><pubDate>Tue, 16 Feb 2021 22:48:35 +0800</pubDate><guid>https://pinkhello.github.io/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/ -&lt;h1 id="pod">Pod&lt;/h1>
+&lt;p>&lt;code>pod&lt;/code> 是 &lt;code>Kubernetes&lt;/code> 项目的最小的 API 对象，原子调度单位.&lt;/p>
+&lt;p>假设 &amp;ldquo;容器的本质是进程&amp;rdquo;，容器镜像就是 exe 安装包, kubernetes 是操作系统&lt;/p>
+&lt;p>&lt;code>Pod&lt;/code> 最重要的一个事实是一个逻辑概念。它对于 &lt;code>Kubernetes&lt;/code> 最核心的意义是 &lt;code>容器设计模式&lt;/code>。&lt;code>Kubernetes&lt;/code> 真正处理的还是宿主机上操作系统上的 &lt;code>Linux&lt;/code> 容器的 &lt;code>Namespace&lt;/code> 和 &lt;code>Cgroups&lt;/code>，而不是一个所谓的 &lt;code>Pod&lt;/code> 边界和隔离环境。&lt;/p>
+&lt;p>&lt;code>Pod&lt;/code> 其实是一组共享了某些资源的容器。&lt;code>Pod&lt;/code> 里面所有的容器，共享的同一个 &lt;code>Network Namespace&lt;/code>，并且可以声明共享同一个 &lt;code>Volume&lt;/code>.&lt;/p>
+&lt;p>&lt;code>Kubernetes&lt;/code> 项目内部，&lt;code>Pod&lt;/code> 实现需要使用一个中间容器，这个容器叫做 &lt;code>Infra&lt;/code> 容器，在 &lt;code>Pod&lt;/code> 中，&lt;code>Infra&lt;/code> 容器永远都是第一个被创建的容器，而其他用户定义的容器，则通过 &lt;code>Join Network Namespace&lt;/code> 的方式，与 &lt;code>Infra&lt;/code> 容器关联在一起。&lt;/p>
+&lt;h2 id="sidecar">&lt;code>sidecar&lt;/code>&lt;/h2>
+&lt;h3 id="典型的例子war-包和-web-服务器">典型的例子：WAR 包和 Web 服务器&lt;/h3>
+&lt;p>&lt;code>POD&lt;/code>后，将 &lt;code>WAR&lt;/code> 包和 &lt;code>Tomcat&lt;/code> 分别做成镜像，可以把他们容器结合在一起&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Pod&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>javaweb-2&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># 启动后做了一件事 把应用的WAR包拷贝到 /app目录中，后退出&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">initContainers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>sample-war:v2&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>war&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">command&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;cp&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;/sample.war&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;/app&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumeMounts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/app&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>app-volume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>tomcat:7.0&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>tomcat&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">command&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;sh&amp;#34;&lt;/span>,&lt;span style="color:#cd5555">&amp;#34;-c&amp;#34;&lt;/span>,&lt;span style="color:#cd5555">&amp;#34;/root/apache-tomcat-7.0.42-v2/bin/start.sh&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumeMounts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/root/apache-tomcat-7.0.42-v2/webapps&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>app-volume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">containerPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">8080&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">hostPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">8001&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>app-volume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">emptyDir&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>{}&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">...&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个&lt;code>POD&lt;/code>中，定义了两个容器，第一个容器镜像&lt;code> sample-war:v2&lt;/code>，第二个容器镜像是 &lt;code>Tomcat&lt;/code> 镜像，War包容器的类型不是一个普通容器，是一个 &lt;code>Init Container&lt;/code> 类型的容器。&lt;/p>
+&lt;p>在Pod中，所有 &lt;code>Init Container&lt;/code> 定义的容器，都比 &lt;code>spec.containers&lt;/code> 定义的用户容器先启动。并且， &lt;code>Init Container&lt;/code> 容器会按顺序准一启动，而直到他们都启动并且退出了，用户容器才会启动。&lt;/p>
+&lt;p>这种组合的方式，正是容器设计模式里面最常用的一种模式：&lt;code>sidecar&lt;/code>&lt;/p>
+&lt;h3 id="容器的日志收集">容器的日志收集&lt;/h3>
+&lt;p>应用把日志文件输出到容器的 &lt;code>/var/log&lt;/code> 目录中，&lt;code>Pod&lt;/code>的 &lt;code>Volume&lt;/code> 挂载到应用容器的 &lt;code>/var/log&lt;/code> 目录上，然后在这个 &lt;code>Pod&lt;/code> 里的运行一个 &lt;code>sidecar&lt;/code> 容器，也声明挂载同一个 &lt;code>Volume&lt;/code> 到自己的 &lt;code>/var/log&lt;/code> 目录上，
+这样这个 &lt;code>sidecar&lt;/code> 容器只需要做一件事，把自己的 &lt;code>/var/log&lt;/code> 目录中读取日志文件，转发就可以了，就是一个基本的日志收集&lt;/p>
+&lt;h1 id="pod-对象的基本概念">Pod 对象的基本概念&lt;/h1>
+&lt;p>Pod 是容器环境的 Kubernetes 的基本单元，调度、网络、存储、以及安全相关的熟悉，都是属于 Pod 级别的。&lt;/p>
+&lt;p>Pod 下重要的字段和含义&lt;/p>
+&lt;ul>
+&lt;li>NodeSelector : 用户将 Pod 和 Node 绑定的字段&lt;/li>
+&lt;li>NodeName : 一旦 Pod 的这个阻断被赋值，K8S 会认为这个 Pod 已经经过调度。&lt;/li>
+&lt;li>HostAliases：定义了 Pod 的 hosts 文件（比如 /etc/hosts）里的内容&lt;/li>
+&lt;/ul>
+&lt;p>凡是跟容器的 Linux Namespace 相关的属性，也一定是 Pod 级别的。
+shareProcessNamespace=true&lt;/p>
+&lt;p>Pod 对象在 Kubernetes 中的生命周期。Pod 生命周期的变化，主要体现在 Pod API 对象的 Status 部分，这是它除了 Metadata 和 Spec 之外的第三个重要字段。其中，pod.status.phase，就是 Pod 的当前状态，
+它有如下几种可能的情况：&lt;/p>
+&lt;ul>
+&lt;li>Pending。这个状态意味着，Pod 的 YAML 文件已经提交给了 Kubernetes，API 对象已经被创建并保存在 Etcd 当中。但是，这个 Pod 里有些容器因为某种原因而不能被顺利创建。比如，调度不成功。&lt;/li>
+&lt;li>Running。这个状态下，Pod 已经调度成功，跟一个具体的节点绑定。它包含的容器都已经创建成功，并且至少有一个正在运行中。&lt;/li>
+&lt;li>Succeeded。这个状态意味着，Pod 里的所有容器都正常运行完毕，并且已经退出了。这种情况在运行一次性任务时最为常见。&lt;/li>
+&lt;li>Failed。这个状态下，Pod 里至少有一个容器以不正常的状态（非 0 的返回码）退出。这个状态的出现，意味着你得想办法 Debug 这个容器的应用，比如查看 Pod 的 Events 和日志。&lt;/li>
+&lt;li>Unknown。这是一个异常状态，意味着 Pod 的状态不能持续地被 kubelet 汇报给 kube-apiserver，这很有可能是主从节点（Master 和 Kubelet）间的通信出现了问题。&lt;/li>
+&lt;/ul>
+&lt;h1 id="kubernetes-其他对象-volume">Kubernetes 其他对象 Volume&lt;/h1>
+&lt;p>Kubernetes 支持的 Projected Volume 一共有四种:&lt;/p>
+&lt;ul>
+&lt;li>Secret : 把 Pod 想要访问的加密数据，存放到 Etcd 中，然后通过在 Pod 的容器里挂载 Volume 的方式。&lt;/li>
+&lt;li>ConfigMap : 保存的是不需要加密的、应用所需的配置信息。而 ConfigMap 的用法几乎与 Secret 完全相同：你可以使用 kubectl create configmap 从文件或者目录创建 ConfigMap，也可以直接编写 ConfigMap 对象的 YAML 文件。&lt;/li>
+&lt;li>Downward API : 让 Pod 里的容器能够直接获取到这个 Pod API 对象本身的信息。
+&lt;blockquote>
+&lt;p>一定是 Pod 里的容器进程启动之前就能够确定下来的信息。而如果你想要获取 Pod 容器运行后才会出现的信息，比如，容器进程的 PID，那就肯定不能使用 Downward API 了，而应该考虑在 Pod 里定义一个 sidecar 容器。&lt;/p>
+&lt;/blockquote>
+&lt;/li>
+&lt;li>ServiceAccountToken : 这种把 Kubernetes 客户端以容器的方式运行在集群里，然后使用 default Service Account 自动授权的方式，被称作“InClusterConfig”.&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Secret&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>mysecret&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">type&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Opaque&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">data&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">user&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>YWRtaW4=&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">pass&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>MWYyZDFlMmU2N2Rm&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">...&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl create secret
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="容器的健康检查和恢复机制">容器的健康检查和恢复机制&lt;/h1>
+&lt;p>Pod 容器定义了一个健康检查的&amp;quot;探针&amp;quot;（Probe）, 这样kubelet就会根据这个 probe 返回的值决定这个容器的状态，而不是直接以容器镜像十分运行来作为依据。生产环境保证应用健康存活的重要手段。&lt;/p>
+&lt;p>Pod 恢复机制 restartPolicy, 它是 Pod 的 Spec 部分的一个标准字段（pod.spec.restartPolicy），默认值是 Always，即：任何时候这个容器发生了异常，它一定会被重新创建。&lt;/p>
+&lt;blockquote>
+&lt;p>pod 恢复，永远只发生在当前节点，而不会跑到别的节点上去。（不会发生故障转移）需要转移的需要切换到 Deployment 这样的控制器来管理POD&lt;/p>
+&lt;/blockquote>
+&lt;p>你还可以通过设置 restartPolicy，改变 Pod 的恢复策略。除了 Always，它还有 OnFailure 和 Never 两种情况：&lt;/p>
+&lt;ul>
+&lt;li>Always：在任何情况下，只要容器不在运行状态，就自动重启容器；&lt;/li>
+&lt;li>OnFailure: 只在容器 异常时才自动重启容器；&lt;/li>
+&lt;li>Never: 从来不重启容器。&lt;/li>
+&lt;/ul>
+- https://pinkhello.github.io/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>19 回望K8S Kubernetes拼图</title><link>https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</link><pubDate>Tue, 16 Feb 2021 20:57:38 +0800</pubDate><guid>https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ -&lt;h1 id="kubernetes-安装">&lt;code>kubernetes&lt;/code> 安装&lt;/h1>
 &lt;h2 id="all-节点安装-docker-和-kubeadm">all 节点安装 &lt;code>Docker&lt;/code> 和 &lt;code>Kubeadm&lt;/code>&lt;/h2>
 &lt;p>所有节点 &lt;code>root&lt;/code> 用户下操作&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
@@ -1818,47 +1915,4 @@ AR = OSR + ISR&lt;/p>
 &lt;h1 id="kafka-producer-流程详细">&lt;code>kafka Producer&lt;/code> 流程详细&lt;/h1>
 &lt;p>&lt;img src="https://pinkhello.github.io/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-producer-flow.png" alt="kafkaProducer流程解读">
 &lt;img src="https://pinkhello.github.io/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-meta-get.png" alt="kafka 获取元数据">&lt;/p>
-- https://pinkhello.github.io/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>10 多域名下的SSH</title><link>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</link><pubDate>Wed, 10 Feb 2021 08:52:57 +0800</pubDate><guid>https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ -&lt;h1 id="前言">前言&lt;/h1>
-&lt;p>有时候我们，有多个 git 账号（Gitlab、GitHub），这时候如果是同一个账号（邮箱注册），那不会有问题，但是如果不是相同的账号呢，我们在使用 SSH KEY 做免密登录时候，头痛了。&lt;/p>
-&lt;p>这个时候我们需要针对不同的账号，生成不同的 SSH Key，并且配置不同的域名使用不同的Key&lt;/p>
-&lt;h1 id="生成一个-ssh-key">生成一个 SSH KEY&lt;/h1>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">ssh-keygen -t rsa -C &lt;span style="color:#cd5555">&amp;#34;username@email.com&amp;#34;&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
-&lt;blockquote>
-&lt;p>一路 Enter，并且在生成时候指定名字，（不指定名字会使用默认的）得到&lt;/p>
-&lt;/blockquote>
-&lt;/blockquote>
-&lt;pre>&lt;code>id_rsa # 私钥
-id_rsa.pub # 公钥
-&lt;/code>&lt;/pre>&lt;h1 id="重复上一个步骤生成多个-私钥和公钥">重复上一个步骤，生成多个 私钥和公钥&lt;/h1>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">github_id_rsa
-github_id_rsa.pub
-gitlab_id_rsa
-gitlab_id_rsa.pub
-&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="配置相应的域名对应的-ssh-key">配置相应的域名对应的 SSH-KEY&lt;/h1>
-&lt;ul>
-&lt;li>本地目录 &lt;code>~/.ssh/&lt;/code> 下，查阅有没有 &lt;code>config&lt;/code> 文件, 不存在就新建 &lt;code>config&lt;/code> 文件&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">Host github
-HostName github.com
-User UserName
-PreferredAuthentications publickey
-IdentityFile ~/.ssh/github_id_rsa
-Host gitlab
-HostName gitlab.com
-User UserName
-PreferredAuthentications publickey
-IdentityFile ~/.ssh/gitlab_id_rsa
-&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="将密钥添加进入--ssh-agent-中">将密钥添加进入 SSH-AGENT 中&lt;/h1>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">ssh-add ~/.ssh/github_id_rsa
-ssh-add ~/.ssh/gitlab_id_rsa
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>查看密钥&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">ssh-add -l
-&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="将生成的-公钥-加入到对应的网站里面-ssh-key-配置">将生成的 公钥 加入到对应的网站里面 SSH KEY 配置&lt;/h1>
-&lt;p>下面就可以使用 &lt;code>git clone git@github.com/****&lt;/code> &lt;code>git clone git@gitlab.com/****&lt;/code>&lt;/p>
-&lt;h1 id="关于-mac-下-每次开机-需要重新-ssh-add-解决办法">关于 Mac 下 每次开机 需要重新 ssh-add 解决办法&lt;/h1>
-&lt;ul>
-&lt;li>添加自启动程序&lt;/li>
-&lt;li>说一个简单的，将 ssh-add ~/.ssh/**id_rsa 添加到 .*shrc 文件里面去&lt;/li>
-&lt;/ul>
-- https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.github.io/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
