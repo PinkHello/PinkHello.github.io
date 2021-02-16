@@ -1,4 +1,123 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Mon, 15 Feb 2021 10:16:34 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>08 Gradle多模块项目模板化</title><link>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</link><pubDate>Wed, 10 Feb 2021 08:43:21 +0800</pubDate><guid>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ -&lt;h2 id="前言">前言&lt;/h2>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 20:57:38 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>09 使用githook统一codestyle</title><link>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</link><pubDate>Wed, 10 Feb 2021 08:46:52 +0800</pubDate><guid>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ -&lt;h1 id="gradle-优化">gradle 优化&lt;/h1>
+&lt;ul>
+&lt;li>build 指定 -g cache 缓存&lt;/li>
+&lt;/ul>
+&lt;h1 id="checkstyle-实践">checkstyle 实践&lt;/h1>
+&lt;ul>
+&lt;li>基础镜像包含 &lt;code>checkstyle.xml&lt;/code> 或者 放到远程其他可被拉取到的存储介质 ，防止项目成员改动&lt;/li>
+&lt;li>&lt;code>gitlab-ci&lt;/code> &lt;code>beforeScript&lt;/code> 标签执行命令 &lt;code>copy /checkstyle.xml&lt;/code> 进入项目，(覆盖项目中存在的).&lt;/li>
+&lt;li>&lt;code>gradle&lt;/code> 编译的话 将 &lt;code>maven-publish.gradle&lt;/code> &lt;code>repos.gradle&lt;/code> &lt;code>checkstyle.gradle&lt;/code>(&lt;code>checkstyle&lt;/code> 插件配置 版本以及 &lt;code>configFile&lt;/code>) 抽出放到公共的地方，防止项目团队成员改的.&lt;/li>
+&lt;li>&lt;code>maven&lt;/code> 的话，可以在公共的顶级继承 &lt;code>pom&lt;/code> 里面指定变量&lt;code>checkstyle.config.location&lt;/code>. &lt;code>mvn checkstyle -Dcheckstyle.config.location=checkstyle.xml&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h1 id="git-hook-实践">git hook 实践&lt;/h1>
+&lt;p>每个项目里面 &lt;code>.git/hooks&lt;/code> 里面有很多的 &lt;code>hook&lt;/code> 模板&lt;/p>
+&lt;p>客户端钩子包括:&lt;code>pre-commit&lt;/code>、&lt;code>prepare-commit-msg&lt;/code>、&lt;code>commit-msg&lt;/code>、&lt;code>post-commit&lt;/code>等，主要用于控制客户端git的提交工作流。&lt;/p>
+&lt;p>服务端钩子：&lt;code>pre-receive&lt;/code>、&lt;code>post-receive&lt;/code>、&lt;code>update&lt;/code>，主要在服务端接收提交对象时、推送到服务器之前调用。&lt;/p>
+&lt;p>今天实践的是 客户端钩子，优化减少不符合规范或者低质量代码进入 &lt;code>gitflow&lt;/code> 流程.&lt;/p>
+&lt;p>&lt;code>pre-commit&lt;/code> 和 &lt;code>commit-msg&lt;/code> 是今天的主角，&lt;code>pre-commit&lt;/code> 执行与 &lt;code>git add&lt;/code> 之后，在进行 &lt;code>git commit&lt;/code> 之前进行的操作.
+可以用来进行 &lt;code>code check&lt;/code> &lt;code>code lint&lt;/code> 等等, &lt;code>commit-msg&lt;/code> 执行与 &lt;code>git commit&lt;/code> 常用于补全 &lt;code>git commit message&lt;/code> &lt;code>check msg&lt;/code> 等等
+当然还有其他骚操作的功能，可以通知，等等，做多种自动化&lt;/p>
+&lt;p>目录结构&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yml" data-lang="yml">project&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>- .git/..等等&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>- git_hooks&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>-- pre-commit &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># pre-commit action&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>-- commit-msg &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># commit-msg action&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>-- init.sh &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 初始化脚本&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>pre-commit&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#1e889b">#!/bin/bash
+&lt;/span>&lt;span style="color:#1e889b">&lt;/span>&lt;span style="color:#00688b">workPath&lt;/span>=&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>&lt;span style="color:#658b00">pwd&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>
+&lt;span style="color:#00688b">CHECK_DIR&lt;/span>=&lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">workPath&lt;/span>&lt;span style="color:#cd5555">}&lt;/span>/checks
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ ! -d &lt;span style="color:#00688b">$CHECK_DIR&lt;/span> ]
+&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
+mkdir &lt;span style="color:#00688b">$CHECK_DIR&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
+&lt;span style="color:#00688b">DOWNLOAD_PATH&lt;/span>=&lt;span style="color:#cd5555">&amp;#34;http://{download.path}/checkstyle&amp;#34;&lt;/span>
+&lt;span style="color:#00688b">CONFIG_CHECK_JAR&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle.jar;
+&lt;span style="color:#00688b">CONFIG_CHECK_FILE&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle.xml;
+&lt;span style="color:#00688b">CONFIG_ERROR_FILE&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle_errors.xml;
+&lt;span style="color:#00688b">CONFIG_ERROR_REPORT_FILE&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle_report.xml;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ ! -f &lt;span style="color:#00688b">$CONFIG_CHECK_JAR&lt;/span> ]
+&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
+curl -o &lt;span style="color:#00688b">$CONFIG_CHECK_JAR&lt;/span> &lt;span style="color:#00688b">$DOWNLOAD_PATH&lt;/span>/checkstyle-8.8-all.jar || true;
+&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ ! -f &lt;span style="color:#00688b">$CONFIG_CHECK_FILE&lt;/span> ]
+&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
+curl -o &lt;span style="color:#00688b">$CONFIG_CHECK_FILE&lt;/span> &lt;span style="color:#00688b">$DOWNLOAD_PATH&lt;/span>/checkstyle.xml || true;
+&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
+&lt;span style="color:#00688b">javafiles&lt;/span>=&lt;span style="color:#cd5555">`&lt;/span>git diff --cached --name-only | grep &lt;span style="color:#cd5555">&amp;#39;\.java&amp;#39;&lt;/span>&lt;span style="color:#cd5555">`&lt;/span>;
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#00688b">$javafiles&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ -f &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> ]
+&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
+rm &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
+&lt;span style="color:#00688b">CHECK_CMD&lt;/span>=&lt;span style="color:#cd5555">&amp;#34;java -cp &lt;/span>&lt;span style="color:#00688b">$CONFIG_CHECK_JAR&lt;/span>&lt;span style="color:#cd5555"> com.puppycrawl.tools.checkstyle.Main -c &lt;/span>&lt;span style="color:#00688b">$CONFIG_CHECK_FILE&lt;/span>&lt;span style="color:#cd5555"> &lt;/span>&lt;span style="color:#00688b">$javafiles&lt;/span>&lt;span style="color:#cd5555"> -f xml -o &lt;/span>&lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>;
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;&lt;/span>&lt;span style="color:#00688b">$CHECK_CMD&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>;
+&lt;span style="color:#00688b">$CHECK_CMD&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ -f &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> ]
+&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
+&lt;span style="color:#00688b">errorResponse&lt;/span>=&lt;span style="color:#cd5555">`&lt;/span>cat &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> | grep &lt;span style="color:#cd5555">\&amp;lt;&lt;/span>error|head -n 1&lt;span style="color:#cd5555">`&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [[ &lt;span style="color:#00688b">$errorResponse&lt;/span> == *&lt;span style="color:#cd5555">&amp;#34;error&amp;#34;&lt;/span>* ]]
+&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
+awk &lt;span style="color:#cd5555">&amp;#39;{print;} NR == 1 { print &amp;#34;&amp;lt;?xml-stylesheet xmlns=\&amp;#34;http://www.w3.org/1999/xhtml\&amp;#34; href=\&amp;#34;checkstyle-simple.xsl\&amp;#34; type=\&amp;#34;text/xsl\&amp;#34;?&amp;gt;&amp;#34;}&amp;#39;&lt;/span> &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> &amp;gt; &lt;span style="color:#00688b">$CONFIG_ERROR_REPORT_FILE&lt;/span>;
+&lt;span style="color:#658b00">echo&lt;/span> -e &lt;span style="color:#cd5555">&amp;#34;Check your code. Open by Safari or Chrome ( --allow-file-access-from-files ): &lt;/span>&lt;span style="color:#00688b">$CONFIG_ERROR_REPORT_FILE&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>;
+open &lt;span style="color:#00688b">$CONFIG_ERROR_REPORT_FILE&lt;/span>
+&lt;span style="color:#658b00">exit&lt;/span> &lt;span style="color:#b452cd">1&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;check pass! pre_commit successfully!&amp;#34;&lt;/span>;
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>commit-msg&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#1e889b">#!/bin/sh
+&lt;/span>&lt;span style="color:#1e889b">&lt;/span>&lt;span style="color:#228b22"># append CL message 信息（加入作者 例子）&lt;/span>
+&lt;span style="color:#228b22">#name=[PinkHello]&lt;/span>
+&lt;span style="color:#228b22">#commit=&amp;#34;$name $(cat $1)&amp;#34;&lt;/span>
+&lt;span style="color:#228b22">#echo &amp;#34;$commit&amp;#34; &amp;gt; &amp;#34;$1&amp;#34;&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#00688b">$commit&lt;/span>
+&lt;span style="color:#00688b">commit&lt;/span>=&lt;span style="color:#cd5555">`&lt;/span>cat &lt;span style="color:#00688b">$1&lt;/span>&lt;span style="color:#cd5555">`&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;&lt;/span>&lt;span style="color:#00688b">$commit&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span> &amp;gt; &lt;span style="color:#cd5555">&amp;#34;&lt;/span>&lt;span style="color:#00688b">$1&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [[ &lt;span style="color:#00688b">$commit&lt;/span> =~ ^([A-Z]+)-([0-9]+):.*|(Merge.*)|(Revert.*)|(Other.*) ]]
+&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;commit successful!&amp;#34;&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">else&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;\033 Error: the commit message must start with JIRA ticket number \033&amp;#34;&lt;/span>
+&lt;span style="color:#658b00">exit&lt;/span> &lt;span style="color:#b452cd">1&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>init.sh&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#1e889b">#!/bin/sh
+&lt;/span>&lt;span style="color:#1e889b">&lt;/span>&lt;span style="color:#228b22"># 当前目录&lt;/span>
+&lt;span style="color:#00688b">workPath&lt;/span>=&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>&lt;span style="color:#658b00">pwd&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;当前初始化目录&lt;/span>&lt;span style="color:#00688b">$workPath&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
+&lt;span style="color:#228b22"># 链接到 .git hooks 目录里面&lt;/span>
+ln -s -f &lt;span style="color:#00688b">$workPath&lt;/span>/pre-commit &lt;span style="color:#00688b">$workPath&lt;/span>/../.git/hooks/pre-commit
+ln -s -f &lt;span style="color:#00688b">$workPath&lt;/span>/commit-msg &lt;span style="color:#00688b">$workPath&lt;/span>/../.git/hooks/commit-msg
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;ln pre-commit commit-msg.....success.&amp;#34;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="google-cr-mr-规范">google CR MR 规范&lt;/h1>
+&lt;p>&lt;a href="https://github.com/google/eng-practices">https://github.com/google/eng-practices&lt;/a>&lt;/p>
+&lt;p>&lt;code>CL&lt;/code> 规范：&lt;/p>
+&lt;ul>
+&lt;li>提交新的 &lt;code>subject&lt;/code> ，才有祈使句，一个命令的形式言简意赅的表达这次要改变的什么，如需要详细上下文，关联 &lt;code>ticket&lt;/code>，在 &lt;code>body&lt;/code> 中说明&lt;/li>
+&lt;li>简化 &lt;code>cl&lt;/code> ，尽可能小，不要积攒一堆 &lt;code>change&lt;/code> ，一次性提交，然后再一次性 &lt;code>MR&lt;/code> ，加大了 &lt;code>review&lt;/code> 风险。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>MR&lt;/code> 规范&lt;/p>
+&lt;ul>
+&lt;li>紧急 &lt;code>MR&lt;/code> 适当放松&lt;/li>
+&lt;li>&lt;code>MR&lt;/code> 不能带有脾气，目的是基于问题讨论，解决问题&lt;/li>
+&lt;li>针对做的好的给予肯定和👍&lt;/li>
+&lt;li>&lt;code>LGTM means look good to me &lt;/code>= 朕知道了！&lt;/li>
+&lt;li>&lt;code>MR&lt;/code> 冲突，联系必要开发者一起参与决定避免出现代码丢失与错误.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>CR&lt;/code> 规范&lt;/p>
+&lt;ul>
+&lt;li>速度可以灭杀一切抱怨，不能让 &lt;code>cr&lt;/code> 时间过长&lt;/li>
+&lt;li>&lt;code>CR&lt;/code> 发现问题一定要让开发者去修改，不要有以后再修改的想法，这种方式往往是让系统变得更差的原因.&lt;/li>
+&lt;/ul>
+- https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>08 Gradle多模块项目模板化</title><link>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</link><pubDate>Wed, 10 Feb 2021 08:43:21 +0800</pubDate><guid>https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/08-gradle%E5%A4%9A%E6%A8%A1%E5%9D%97%E9%A1%B9%E7%9B%AE%E6%A8%A1%E6%9D%BF%E5%8C%96/ -&lt;h2 id="前言">前言&lt;/h2>
 &lt;p>Maven 冗余， Gradle 简单轻便
 公司原有的 CI/CD 流程，借助 Maven 插件 build Docker Image,改为原生 Docker Runner 原始构建&lt;/p>
 &lt;h2 id="1多模块项目">1、多模块项目&lt;/h2>
@@ -1523,4 +1642,4 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;li>此方法为 1.5 引入，旨在协助&lt;code>jvm&lt;/code>进行有效的快速 &lt;code>gc&lt;/code>；&lt;/li>
 &lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
 &lt;/ul>
-- https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>Links</title><link>https://pinkhello.github.io/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.github.io/links/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/links/ -- https://pinkhello.github.io/links/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>

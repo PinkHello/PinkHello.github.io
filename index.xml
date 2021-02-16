@@ -1,4 +1,130 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Mon, 15 Feb 2021 10:16:34 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>18 回望K8S 白话容器</title><link>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Mon, 15 Feb 2021 10:16:34 +0800</pubDate><guid>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;p>前言&lt;/p>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 20:57:38 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>19 回望K8S Kubernetes拼图</title><link>https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</link><pubDate>Tue, 16 Feb 2021 20:57:38 +0800</pubDate><guid>https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ -&lt;h1 id="kubernetes-安装">kubernetes 安装&lt;/h1>
+&lt;h2 id="all-节点安装-docker-和-kubeadm">all 节点安装 Docker 和 Kubeadm&lt;/h2>
+&lt;p>所有节点 root 用户下操作&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+&amp;gt; cat &lt;span style="color:#cd5555">&amp;lt;&amp;lt;EOF &amp;gt; /etc/apt/sources.list.d/kubernetes.list
+&lt;/span>&lt;span style="color:#cd5555">deb http://apt.kubernetes.io/ kubernetes-xenial main
+&lt;/span>&lt;span style="color:#cd5555">EOF&lt;/span>
+&amp;gt; apt-get update
+&lt;span style="color:#228b22"># 这一步安装的时候 kubeadm 和 kubelet、kubectl、kubernetes-cni 都会自动安装完毕&lt;/span>
+&amp;gt; apt-get install -y docker.io kubeadm
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>提示：如果 apt.kubernetes.io 因为网络问题访问不到，可以换成中科大的 Ubuntu 镜像源 deb &lt;a href="http://mirrors.ustc.edu.cn/kubernetes/apt">http://mirrors.ustc.edu.cn/kubernetes/apt&lt;/a> kubernetes-xenial main。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="部署-kubernetes-master">部署 Kubernetes Master&lt;/h2>
+&lt;p>声明一个 kubeadm.yaml&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>kubeadm.k8s.io/v1alpha1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>MasterConfiguration&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">controllerManagerExtraArgs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># 配置了自定义自动水平扩展&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">horizontal-pod-autoscaler-use-rest-clients&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;true&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">horizontal-pod-autoscaler-sync-period&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;10s&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">node-monitor-grace-period&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;10s&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiServerExtraArgs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">runtime-config&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;api/all=true&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># kubeadm 部署的 kubernetes 的版本&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kubernetesVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;stable-1.11&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>···&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>执行下面的指令，完成 kubernetes master 部署，这回生成一行指令&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubeadm init --config kubeadm.yaml
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">kubeadm join 10.168.0.2:6443 --token 00bwbx.uvnaa2ewjflwu1ry --discovery-token-ca-cert-hash sha256:00eb62a2a6020f94132e3fe1ab721349bbcd3e9b94da9654cfe15f2985ebd711
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个 kubeadm join 命令, 用来给这个 Master 节点添加更多的 Worker 节点.&lt;/p>
+&lt;p>另外 kubeadm 会提示我们第一次使用 kubernetes 集群所需要的配置命令:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; mkdir -p &lt;span style="color:#00688b">$HOME&lt;/span>/.kube
+&amp;gt; sudo cp -i /etc/kubernetes/admin.conf &lt;span style="color:#00688b">$HOME&lt;/span>/.kube/config
+&amp;gt; sudo chown &lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>id -u&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>:&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>id -g&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span> &lt;span style="color:#00688b">$HOME&lt;/span>/.kube/config
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>因为 Kubernetes 集群默认需要加密方式访问，所以，需要将刚刚部署生成的 kubernetes 集群安全配置文件，保存到当前用户的 .kube 目录下, kubectl 默认会使用这个目录下的授权信息进行访问&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22">#查看kubernetes集群的节点状态&lt;/span>
+&amp;gt; kubectl get nodes
+NAME STATUS ROLES AGE VERSION
+master NotReady master 1d v1.11.1
+&lt;span style="color:#228b22"># NotReady 因为还没有部署任何网络插件&lt;/span>
+&amp;gt; kubectl describe node master
+...
+Conditions:
+...
+Ready False ... KubeletNotReady runtime network not ready: &lt;span style="color:#00688b">NetworkReady&lt;/span>=&lt;span style="color:#658b00">false&lt;/span> reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl get pods -n kube-system
+NAME READY STATUS RESTARTS AGE
+coredns-78fcdf6894-j9s52 0/1 Pending &lt;span style="color:#b452cd">0&lt;/span> 1h
+coredns-78fcdf6894-jm4wf 0/1 Pending &lt;span style="color:#b452cd">0&lt;/span> 1h
+etcd-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 2s
+kube-apiserver-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1s
+kube-controller-manager-master 0/1 Pending &lt;span style="color:#b452cd">0&lt;/span> 1s
+kube-proxy-xbd47 1/1 NodeLost &lt;span style="color:#b452cd">0&lt;/span> 1h
+kube-scheduler-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1s
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="部署-容器网络插件">部署 容器网络插件&lt;/h2>
+&lt;p>在 kubernetes 内部里面 一切皆容器 设计方式，部署网络插件非常简单,以 Weave 为例子&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl apply -f https://git.io/weave-kube-1.6
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>部署完毕后, 通过 kubectl get 检查 POD 状态&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl get pods -n kube-system
+NAME READY STATUS RESTARTS AGE
+coredns-78fcdf6894-j9s52 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1d
+coredns-78fcdf6894-jm4wf 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1d
+etcd-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+kube-apiserver-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+kube-controller-manager-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+kube-proxy-xbd47 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1d
+kube-scheduler-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+weave-net-cmk27 2/2 Running &lt;span style="color:#b452cd">0&lt;/span> 19s
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>而刚刚部署的 Weave 网络插件则在 kube-system 下面新建了一个名叫 weave-net-cmk27 的 Pod，一般来说，这些 Pod 就是容器网络插件在每个节点上的控制组件。&lt;/p>
+&lt;p>Kubernetes 的支持的容器网络插件，使用的 CNI 的通用接口，当前开源的容器网络插件有&lt;/p>
+&lt;ul>
+&lt;li>Flannel 这个采用应该比较多的&lt;/li>
+&lt;li>Calico&lt;/li>
+&lt;li>Canal&lt;/li>
+&lt;li>Romana&lt;/li>
+&lt;/ul>
+&lt;h2 id="部署-kubernetes-worker">部署 Kubernetes Worker&lt;/h2>
+&lt;p>Worker 节点的部署 和 Master 节点的运行的程序几乎相同, 都运行这 kubelet 组件，唯一的区别是 kubelet 启动后，Master 节点需要自动运行 kube-apiserver，kube-scheduler，kube-controller-manager三个Pod&lt;/p>
+&lt;p>执行部署Master时候生成的 kubeadm join 指令&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubeadm join 10.168.0.2:6443 --token 00bwbx.uvnaa2ewjflwu1ry --discovery-token-ca-cert-hash sha256:00eb62a2a6020f94132e3fe1ab721349bbcd3e9b94da9654cfe15f2985ebd711
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>通过 Taint/Toleration 调整 Master 执行 Pod 的策略&lt;/p>
+&lt;blockquote>
+&lt;p>默认情况下 Master 节点是不允许运行用户 Pod 的。而 Kubernetes 做到这一点，依靠的是 Kubernetes 的 Taint/Toleration 机制。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>它的原理非常简单：一旦某个节点被加上了一个 Taint，即被“打上了污点”，那么所有 Pod 就都不能在这个节点上运行，因为 Kubernetes 的 Pod 都有“洁癖”。除非，有个别的 Pod 声明自己能“容忍”这个“污点”，即声明了 Toleration，它才可以在这个节点上运行。其中，为节点打上“污点”（Taint）的命令是：kubectl taint nodes node1 foo=bar:NoSchedule&lt;/p>
+&lt;/blockquote>
+&lt;p>默认情况下 Master 节点是不允许运行用户 Pod 的, 可以通过 kubectl describe 检查一下 Master 节点的 Taint 字段&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl describe node master
+Name: master
+Roles: master
+Taints: node-role.kubernetes.io/master:NoSchedule
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看到，Master 节点默认被加上了node-role.kubernetes.io/master:NoSchedule这样一个“污点”，其中“键”是node-role.kubernetes.io/master，而没有提供“值”。&lt;/p>
+&lt;p>当然，如果你就是想要一个单节点的 Kubernetes，删除这个 Taint 才是正确的选择：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># “node-role.kubernetes.io/master”这个键后面加上了一个短横线“-”，这个格式就意味着移除所有以“node-role.kubernetes.io/master”为键的 Taint。&lt;/span>
+&amp;gt; kubectl taint nodes --all node-role.kubernetes.io/master-
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="部署-dashboard-可视化插件">部署 Dashboard 可视化插件&lt;/h2>
+&lt;p>Web 页面展示也是一个很重要的方面，能可视化的查看集群的各种信息&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-rc6/aio/deploy/recommended.yaml
+&amp;gt; kubectl get pods -n kube-system
+kubernetes-dashboard-6948bdb78-f67xk 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1m
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>Dashboard 项目部署完成后，默认只能通过 Proxy 的方式在本地访问&lt;/p>
+&lt;h2 id="部署-容器存储插件">部署 容器存储插件&lt;/h2>
+&lt;p>Kubernetes 松耦合的设计，所以绝大多数存储项目都可以为 Kubernetes 提供持久化存储能力.&lt;/p>
+&lt;ul>
+&lt;li>Ceph&lt;/li>
+&lt;li>GlusterFS&lt;/li>
+&lt;li>NFS&lt;/li>
+&lt;/ul>
+&lt;p>Rook 插件是基于 Ceph 的 Kubernetes 存储插件，Rook 在自己的实现中加入了水平扩展、迁移、灾备、监控等大量的企业级功能，这是一个完整的，可以应用在生产上的容器存储插件&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/common.yaml
+&amp;gt; kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/operator.yaml
+&amp;gt; kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/cluster.yaml
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>在部署完成后，你就可以看到 Rook 项目会将自己的 Pod 放置在由它自己管理的两个 Namespace 当中：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl get pods -n rook-ceph-system
+NAME READY STATUS RESTARTS AGE
+rook-ceph-agent-7cv62 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 15s
+rook-ceph-operator-78d498c68c-7fj72 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 44s
+rook-discover-2ctcv 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 15s
+&amp;gt; kubectl get pods -n rook-ceph
+NAME READY STATUS RESTARTS AGE
+rook-ceph-mon0-kxnzh 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 13s
+rook-ceph-mon1-7dn2t 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 2s
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这样，一个基于 Rook 持久化存储集群就以容器的方式运行起来了，而接下来在 Kubernetes 项目上创建的所有 Pod 就能够通过 Persistent Volume（PV）和 Persistent Volume Claim（PVC）的方式，在容器里挂载由 Ceph 提供的数据卷了。&lt;/p>
+- https://pinkhello.github.io/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>18 回望K8S 白话容器</title><link>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Mon, 15 Feb 2021 10:16:34 +0800</pubDate><guid>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;p>前言&lt;/p>
 &lt;ul>
 &lt;li>总结自 极客时间 深入剖析 Kubernetes&lt;/li>
 &lt;/ul>
@@ -1735,123 +1861,4 @@ ssh-add ~/.ssh/gitlab_id_rsa
 &lt;li>添加自启动程序&lt;/li>
 &lt;li>说一个简单的，将 ssh-add ~/.ssh/**id_rsa 添加到 .*shrc 文件里面去&lt;/li>
 &lt;/ul>
-- https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>09 使用githook统一codestyle</title><link>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</link><pubDate>Wed, 10 Feb 2021 08:46:52 +0800</pubDate><guid>https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ -&lt;h1 id="gradle-优化">gradle 优化&lt;/h1>
-&lt;ul>
-&lt;li>build 指定 -g cache 缓存&lt;/li>
-&lt;/ul>
-&lt;h1 id="checkstyle-实践">checkstyle 实践&lt;/h1>
-&lt;ul>
-&lt;li>基础镜像包含 &lt;code>checkstyle.xml&lt;/code> 或者 放到远程其他可被拉取到的存储介质 ，防止项目成员改动&lt;/li>
-&lt;li>&lt;code>gitlab-ci&lt;/code> &lt;code>beforeScript&lt;/code> 标签执行命令 &lt;code>copy /checkstyle.xml&lt;/code> 进入项目，(覆盖项目中存在的).&lt;/li>
-&lt;li>&lt;code>gradle&lt;/code> 编译的话 将 &lt;code>maven-publish.gradle&lt;/code> &lt;code>repos.gradle&lt;/code> &lt;code>checkstyle.gradle&lt;/code>(&lt;code>checkstyle&lt;/code> 插件配置 版本以及 &lt;code>configFile&lt;/code>) 抽出放到公共的地方，防止项目团队成员改的.&lt;/li>
-&lt;li>&lt;code>maven&lt;/code> 的话，可以在公共的顶级继承 &lt;code>pom&lt;/code> 里面指定变量&lt;code>checkstyle.config.location&lt;/code>. &lt;code>mvn checkstyle -Dcheckstyle.config.location=checkstyle.xml&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;h1 id="git-hook-实践">git hook 实践&lt;/h1>
-&lt;p>每个项目里面 &lt;code>.git/hooks&lt;/code> 里面有很多的 &lt;code>hook&lt;/code> 模板&lt;/p>
-&lt;p>客户端钩子包括:&lt;code>pre-commit&lt;/code>、&lt;code>prepare-commit-msg&lt;/code>、&lt;code>commit-msg&lt;/code>、&lt;code>post-commit&lt;/code>等，主要用于控制客户端git的提交工作流。&lt;/p>
-&lt;p>服务端钩子：&lt;code>pre-receive&lt;/code>、&lt;code>post-receive&lt;/code>、&lt;code>update&lt;/code>，主要在服务端接收提交对象时、推送到服务器之前调用。&lt;/p>
-&lt;p>今天实践的是 客户端钩子，优化减少不符合规范或者低质量代码进入 &lt;code>gitflow&lt;/code> 流程.&lt;/p>
-&lt;p>&lt;code>pre-commit&lt;/code> 和 &lt;code>commit-msg&lt;/code> 是今天的主角，&lt;code>pre-commit&lt;/code> 执行与 &lt;code>git add&lt;/code> 之后，在进行 &lt;code>git commit&lt;/code> 之前进行的操作.
-可以用来进行 &lt;code>code check&lt;/code> &lt;code>code lint&lt;/code> 等等, &lt;code>commit-msg&lt;/code> 执行与 &lt;code>git commit&lt;/code> 常用于补全 &lt;code>git commit message&lt;/code> &lt;code>check msg&lt;/code> 等等
-当然还有其他骚操作的功能，可以通知，等等，做多种自动化&lt;/p>
-&lt;p>目录结构&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yml" data-lang="yml">project&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>- .git/..等等&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>- git_hooks&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>-- pre-commit &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># pre-commit action&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>-- commit-msg &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># commit-msg action&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>-- init.sh &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 初始化脚本&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>pre-commit&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#1e889b">#!/bin/bash
-&lt;/span>&lt;span style="color:#1e889b">&lt;/span>&lt;span style="color:#00688b">workPath&lt;/span>=&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>&lt;span style="color:#658b00">pwd&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>
-&lt;span style="color:#00688b">CHECK_DIR&lt;/span>=&lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">workPath&lt;/span>&lt;span style="color:#cd5555">}&lt;/span>/checks
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ ! -d &lt;span style="color:#00688b">$CHECK_DIR&lt;/span> ]
-&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
-mkdir &lt;span style="color:#00688b">$CHECK_DIR&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
-&lt;span style="color:#00688b">DOWNLOAD_PATH&lt;/span>=&lt;span style="color:#cd5555">&amp;#34;http://{download.path}/checkstyle&amp;#34;&lt;/span>
-&lt;span style="color:#00688b">CONFIG_CHECK_JAR&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle.jar;
-&lt;span style="color:#00688b">CONFIG_CHECK_FILE&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle.xml;
-&lt;span style="color:#00688b">CONFIG_ERROR_FILE&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle_errors.xml;
-&lt;span style="color:#00688b">CONFIG_ERROR_REPORT_FILE&lt;/span>=&lt;span style="color:#00688b">$CHECK_DIR&lt;/span>/checkstyle_report.xml;
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ ! -f &lt;span style="color:#00688b">$CONFIG_CHECK_JAR&lt;/span> ]
-&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
-curl -o &lt;span style="color:#00688b">$CONFIG_CHECK_JAR&lt;/span> &lt;span style="color:#00688b">$DOWNLOAD_PATH&lt;/span>/checkstyle-8.8-all.jar || true;
-&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ ! -f &lt;span style="color:#00688b">$CONFIG_CHECK_FILE&lt;/span> ]
-&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
-curl -o &lt;span style="color:#00688b">$CONFIG_CHECK_FILE&lt;/span> &lt;span style="color:#00688b">$DOWNLOAD_PATH&lt;/span>/checkstyle.xml || true;
-&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
-&lt;span style="color:#00688b">javafiles&lt;/span>=&lt;span style="color:#cd5555">`&lt;/span>git diff --cached --name-only | grep &lt;span style="color:#cd5555">&amp;#39;\.java&amp;#39;&lt;/span>&lt;span style="color:#cd5555">`&lt;/span>;
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#00688b">$javafiles&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ -f &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> ]
-&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
-rm &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
-&lt;span style="color:#00688b">CHECK_CMD&lt;/span>=&lt;span style="color:#cd5555">&amp;#34;java -cp &lt;/span>&lt;span style="color:#00688b">$CONFIG_CHECK_JAR&lt;/span>&lt;span style="color:#cd5555"> com.puppycrawl.tools.checkstyle.Main -c &lt;/span>&lt;span style="color:#00688b">$CONFIG_CHECK_FILE&lt;/span>&lt;span style="color:#cd5555"> &lt;/span>&lt;span style="color:#00688b">$javafiles&lt;/span>&lt;span style="color:#cd5555"> -f xml -o &lt;/span>&lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>;
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;&lt;/span>&lt;span style="color:#00688b">$CHECK_CMD&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>;
-&lt;span style="color:#00688b">$CHECK_CMD&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [ -f &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> ]
-&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
-&lt;span style="color:#00688b">errorResponse&lt;/span>=&lt;span style="color:#cd5555">`&lt;/span>cat &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> | grep &lt;span style="color:#cd5555">\&amp;lt;&lt;/span>error|head -n 1&lt;span style="color:#cd5555">`&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [[ &lt;span style="color:#00688b">$errorResponse&lt;/span> == *&lt;span style="color:#cd5555">&amp;#34;error&amp;#34;&lt;/span>* ]]
-&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
-awk &lt;span style="color:#cd5555">&amp;#39;{print;} NR == 1 { print &amp;#34;&amp;lt;?xml-stylesheet xmlns=\&amp;#34;http://www.w3.org/1999/xhtml\&amp;#34; href=\&amp;#34;checkstyle-simple.xsl\&amp;#34; type=\&amp;#34;text/xsl\&amp;#34;?&amp;gt;&amp;#34;}&amp;#39;&lt;/span> &lt;span style="color:#00688b">$CONFIG_ERROR_FILE&lt;/span> &amp;gt; &lt;span style="color:#00688b">$CONFIG_ERROR_REPORT_FILE&lt;/span>;
-&lt;span style="color:#658b00">echo&lt;/span> -e &lt;span style="color:#cd5555">&amp;#34;Check your code. Open by Safari or Chrome ( --allow-file-access-from-files ): &lt;/span>&lt;span style="color:#00688b">$CONFIG_ERROR_REPORT_FILE&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>;
-open &lt;span style="color:#00688b">$CONFIG_ERROR_REPORT_FILE&lt;/span>
-&lt;span style="color:#658b00">exit&lt;/span> &lt;span style="color:#b452cd">1&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;check pass! pre_commit successfully!&amp;#34;&lt;/span>;
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>commit-msg&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#1e889b">#!/bin/sh
-&lt;/span>&lt;span style="color:#1e889b">&lt;/span>&lt;span style="color:#228b22"># append CL message 信息（加入作者 例子）&lt;/span>
-&lt;span style="color:#228b22">#name=[PinkHello]&lt;/span>
-&lt;span style="color:#228b22">#commit=&amp;#34;$name $(cat $1)&amp;#34;&lt;/span>
-&lt;span style="color:#228b22">#echo &amp;#34;$commit&amp;#34; &amp;gt; &amp;#34;$1&amp;#34;&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#00688b">$commit&lt;/span>
-&lt;span style="color:#00688b">commit&lt;/span>=&lt;span style="color:#cd5555">`&lt;/span>cat &lt;span style="color:#00688b">$1&lt;/span>&lt;span style="color:#cd5555">`&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;&lt;/span>&lt;span style="color:#00688b">$commit&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span> &amp;gt; &lt;span style="color:#cd5555">&amp;#34;&lt;/span>&lt;span style="color:#00688b">$1&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> [[ &lt;span style="color:#00688b">$commit&lt;/span> =~ ^([A-Z]+)-([0-9]+):.*|(Merge.*)|(Revert.*)|(Other.*) ]]
-&lt;span style="color:#8b008b;font-weight:bold">then&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;commit successful!&amp;#34;&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">else&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;\033 Error: the commit message must start with JIRA ticket number \033&amp;#34;&lt;/span>
-&lt;span style="color:#658b00">exit&lt;/span> &lt;span style="color:#b452cd">1&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">fi&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>init.sh&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#1e889b">#!/bin/sh
-&lt;/span>&lt;span style="color:#1e889b">&lt;/span>&lt;span style="color:#228b22"># 当前目录&lt;/span>
-&lt;span style="color:#00688b">workPath&lt;/span>=&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>&lt;span style="color:#658b00">pwd&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;当前初始化目录&lt;/span>&lt;span style="color:#00688b">$workPath&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
-&lt;span style="color:#228b22"># 链接到 .git hooks 目录里面&lt;/span>
-ln -s -f &lt;span style="color:#00688b">$workPath&lt;/span>/pre-commit &lt;span style="color:#00688b">$workPath&lt;/span>/../.git/hooks/pre-commit
-ln -s -f &lt;span style="color:#00688b">$workPath&lt;/span>/commit-msg &lt;span style="color:#00688b">$workPath&lt;/span>/../.git/hooks/commit-msg
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;ln pre-commit commit-msg.....success.&amp;#34;&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="google-cr-mr-规范">google CR MR 规范&lt;/h1>
-&lt;p>&lt;a href="https://github.com/google/eng-practices">https://github.com/google/eng-practices&lt;/a>&lt;/p>
-&lt;p>&lt;code>CL&lt;/code> 规范：&lt;/p>
-&lt;ul>
-&lt;li>提交新的 &lt;code>subject&lt;/code> ，才有祈使句，一个命令的形式言简意赅的表达这次要改变的什么，如需要详细上下文，关联 &lt;code>ticket&lt;/code>，在 &lt;code>body&lt;/code> 中说明&lt;/li>
-&lt;li>简化 &lt;code>cl&lt;/code> ，尽可能小，不要积攒一堆 &lt;code>change&lt;/code> ，一次性提交，然后再一次性 &lt;code>MR&lt;/code> ，加大了 &lt;code>review&lt;/code> 风险。&lt;/li>
-&lt;/ul>
-&lt;p>&lt;code>MR&lt;/code> 规范&lt;/p>
-&lt;ul>
-&lt;li>紧急 &lt;code>MR&lt;/code> 适当放松&lt;/li>
-&lt;li>&lt;code>MR&lt;/code> 不能带有脾气，目的是基于问题讨论，解决问题&lt;/li>
-&lt;li>针对做的好的给予肯定和👍&lt;/li>
-&lt;li>&lt;code>LGTM means look good to me &lt;/code>= 朕知道了！&lt;/li>
-&lt;li>&lt;code>MR&lt;/code> 冲突，联系必要开发者一起参与决定避免出现代码丢失与错误.&lt;/li>
-&lt;/ul>
-&lt;p>&lt;code>CR&lt;/code> 规范&lt;/p>
-&lt;ul>
-&lt;li>速度可以灭杀一切抱怨，不能让 &lt;code>cr&lt;/code> 时间过长&lt;/li>
-&lt;li>&lt;code>CR&lt;/code> 发现问题一定要让开发者去修改，不要有以后再修改的想法，这种方式往往是让系统变得更差的原因.&lt;/li>
-&lt;/ul>
-- https://pinkhello.github.io/posts/09-%E4%BD%BF%E7%94%A8githook%E7%BB%9F%E4%B8%80codestyle/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.github.io/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ - 一杯哈希不加盐, All Rights Reserved</description></item></channel></rss>
