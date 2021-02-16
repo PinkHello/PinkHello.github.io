@@ -1,4 +1,8 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Mon, 15 Feb 2021 10:16:34 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>18 回望K8S 白话容器</title><link>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Mon, 15 Feb 2021 10:16:34 +0800</pubDate><guid>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;h1 id="进程开启">进程开启&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>一杯哈希不加盐</title><link>https://pinkhello.github.io/</link><description>Recent content on 一杯哈希不加盐</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>一杯哈希不加盐, All Rights Reserved</copyright><lastBuildDate>Mon, 15 Feb 2021 10:16:34 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>18 回望K8S 白话容器</title><link>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Mon, 15 Feb 2021 10:16:34 +0800</pubDate><guid>https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;p>前言&lt;/p>
+&lt;ul>
+&lt;li>总结自 极客时间 深入剖析 Kubernetes&lt;/li>
+&lt;/ul>
+&lt;h1 id="进程开启">进程开启&lt;/h1>
 &lt;h2 id="容器-到底是什么">容器, 到底是什么?&lt;/h2>
 &lt;blockquote>
 &lt;p>前面提出: 容器是一种沙盒技术. 就是一个集装箱, 把应用装起来的技术. 这样, 应用与应用之间有了边界不至于互相干扰; 有了这些集装箱, 也方便搬来搬去.&lt;/p>
@@ -351,7 +355,27 @@ Kubernetes的做法是 Pod 绑定一个 Service 服务，而 Service 服务声�
 这样对于调用方只需要关系 Service 声明信息，而Service后端真正代理的Pod 的IP地址、端口等信息的自动更新、维护是 Kubernetes的职责。&lt;/p>
 &lt;/blockquote>
 &lt;p>&lt;img src="https://pinkhello.github.io/%E5%9B%9E%E6%9C%9BK8S/kubernetes-%E5%85%A8%E6%99%AF%E5%9B%BE.png" alt="kubernetes全景图">&lt;/p>
-- https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
+&lt;ul>
+&lt;li>Pod&lt;/li>
+&lt;li>Service 描述访问关系&lt;/li>
+&lt;li>Secret 密钥&lt;/li>
+&lt;li>Job 描述一次性运行的POD&lt;/li>
+&lt;li>DaemonSet 描述每个宿主机必须且只能运行一个副本的守护进程服务&lt;/li>
+&lt;li>CronJob 描述定时任务&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>如何编排一个K8S项目&lt;/p>
+&lt;ul>
+&lt;li>通过编排对象, 比如 Pod、Job、CronJob 等，来描述试图管理的应用；&lt;/li>
+&lt;li>定义服务对象, 比如 Service、Secret、Horizontal Pod Autoscaler等，会负责具体的平台级功能&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>&lt;code>声明式 API&lt;/code> 对应的 &lt;code>编排对象&lt;/code> 和 &lt;code>服务对象&lt;/code>，都是 Kubernetes 项目中的 API 对象（API Object）&lt;/p>
+- https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;p>前言&lt;/p>
+&lt;ul>
+&lt;li>总结自 极客时间 深入剖析 Kubernetes&lt;/li>
+&lt;/ul>
+&lt;h1 id="什么是容器">什么是容器&lt;/h1>
 &lt;p>在容器之前, 火爆云计算市场的是 &lt;code>PAAS&lt;/code>, &lt;code>PAAS&lt;/code>已经深入人心. 那时候突然有一家公司 dotCloud 剑走偏锋, 直接开源出了 &lt;code>Docker&lt;/code> 项目，并且直接面向的社区。 这样的做法直接将当时的&lt;code>PAAS&lt;/code>流主要公司打的屁滚尿流。&lt;/p>
 &lt;p>回头看, &lt;code>PAAS&lt;/code> 最核心的是隔离环境,或者叫 &lt;code>沙盒&lt;/code>,在我看来也就是 &lt;code>容器&lt;/code>. 而 &lt;code>Docker&lt;/code> 项目和 &lt;code>Cloud Foundry&lt;/code> 的容器没有太大的不同,但是它为什么能针对 &lt;code>PAAS&lt;/code>进行了一场快速的闪电战呢？&lt;/p>
 &lt;blockquote>
