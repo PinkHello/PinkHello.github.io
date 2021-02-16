@@ -3,7 +3,7 @@
 &lt;blockquote>
 &lt;p>前面提出: 容器是一种沙盒技术. 就是一个集装箱, 把应用装起来的技术. 这样, 应用与应用之间有了边界不至于互相干扰; 有了这些集装箱, 也方便搬来搬去.&lt;/p>
 &lt;/blockquote>
-&lt;p>码农都知道可执行的二进制文件是代码的可执行镜像(executable image). 一旦程序执行起来, 内存数据、寄存器的值、堆栈的指令、打开的文件等这些集合汇集成一个程序的计算机执行环境总和: 进程.&lt;/p>
+&lt;p>码农都知道可执行的二进制文件是代码的可执行镜像(&lt;code>executable image&lt;/code>). 一旦程序执行起来, 内存数据、寄存器的值、堆栈的指令、打开的文件等这些集合汇集成一个程序的计算机执行环境总和: 进程.&lt;/p>
 &lt;p>&lt;code>进程&lt;/code>: 静态表现是程序, 动态表现计算机的数据和状态的总和。&lt;/p>
 &lt;p>容器的核心功能, 就是通过约束和修改进程的动态表现, 从而为其创造一个&amp;quot;边界&amp;quot;.&lt;/p>
 &lt;ul>
@@ -39,7 +39,7 @@ Linux提供了不同的Namespace，去应对不同的进程上下文&lt;/p>
 而右边的图，&lt;code>Docker Engine&lt;/code>替换了&lt;code>Hypervisor&lt;/code>,但是有个核心一点&lt;code>Docker Engine&lt;/code>并不少&lt;code>轻量级&lt;/code>虚拟化技术。&lt;/p>
 &lt;p>在&lt;code>Linux&lt;/code>的&lt;code>Namespace&lt;/code>工作方式后, 在使用&lt;code>Docker&lt;/code>的时候,&lt;code>Docker&lt;/code>并没有一个真正的&lt;code>Docker容器&lt;/code>运行在宿主机里面，而是&lt;code>Docker&lt;/code>启动还是原来的应用进程，只不过在创建这些进程时候，加上了各种&lt;code>Namespace&lt;/code>参数，使得这些进程觉得自己是在各自的&lt;code>PID Namespace&lt;/code>是第一号进程，并且只能看到各自&lt;code>Mount Namespace&lt;/code>里挂在的目录和文件、只能访问各自&lt;code>Network Namespace&lt;/code>里的网络设备.&lt;/p>
 &lt;h1 id="隔离和限制">隔离和限制&lt;/h1>
-&lt;p>前面提到实现 &lt;code>隔离&lt;/code> 的手段: Namespace. Namespace 技术实际修改了应用进程看待整个计算机的&amp;quot;视图&amp;quot;，即它的&amp;quot;视线&amp;quot;被操作系统做了限制，只能&amp;quot;看到&amp;quot;某些知道的内容.&lt;/p>
+&lt;p>前面提到实现 &lt;code>隔离&lt;/code> 的手段: &lt;code>Namespace&lt;/code>. &lt;code>Namespace&lt;/code> 技术实际修改了应用进程看待整个计算机的&amp;quot;视图&amp;quot;，即它的&amp;quot;视线&amp;quot;被操作系统做了限制，只能&amp;quot;看到&amp;quot;某些知道的内容.&lt;/p>
 &lt;h2 id="为什么需要隔离">为什么需要&lt;code>隔离&lt;/code>&lt;/h2>
 &lt;ul>
 &lt;li>首先，既然容器只是运行在宿主机上的一种特殊的进程，那么多个容器之间使用的就还是同一个宿主机的操作系统内核。&lt;/li>
@@ -53,7 +53,7 @@ Linux提供了不同的Namespace，去应对不同的进程上下文&lt;/p>
 &lt;blockquote>
 &lt;p>在宿主机上,启动多个容器都是在宿主机上的特殊进程,但是在不同的进程之间, 资源（CPU、内存）还是可能被其他进程（或者容器）占用的。&lt;/p>
 &lt;/blockquote>
-&lt;p>&lt;code>Linux Cgroups&lt;/code>全称&lt;code>Linux Control Group&lt;/code> 就是 Linux 内核中用来为进程设置资源限制的一个重要功能, 限制一个进程组能够使用的资源上限, 包括 CPU、内存、磁盘、网络带宽 等等。此外 Cgroups 还能够对进程进行优先级设置、审计，以及将进程挂起和恢复操作。&lt;/p>
+&lt;p>&lt;code>Linux Cgroups&lt;/code>全称&lt;code>Linux Control Group&lt;/code> 就是 Linux 内核中用来为进程设置资源限制的一个重要功能, 限制一个进程组能够使用的资源上限, 包括 CPU、内存、磁盘、网络带宽 等等。此外 &lt;code>Cgroups&lt;/code> 还能够对进程进行优先级设置、审计，以及将进程挂起和恢复操作。&lt;/p>
 &lt;p>在&lt;code>Linux&lt;/code>中,&lt;code>Cgroups&lt;/code>给用户暴露出来的操作接口是文件系统，即它以文件和目录的方式组织在操作系统的 &lt;code>/sys/fs/cgroup&lt;/code> 路径下&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># Ubuntu 下 mount 指令展示出来&lt;/span>
 &amp;gt; mount -t cgroup
@@ -68,19 +68,19 @@ memory on /sys/fs/cgroup/memory &lt;span style="color:#658b00">type&lt;/span> cg
 cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_release
 cgroup.procs cpu.cfs_quota_us cpu.rt_runtime_us cpu.stat tasks
 &lt;/code>&lt;/pre>&lt;/div>&lt;p>输出中&lt;code>cfs_period&lt;/code>和&lt;code>cfs_quota&lt;/code>这样的关键词。组合使用,限制进程在长度为&lt;code>cfs_period&lt;/code>的一段时间内,只能被分配到总量为&lt;code>cfs_quota&lt;/code>的&lt;code>CPU&lt;/code>时间&lt;/p>
-&lt;p>如何使用cgroups呢？&lt;/p>
-&lt;p>在对应的子系统的下面创建一个目录，比如限制CPU进入 /sys/fs/cgroups/cpu 目录下&lt;/p>
+&lt;p>如何使用&lt;code>cgroups&lt;/code>呢？&lt;/p>
+&lt;p>在对应的子系统的下面创建一个目录，比如限制CPU进入 &lt;code>/sys/fs/cgroups/cpu&lt;/code> 目录下&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; &lt;span style="color:#658b00">cd&lt;/span> /sys/fs/cgroups/cpu
 &amp;gt; mkdir container
 &amp;gt; ls container/
 cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_releasecgroup.procs cpu.cfs_quota_us cpu.rt_runtime_us cpu.stat tasks
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个目录就称为一个控制组，操作系统自动在新创建的 container 目录下，自动生成该子系统的对应的资源限制文件.&lt;/p>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个目录就称为一个控制组，操作系统自动在新创建的 &lt;code>container&lt;/code> 目录下，自动生成该子系统的对应的资源限制文件.&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看 container 控制组的 CPU quota 还没有任何限制：-1，CPU period 则是默认的 100 ms (100000 us)&lt;/span>
 &amp;gt; cat /sys/fs/cgroup/cpu/container/cpu.cfs_quota_us
 -1
 &amp;gt; cat /sys/fs/cgroup/cpu/container/cpu.cfs_period_us
 &lt;span style="color:#b452cd">100000&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>向 container 组里的 cfs_quota 文件写入 20 ms（20000 us）&lt;/p>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>向 &lt;code>container&lt;/code> 组里的 &lt;code>cfs_quota&lt;/code> 文件写入 20 ms（20000 us）&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22">#意味着在每 100 ms 的时间里，被该控制组限制的进程只能使用 20 ms 的 CPU 时间，也就是说这个进程只能使用到 20% 的 CPU 带宽。&lt;/span>
 &amp;gt; &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#b452cd">20000&lt;/span> &amp;gt; /sys/fs/cgroup/cpu/container/cpu.cfs_quota_us
 &lt;span style="color:#228b22"># 现在把需要被限制的进程的 PID 写入 container 组里的 tasks 文件，上面的设置就会对该进程生效了&lt;/span>
@@ -96,7 +96,7 @@ cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_re
 &lt;li>&lt;code>memory&lt;/code>, 为进程设定内存使用的限制&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>Linux Cgroups&lt;/code>的设计，它就是&lt;code>一个子系统的目录加上一组资源限制文件的组合&lt;/code>。而对于&lt;code>Docker&lt;/code>等&lt;code>Linux&lt;/code>容器项目来说，它们只需要在每个子系统下面，为每个容器创建一个控制组(即创建一个新目录), 然后在启动进程之后，把这个进程的&lt;code>PID&lt;/code>写到对应的控制组的&lt;code>tasks&lt;/code>文件中.&lt;/p>
-&lt;p>那么在Docker容器中，如何启动的时候知道控制组下面的资源如何使用呢？&lt;/p>
+&lt;p>那么在&lt;code>Docker&lt;/code>容器中，如何启动的时候知道控制组下面的资源如何使用呢？&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># docker run 时的参数指定&lt;/span>
 &amp;gt; docker run -it --cpu-period=&lt;span style="color:#b452cd">100000&lt;/span> --cpu-quota=&lt;span style="color:#b452cd">20000&lt;/span> ubuntu /bin/bash
 &lt;/code>&lt;/pre>&lt;/div>&lt;p>在启动这个容器后，我们可以通过 &lt;code>Cgroups&lt;/code> 文件系统下，&lt;code>CPU&lt;/code>子系统中, &lt;code>docker&lt;/code>这个控制组里的资源限制文件内容来确认：&lt;/p>
@@ -118,7 +118,7 @@ cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_re
 &lt;/blockquote>
 &lt;h1 id="容器镜像">容器镜像&lt;/h1>
 &lt;h2 id="容器中的进程看到的文件系统又是什么样子的呢">容器中的进程看到的文件系统又是什么样子的呢？&lt;/h2>
-&lt;p>嘿嘿, &lt;code>Mount Namespace&lt;/code> 开启后，容器进行看到的文件系统也跟宿主机完全一样。&lt;code>Mount Namespace&lt;/code> 修改的，是容器进程对文件系统&amp;quot;挂载点&amp;quot;的认知。&lt;code>Mount Namespace&lt;/code> 跟其他的 &lt;code>Namespace&lt;/code> 的使用略有不同的地方：它对容器进程视图的改变，一定是伴随着挂载操作（mount）才能生效。&lt;/p>
+&lt;p>嘿嘿, &lt;code>Mount Namespace&lt;/code> 开启后，容器进行看到的文件系统也跟宿主机完全一样。&lt;code>Mount Namespace&lt;/code> 修改的，是容器进程对文件系统&amp;quot;挂载点&amp;quot;的认知。&lt;code>Mount Namespace&lt;/code> 跟其他的 &lt;code>Namespace&lt;/code> 的使用略有不同的地方：它对容器进程视图的改变，一定是伴随着挂载操作（&lt;code>mount&lt;/code>）才能生效。&lt;/p>
 &lt;p>在&lt;code>Linux&lt;/code>操作系统中，有一个 &lt;code>chroot&lt;/code> 的命令：&lt;code>change root file system&lt;/code>， 改变进程的根目录到你指定的位置。这个 &lt;code>Mount Namespace&lt;/code> 正是基于对 &lt;code>chroot&lt;/code> 的不断改良的，也是 &lt;code>Linux&lt;/code> 操作系统里第一个 &lt;code>Namespace&lt;/code>。
 而挂载在容器根目录上，用来为容器进程提供隔离后执行环境的文件系统，就是所谓的容器镜像。它还有一个更专业的名字叫做 &lt;code>rootfs&lt;/code>（根文件系统）&lt;/p>
 &lt;p>一个常见的 &lt;code>rootfs&lt;/code>，包含一些目录和文件:&lt;/p>
@@ -145,7 +145,7 @@ bin dev etc home lib lib64 mnt opt proc root run sbin sys tmp usr var
 &lt;/blockquote>
 &lt;h2 id="如何解决每次升级如何解决重复制作-rootfs-的问题呢">如何解决每次升级，如何解决重复制作 &lt;code>rootfs&lt;/code> 的问题呢？&lt;/h2>
 &lt;p>&lt;code>Docker&lt;/code>公司实现&lt;code>Docker&lt;/code>镜像的时候没有使用重制作&lt;code>rootfs&lt;/code>流程，而是在&lt;code>Docker&lt;/code>在镜像的设计中，引入了层（&lt;code>layer&lt;/code>）的概念。也就是说，用户制作镜像的每一步操作，都会生成一个层，也就是一个增量的&lt;code>rootfs&lt;/code>.&lt;/p>
-&lt;p>联合文件系统(Union File System) UnionFS, 最主要的功能是将不同位置的目录联合挂载（union mount）到同一个目录下。&lt;/p>
+&lt;p>联合文件系统(&lt;code>Union File System&lt;/code>) &lt;code>UnionFS&lt;/code>, 最主要的功能是将不同位置的目录联合挂载（&lt;code>union mount&lt;/code>）到同一个目录下。&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; tree
 .
 |- A
@@ -164,7 +164,7 @@ bin dev etc home lib lib64 mnt opt proc root run sbin sys tmp usr var
 |-- b
 |-- x
 &lt;span style="color:#228b22"># 此时对 C 里的文件进行修改，在目录 A 和 B 中都会生效&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="docker-layer概念">docker layer概念&lt;/h2>
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="docker-layer概念">&lt;code>docker&lt;/code> &lt;code>layer&lt;/code>概念&lt;/h2>
 &lt;p>关键目录:&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">/var/lib/docker/aufs/diff/&amp;lt;layer_id&amp;gt;
 &lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 拉取ubuntu镜像&lt;/span>
@@ -182,12 +182,12 @@ bin dev etc home lib lib64 mnt opt proc root run sbin sys tmp usr var
 &lt;span style="color:#cd5555">&amp;#34;sha256:268a067217b5fe78e000...&amp;#34;&lt;/span>
 ]
 }
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>ubuntu镜像的是五层组成，这五层就是5个增量 rootfs,每一层都是 ubuntu 操作系统文件与目录的一部分; 而在使用镜像时, Docker 会把这些增量的联合挂载在一个统一的挂载点上。挂载点就是 &lt;code>/var/lib/docker/aufs/mnt/&lt;/code>,比如:&lt;/p>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>ubuntu&lt;/code>镜像的是五层组成，这五层就是5个增量 &lt;code>rootfs&lt;/code>,每一层都是 &lt;code>ubuntu&lt;/code> 操作系统文件与目录的一部分; 而在使用镜像时, &lt;code>Docker&lt;/code> 会把这些增量的联合挂载在一个统一的挂载点上。挂载点就是 &lt;code>/var/lib/docker/aufs/mnt/&lt;/code>,比如:&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">/var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fcfa2a2f5c89dc21ee30e166be823ceaeba15dce645b3e
 &lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 这个目录下是一个完整的 ubuntu 操作系统&lt;/span>
 &amp;gt; ls /var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fcfa2a2f5c89dc21ee30e166be823ceaeba15dce645b3e
 bin boot dev etc home lib lib64 media mnt opt proc root run sbin srv sys tmp usr var
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>前面的五个镜像层，如何被挂载到这样一个完整的Ubuntu的文件系统的呢？这个信息纪录在 AuFS 的系统目录 &lt;code>/sys/fs/aufs&lt;/code> 下面。查看 AuFS 的挂载信息, 我们可以找到这个目录对应的 AuFS 的内部ID（也叫si），&lt;/p>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>前面的五个镜像层，如何被挂载到这样一个完整的&lt;code>Ubuntu&lt;/code>的文件系统的呢？这个信息纪录在 &lt;code>AuFS&lt;/code> 的系统目录 &lt;code>/sys/fs/aufs&lt;/code> 下面。查看 &lt;code>AuFS&lt;/code> 的挂载信息, 我们可以找到这个目录对应的 &lt;code>AuFS&lt;/code> 的内部ID（也叫&lt;code>si&lt;/code>），&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># si=972c6d361e6b32ba&lt;/span>
 &amp;gt; cat /proc/mounts| grep aufs
 none /var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fc... aufs rw,relatime,si=972c6d361e6b32ba,dio,dirperm1 &lt;span style="color:#b452cd">0&lt;/span> &lt;span style="color:#b452cd">0&lt;/span>
@@ -200,40 +200,40 @@ none /var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fc... aufs rw,relatime,si=972c6d
 /var/lib/docker/aufs/diff/20707dce8efc0d267...=ro+wh
 /var/lib/docker/aufs/diff/72b0744e06247c7d0...=ro+wh
 /var/lib/docker/aufs/diff/a524a729adadedb90...=ro+wh
-&lt;span style="color:#228b22"># 镜像的层都放置在 /var/lib/docker/aufs/diff 目录下，然后被联合挂载在 /var/lib/docker/aufs/mnt 里面 &lt;/span>
+&lt;span style="color:#228b22"># 镜像的层都放置在 `/var/lib/docker/aufs/diff` 目录下，然后被联合挂载在 `/var/lib/docker/aufs/mnt` 里面 &lt;/span>
 &lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.github.io/%E5%9B%9E%E6%9C%9BK8S/ubuntu-layer.png" alt="容器的rootfs的展示">&lt;/p>
 &lt;ul>
 &lt;li>第一部分: 只读层
 &lt;blockquote>
-&lt;p>它是这个容器 rootfs 最下面的 5 层, 对应的正是 ubuntu 镜像的五层.他们的挂载方式都是只读的（ro+wh readonly+whiteout）&lt;/p>
+&lt;p>它是这个容器 &lt;code>rootfs&lt;/code> 最下面的 5 层, 对应的正是 &lt;code>ubuntu&lt;/code> 镜像的五层.他们的挂载方式都是只读的（ro+wh readonly+whiteout）&lt;/p>
 &lt;/blockquote>
 &lt;/li>
 &lt;li>第二部分: 可读写层
 &lt;blockquote>
-&lt;p>它是这个容器的 rootfs 最上面的一层（6e3be5d2ecccae7cc），它的挂载方式为：rw （read write）, 在这个容器中进行修改产生的内容就会以增量的方式出现在这一层。
-假如删除只读层的一个文件呢？这时候 AuFS 在可读写层创建了一个 whiteout 文件，把只读层里的文件 遮挡 起来了。对上层来说，这个文件就是不可见的。
-这边可读写层的作用就是存放我们自己修改后的 rootfs 后产生的增量，无论增删改都在此处处理，增量的 rootfs&lt;/p>
+&lt;p>它是这个容器的 &lt;code>rootfs&lt;/code> 最上面的一层（6e3be5d2ecccae7cc），它的挂载方式为：&lt;code>rw&lt;/code> （read write）, 在这个容器中进行修改产生的内容就会以增量的方式出现在这一层。
+假如删除只读层的一个文件呢？这时候 &lt;code>AuFS&lt;/code> 在可读写层创建了一个 &lt;code>whiteout&lt;/code> 文件，把只读层里的文件 遮挡 起来了。对上层来说，这个文件就是不可见的。
+这边可读写层的作用就是存放我们自己修改后的 &lt;code>rootfs&lt;/code> 后产生的增量，无论增删改都在此处处理，增量的 &lt;code>rootfs&lt;/code>&lt;/p>
 &lt;/blockquote>
 &lt;/li>
-&lt;li>第三部分: Init 层
+&lt;li>第三部分: &lt;code>Init&lt;/code> 层
 &lt;blockquote>
-&lt;p>它是以&amp;quot;-init&amp;quot;结尾的层，夹在只读层和读写层之间, Init 层是Docker项目单独生成的内部层，专门用来存放 /etc/hosts、/etc/resolv.conf 等信息，这些文件本来属于只读的Ubuntu镜像一部分，但用户往往需要在启动的时候写入一定指定的值 hostname，用户可以在可读写层对他们进行修改。&lt;/p>
-&lt;p>可是我们修改往往只对当前容器生效，我们并不希望执行 docker commit 时，把这些信息连同可读写层一起提交掉。所以Docker的做法，时修改的这些文件以后，以一个单独的层挂载出来，而用户执行的 docker commit 只会提交可读写层，所以不会包含这些内容。&lt;/p>
-&lt;p>最终这 7 层都被联合挂载到 /var/lib/docker/aufs/mnt 目录下&lt;/p>
+&lt;p>它是以&amp;quot;-init&amp;quot;结尾的层，夹在只读层和读写层之间, &lt;code>Init&lt;/code> 层是&lt;code>Docker&lt;/code>项目单独生成的内部层，专门用来存放 &lt;code>/etc/hosts&lt;/code>、&lt;code>/etc/resolv.conf&lt;/code> 等信息，这些文件本来属于只读的&lt;code>Ubuntu&lt;/code>镜像一部分，但用户往往需要在启动的时候写入一定指定的值 &lt;code>hostname&lt;/code>，用户可以在可读写层对他们进行修改。&lt;/p>
+&lt;p>可是我们修改往往只对当前容器生效，我们并不希望执行 &lt;code>docker commit&lt;/code> 时，把这些信息连同可读写层一起提交掉。所以&lt;code>Docker&lt;/code>的做法，时修改的这些文件以后，以一个单独的层挂载出来，而用户执行的 &lt;code>docker commit&lt;/code> 只会提交可读写层，所以不会包含这些内容。&lt;/p>
+&lt;p>最终这 7 层都被联合挂载到 &lt;code>/var/lib/docker/aufs/mnt&lt;/code> 目录下&lt;/p>
 &lt;/blockquote>
 &lt;/li>
 &lt;/ul>
 &lt;h1 id="docker容器">&lt;code>Docker&lt;/code>容器&lt;/h1>
 &lt;h2 id="docker-如何实现容器的">docker 如何实现容器的&lt;/h2>
 &lt;ul>
-&lt;li>Linux Namespace 隔离能力&lt;/li>
-&lt;li>Linux Cgroups 限制能力&lt;/li>
-&lt;li>基于 rootfs 文件系统的增量实现&lt;/li>
+&lt;li>&lt;code>Linux Namespace&lt;/code> 隔离能力&lt;/li>
+&lt;li>&lt;code>Linux Cgroups&lt;/code> 限制能力&lt;/li>
+&lt;li>基于 &lt;code>rootfs&lt;/code> 文件系统的增量实现&lt;/li>
 &lt;/ul>
 &lt;h2 id="开发的应用的如何容器化的步骤">开发的应用的如何容器化的步骤&lt;/h2>
-&lt;h3 id="1dockerfile-制作容器镜像">1、Dockerfile 制作容器镜像&lt;/h3>
-&lt;p>制作rootfs过程，Docker提供了一个便捷的方式: Dockerfile&lt;/p>
-&lt;p>举例个写个 app.py, 使用 Flask 启动一个Web服务器。&lt;/p>
+&lt;h3 id="1dockerfile-制作容器镜像">1、&lt;code>Dockerfile&lt;/code> 制作容器镜像&lt;/h3>
+&lt;p>制作&lt;code>rootfs&lt;/code>过程，&lt;code>Docker&lt;/code>提供了一个便捷的方式: &lt;code>Dockerfile&lt;/code>&lt;/p>
+&lt;p>举例个写个 &lt;code>app.py&lt;/code>, 使用 &lt;code>Flask&lt;/code> 启动一个&lt;code>Web&lt;/code>服务器。&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-python" data-lang="python">&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">flask&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> Flask
 &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">socket&lt;/span>
 &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">os&lt;/span>
@@ -286,18 +286,71 @@ lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="
 lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 pid_for_children -&amp;gt; pid:[4026532279]
 lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 user -&amp;gt; user:[4026531837]
 lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 uts -&amp;gt; uts:[4026532277]
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>这也就意味着：一个进程，可以选择加入到某个进程已有的 Namespace 当中，从而达到“进入”这个进程所在容器的目的，这正是 docker exec 的实现原理。&lt;/p>
-&lt;h3 id="2volume-机制允许将宿主机上的指定的目录或者文件挂载到容器里面进行读取和修改">2、Volume 机制，允许将宿主机上的指定的目录或者文件挂载到容器里面进行读取和修改&lt;/h3>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这也就意味着：一个进程，可以选择加入到某个进程已有的 &lt;code>Namespace&lt;/code> 当中，从而达到“进入”这个进程所在容器的目的，这正是 &lt;code>docker exec&lt;/code> 的实现原理。&lt;/p>
+&lt;h3 id="2volume-机制允许将宿主机上的指定的目录或者文件挂载到容器里面进行读取和修改">2、&lt;code>Volume&lt;/code> 机制，允许将宿主机上的指定的目录或者文件挂载到容器里面进行读取和修改&lt;/h3>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; docker run -v /test ...
 &amp;gt; docker run -v /home:/test ...
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>只不过，在第一种情况下，由于你并没有显示声明宿主机目录，那么 Docker 就会默认在宿主机上创建一个临时目录 /var/lib/docker/volumes/[VOLUME_ID]/_data，然后把它挂载到容器的 /test 目录上。而在第二种情况下，Docker 就直接把宿主机的 /home 目录挂载到容器的 /test 目录上。&lt;/p>
-&lt;p>当容器进程被创建之后，尽管开启了 Mount Namespace，但是在它执行 chroot（或者 pivot_root）之前，容器进程一直可以看到宿主机上的整个文件系统。&lt;/p>
-&lt;p>而宿主机上的文件系统，也自然包括了我们要使用的容器镜像。这个镜像的各个层，保存在 /var/lib/docker/aufs/diff 目录下，在容器进程启动后，它们会被联合挂载在 /var/lib/docker/aufs/mnt/ 目录中，这样容器所需的 rootfs 就准备好了。&lt;/p>
-&lt;p>所以，我们只需要在 rootfs 准备好之后，在执行 chroot 之前，把 Volume 指定的宿主机目录（比如 /home 目录），挂载到指定的容器目录（比如 /test 目录）在宿主机上对应的目录（即 /var/lib/docker/aufs/mnt/[可读写层 ID]/test）上，这个 Volume 的挂载工作就完成了。&lt;/p>
-&lt;p>更重要的是，由于执行这个挂载操作时，“容器进程”已经创建了，也就意味着此时 Mount Namespace 已经开启了。所以，这个挂载事件只在这个容器里可见。你在宿主机上，是看不见容器内部的这个挂载点的。这就保证了容器的隔离性不会被 Volume 打破。&lt;/p>
-&lt;p>而这里要使用到的挂载技术，就是 Linux 的绑定挂载（bind mount）机制。它的主要作用就是，允许你将一个目录或者文件，而不是整个设备，挂载到一个指定的目录上。并且，这时你在该挂载点上进行的任何操作，只是发生在被挂载的目录或者文件上，而原挂载点的内容则会被隐藏起来且不受影响。&lt;/p>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>只不过，在第一种情况下，由于你并没有显示声明宿主机目录，那么 &lt;code>Docker&lt;/code> 就会默认在宿主机上创建一个临时目录 &lt;code>/var/lib/docker/volumes/[VOLUME_ID]/_data&lt;/code>，然后把它挂载到容器的 &lt;code>/test&lt;/code> 目录上。而在第二种情况下，&lt;code>Docker&lt;/code> 就直接把宿主机的 &lt;code>/home&lt;/code> 目录挂载到容器的 &lt;code>/test&lt;/code> 目录上。&lt;/p>
+&lt;p>当容器进程被创建之后，尽管开启了 &lt;code>Mount Namespace&lt;/code>，但是在它执行 &lt;code>chroot&lt;/code>（或者 &lt;code>pivot_root&lt;/code>）之前，容器进程一直可以看到宿主机上的整个文件系统。&lt;/p>
+&lt;p>而宿主机上的文件系统，也自然包括了我们要使用的容器镜像。这个镜像的各个层，保存在 &lt;code>/var/lib/docker/aufs/diff&lt;/code> 目录下，在容器进程启动后，它们会被联合挂载在 &lt;code>/var/lib/docker/aufs/mnt/&lt;/code> 目录中，这样容器所需的 &lt;code>rootfs&lt;/code> 就准备好了。&lt;/p>
+&lt;p>所以，我们只需要在 &lt;code>rootfs&lt;/code> 准备好之后，在执行 &lt;code>chroot&lt;/code> 之前，把 &lt;code>Volume&lt;/code> 指定的宿主机目录（比如 &lt;code>/home&lt;/code> 目录），挂载到指定的容器目录（比如 &lt;code>/test&lt;/code> 目录）在宿主机上对应的目录（即 &lt;code>/var/lib/docker/aufs/mnt/[可读写层 ID]/test&lt;/code>）上，这个 &lt;code>Volume&lt;/code> 的挂载工作就完成了。&lt;/p>
+&lt;p>更重要的是，由于执行这个挂载操作时，“容器进程”已经创建了，也就意味着此时 &lt;code>Mount Namespace&lt;/code> 已经开启了。所以，这个挂载事件只在这个容器里可见。你在宿主机上，是看不见容器内部的这个挂载点的。这就保证了容器的隔离性不会被 &lt;code>Volume&lt;/code> 打破。&lt;/p>
+&lt;p>而这里要使用到的挂载技术，就是 &lt;code>Linux&lt;/code> 的绑定挂载（&lt;code>bind mount&lt;/code>）机制。它的主要作用就是，允许你将一个目录或者文件，而不是整个设备，挂载到一个指定的目录上。并且，这时你在该挂载点上进行的任何操作，只是发生在被挂载的目录或者文件上，而原挂载点的内容则会被隐藏起来且不受影响。&lt;/p>
 &lt;p>&lt;img src="https://pinkhello.github.io/%E5%9B%9E%E6%9C%9BK8S/python-app-image.jpg" alt="应用的镜像">&lt;/p>
 &lt;h1 id="kubernetes-本质">&lt;code>Kubernetes&lt;/code> 本质&lt;/h1>
+&lt;h2 id="回顾">回顾&lt;/h2>
+&lt;p>一个容器：&lt;code>Linux Namespace&lt;/code>、&lt;code>Linux Cgroups&lt;/code>、 &lt;code>rootfs&lt;/code> 三种技术构建的进程隔离环境。&lt;/p>
+&lt;p>一个正在允许的 &lt;code>Linux&lt;/code> 的容器:&lt;/p>
+&lt;ul>
+&lt;li>一组联合挂载在 &lt;code>/var/lib/docker/aufs/mnt&lt;/code> 上的 &lt;code>rootfs&lt;/code>, 容器的静态视图（容器镜像）&lt;/li>
+&lt;li>一个有 &lt;code>Namespace&lt;/code> + &lt;code>Cgroups&lt;/code> 构成的隔离环境，容器的动态视图（容器运行时）&lt;/li>
+&lt;/ul>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>在整个开发流程中 &amp;ldquo;开发 - 测试 - 发布&amp;rdquo;，真正承载容器信息传递的是&lt;code>容器镜像&lt;/code>！然而云计算商想要与全部用户关联起来，那么只有通过&lt;code>容器镜像&lt;/code>。
+容器只是开发者手里的小工具，但是想从容器进入容器云的方式，就需要 &lt;code>容器编排&lt;/code> 技术.&lt;/p>
+&lt;h2 id="容器编排技术">&lt;code>容器编排&lt;/code>技术&lt;/h2>
+&lt;p>大战之后，Kubernetes 应运而生&lt;/p>
+&lt;h3 id="kubernetes-顶层设计">Kubernetes 顶层设计&lt;/h3>
+&lt;ul>
+&lt;li>编排、调度、容器云、集群管理&lt;/li>
+&lt;li>路由网关、水平扩展、监控、备份、灾难恢复&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E5%9B%9E%E6%9C%9BK8S/kubernetes-%E6%9E%B6%E6%9E%84.png" alt="kubernetes架构">&lt;/p>
+&lt;p>Kubernetes 是由 Master 和 Node 两种节点，控制节点 与 计算节点&lt;/p>
+&lt;ul>
+&lt;li>控制节点（三个组件）
+&lt;ul>
+&lt;li>kube-apiserver 负责API服务&lt;/li>
+&lt;li>kube-scheduler 负责调度&lt;/li>
+&lt;li>kube-controller-manager 负责容器编排&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>计算节点
+&lt;ul>
+&lt;li>核心 kubelet 负责和容器运行时（比如docker）交互
+&lt;ul>
+&lt;li>交互的时候的依赖接口 CRI （Container Runtime Interface）的远程调用接口&lt;/li>
+&lt;li>通过 gRPC 协议 与 Device Plugin 进行交互&lt;/li>
+&lt;li>调用网络插件为容器配置网络 CNI （Container Networking Interface）&lt;/li>
+&lt;li>调用存储插件为容器配置持久化存储 CSI （Container Storage Interface）&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>etcd 整个集群的持久化数据，由 kube-apiserver 处理后保存在 Etcd 中&lt;/li>
+&lt;/ul>
+&lt;p>从一开始，Kubernetes 就没有衣服到 Docker 项目上，没有将它作为架构的核心，只是将它作为了最底层的容器运行时的实现&lt;/p>
+&lt;p>Kubernetes 项目最主要的设计思想：从宏观的角度、以统一的方式定义任务之间的各种关系，为将来支持更多种类的关系留有余地&lt;/p>
+&lt;blockquote>
+&lt;p>例如：
+Kubernetes 在访问关系上的操作&lt;/p>
+&lt;p>Pod 是 Kubernetes 的最基础的对象。
+Service 是 Kubernetes 提供的访问关系的服务对象&lt;/p>
+&lt;p>我现在两个应用各自为POD，现在要做到A应用访问B应用，在使用时候，对于容器需要 IP 地址信息不变等等。
+Kubernetes的做法是 Pod 绑定一个 Service 服务，而 Service 服务声明的 IP 地址等信息是不变的，这个Service服务主要作用就是作为 Pod 的代理入口，从而替代Pod对外暴露一个固定的网络地址。
+这样对于调用方只需要关系 Service 声明信息，而Service后端真正代理的Pod 的IP地址、端口等信息的自动更新、维护是 Kubernetes的职责。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://pinkhello.github.io/%E5%9B%9E%E6%9C%9BK8S/kubernetes-%E5%85%A8%E6%99%AF%E5%9B%BE.png" alt="kubernetes全景图">&lt;/p>
 - https://pinkhello.github.io/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - 一杯哈希不加盐, All Rights Reserved</description></item><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>一杯哈希不加盐 https://pinkhello.github.io/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
 &lt;p>在容器之前, 火爆云计算市场的是 &lt;code>PAAS&lt;/code>, &lt;code>PAAS&lt;/code>已经深入人心. 那时候突然有一家公司 dotCloud 剑走偏锋, 直接开源出了 &lt;code>Docker&lt;/code> 项目，并且直接面向的社区。 这样的做法直接将当时的&lt;code>PAAS&lt;/code>流主要公司打的屁滚尿流。&lt;/p>
 &lt;p>回头看, &lt;code>PAAS&lt;/code> 最核心的是隔离环境,或者叫 &lt;code>沙盒&lt;/code>,在我看来也就是 &lt;code>容器&lt;/code>. 而 &lt;code>Docker&lt;/code> 项目和 &lt;code>Cloud Foundry&lt;/code> 的容器没有太大的不同,但是它为什么能针对 &lt;code>PAAS&lt;/code>进行了一场快速的闪电战呢？&lt;/p>
