@@ -1,4 +1,4 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 22:48:35 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.github.io/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 22:48:35 +0800</lastBuildDate><atom:link href="https://pinkhello.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>PinkHello https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
 &lt;h2 id="前言">前言&lt;/h2>
 &lt;p>对于 &lt;code>ThreadLocal&lt;/code> 的使用，并不难，这次主要讲述 &lt;code>ThreadLocal&lt;/code> 的实现方式以及原理&lt;/p>
 &lt;h2 id="threadlocal-是什么">&lt;code>ThreadLocal&lt;/code> 是什么&lt;/h2>
@@ -201,7 +201,7 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;li>此方法为 1.5 引入，旨在协助&lt;code>jvm&lt;/code>进行有效的快速 &lt;code>gc&lt;/code>；&lt;/li>
 &lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
 &lt;/ul>
-- https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>Links</title><link>https://pinkhello.me/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.me/links/</guid><description>PinkHello https://pinkhello.me/links/ -- https://pinkhello.me/links/ - PinkHello, All Rights Reserved</description></item><item><title>About</title><link>https://pinkhello.me/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.me/about/</guid><description>PinkHello https://pinkhello.me/about/ -&lt;h1 id="联系方式">联系方式&lt;/h1>
+- https://pinkhello.github.io/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>Links</title><link>https://pinkhello.github.io/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.github.io/links/</guid><description>PinkHello https://pinkhello.github.io/links/ -- https://pinkhello.github.io/links/ - PinkHello, All Rights Reserved</description></item><item><title>About</title><link>https://pinkhello.github.io/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.github.io/about/</guid><description>PinkHello https://pinkhello.github.io/about/ -&lt;h1 id="联系方式">联系方式&lt;/h1>
 &lt;blockquote>
 &lt;p>Github: &lt;a href="https://github.com/pinkhello">https://github.com/pinkhello&lt;/a>&lt;/p>
 &lt;/blockquote>
@@ -220,4 +220,4 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;blockquote>
 &lt;p>&lt;a href="https://github.com/PinkHello/spring-boot-starter-dubbo">spring-boot-starter-dubbo&lt;/a>&lt;/p>
 &lt;/blockquote>
-- https://pinkhello.me/about/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.github.io/about/ - PinkHello, All Rights Reserved</description></item></channel></rss>
