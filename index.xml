@@ -611,11 +611,7 @@ NAME READY STATUS RESTARTS AGE
 rook-ceph-mon0-kxnzh 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 13s
 rook-ceph-mon1-7dn2t 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 2s
 &lt;/code>&lt;/pre>&lt;/div>&lt;p>这样，一个基于 &lt;code>Rook&lt;/code> 持久化存储集群就以容器的方式运行起来了，而接下来在 &lt;code>Kubernetes&lt;/code> 项目上创建的所有 &lt;code>Pod&lt;/code> 就能够通过 &lt;code>Persistent Volume&lt;/code>（PV）和 &lt;code>Persistent Volume Claim&lt;/code>（PVC）的方式，在容器里挂载由 &lt;code>Ceph&lt;/code> 提供的数据卷了。&lt;/p>
-- https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ - PinkHello, All Rights Reserved</description></item><item><title>18 回望K8S 白话容器</title><link>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Mon, 15 Feb 2021 10:16:34 +0800</pubDate><guid>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>PinkHello https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;p>前言&lt;/p>
-&lt;ul>
-&lt;li>总结自 极客时间 深入剖析 Kubernetes&lt;/li>
-&lt;/ul>
-&lt;h1 id="进程开启">进程开启&lt;/h1>
+- https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ - PinkHello, All Rights Reserved</description></item><item><title>18 回望K8S 白话容器</title><link>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Mon, 15 Feb 2021 10:16:34 +0800</pubDate><guid>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>PinkHello https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;h1 id="进程开启">进程开启&lt;/h1>
 &lt;h2 id="容器-到底是什么">容器, 到底是什么?&lt;/h2>
 &lt;blockquote>
 &lt;p>前面提出: 容器是一种沙盒技术. 就是一个集装箱, 把应用装起来的技术. 这样, 应用与应用之间有了边界不至于互相干扰; 有了这些集装箱, 也方便搬来搬去.&lt;/p>
