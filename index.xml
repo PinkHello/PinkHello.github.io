@@ -980,11 +980,7 @@ Kubernetes的做法是 Pod 绑定一个 Service 服务，而 Service 服务声�
 &lt;/ul>
 &lt;/blockquote>
 &lt;p>&lt;code>声明式 API&lt;/code> 对应的 &lt;code>编排对象&lt;/code> 和 &lt;code>服务对象&lt;/code>，都是 Kubernetes 项目中的 API 对象（API Object）&lt;/p>
-- https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - PinkHello, All Rights Reserved</description></item><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>PinkHello https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;p>前言&lt;/p>
-&lt;ul>
-&lt;li>总结自 极客时间 深入剖析 Kubernetes&lt;/li>
-&lt;/ul>
-&lt;h1 id="什么是容器">什么是容器&lt;/h1>
+- https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - PinkHello, All Rights Reserved</description></item><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>PinkHello https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
 &lt;p>在容器之前, 火爆云计算市场的是 &lt;code>PAAS&lt;/code>, &lt;code>PAAS&lt;/code>已经深入人心. 那时候突然有一家公司 dotCloud 剑走偏锋, 直接开源出了 &lt;code>Docker&lt;/code> 项目，并且直接面向的社区。 这样的做法直接将当时的&lt;code>PAAS&lt;/code>流主要公司打的屁滚尿流。&lt;/p>
 &lt;p>回头看, &lt;code>PAAS&lt;/code> 最核心的是隔离环境,或者叫 &lt;code>沙盒&lt;/code>,在我看来也就是 &lt;code>容器&lt;/code>. 而 &lt;code>Docker&lt;/code> 项目和 &lt;code>Cloud Foundry&lt;/code> 的容器没有太大的不同,但是它为什么能针对 &lt;code>PAAS&lt;/code>进行了一场快速的闪电战呢？&lt;/p>
 &lt;blockquote>
