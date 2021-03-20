@@ -201,12 +201,13 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;li>此方法为 1.5 引入，旨在协助&lt;code>jvm&lt;/code>进行有效的快速 &lt;code>gc&lt;/code>；&lt;/li>
 &lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
 &lt;/ul>
-- https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>Links</title><link>https://pinkhello.me/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.me/links/</guid><description>PinkHello https://pinkhello.me/links/ -- https://pinkhello.me/links/ - PinkHello, All Rights Reserved</description></item><item><title>About</title><link>https://pinkhello.me/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.me/about/</guid><description>PinkHello https://pinkhello.me/about/ -&lt;hr>
+- https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>链接</title><link>https://pinkhello.me/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.me/links/</guid><description>PinkHello https://pinkhello.me/links/ -- https://pinkhello.me/links/ - PinkHello, All Rights Reserved</description></item><item><title>关于我</title><link>https://pinkhello.me/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.me/about/</guid><description>PinkHello https://pinkhello.me/about/ -&lt;hr>
 &lt;h2 id="个人介绍">个人介绍&lt;/h2>
 &lt;p>我，一个包含粉红色之心的老Boy。专注与后端服务、写过&lt;code>C++&lt;/code>、执过&lt;code>Python&lt;/code>、干过&lt;code>Java&lt;/code>、&lt;code>Golang&lt;/code>. 一个给诸位大佬端茶倒水的技术小二。&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://github.com/PinkHello">Github&lt;/a> &lt;img src="https://views.whatilearened.today/views/github/pinkhello/pinkhello.svg" alt="">&lt;/li>
 &lt;li>Email: &lt;a href="mailto:lee123lee123@163.com">lee123lee123@163.com&lt;/a>&lt;/li>
+&lt;li>Wechat &lt;img src="https://pinkhello.me/%E5%85%B6%E4%BB%96/wechat.png" alt="Wechat">&lt;/li>
 &lt;/ul>
 &lt;h2 id="个人标签">个人标签&lt;/h2>
 &lt;p>&lt;code>Go&lt;/code>、&lt;code>Java&lt;/code>、&lt;code>Python&lt;/code>、&lt;code>后端开发&lt;/code>、&lt;code>架构&lt;/code>、&lt;code>大数据&lt;/code>、&lt;code>分布式系统&lt;/code>&lt;/p>
