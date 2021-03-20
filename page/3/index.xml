@@ -227,8 +227,8 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;thead>
 &lt;tr>
 &lt;th style="text-align:left">动作&lt;/th>
-&lt;th style="text-align:left">目标&lt;/th>
 &lt;th style="text-align:left">进度&lt;/th>
+&lt;th style="text-align:left">目标&lt;/th>
 &lt;th style="text-align:left">缺陷&lt;/th>
 &lt;/tr>
 &lt;/thead>
