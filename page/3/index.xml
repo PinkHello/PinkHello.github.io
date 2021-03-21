@@ -1,4 +1,78 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Sun, 21 Mar 2021 17:17:13 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>01 一致性哈希算法</title><link>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate><guid>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ -&lt;h1 id="分布式均衡寻址算法">分布式均衡寻址算法&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Sun, 21 Mar 2021 23:10:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>02 关于final的思考</title><link>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate><guid>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>PinkHello https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ -&lt;h2 id="关于final的思考">关于&lt;code>final&lt;/code>的思考&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>final&lt;/code> 是声明数据域最终的,不可以修改的，常见的 是类的 序列化&lt;code>ID&lt;/code>&lt;/li>
+&lt;li>&lt;code>String&lt;/code> 类，其数据域都是 &lt;code>final&lt;/code> 的&lt;/li>
+&lt;/ul>
+&lt;h3 id="修改-final-修饰的属性">修改 &lt;code>final&lt;/code> 修饰的属性&lt;/h3>
+&lt;p>反射修改 &lt;code>final&lt;/code> 修饰的数据域【非常成功的修改了】&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String name = &lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+Field field = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;name&amp;#34;&lt;/span>);
+field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+field.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(field.&lt;span style="color:#658b00">get&lt;/span>(test));
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">name&lt;/span>);
+}
+}
+输出
+Hello, WORLD!
+hello world
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>第一个输出是因为说明运行成功，修改&lt;code>final&lt;/code>修饰的对象的属性成功修改；&lt;/p>
+&lt;p>但是第二个输出，表明了我直接使用 &lt;code>name&lt;/code> 的属性却还是输出端额原来的值.&lt;/p>
+&lt;p>反编译后的代码&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String name = &lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#008b45">Test&lt;/span>() {
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+Field field = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;name&amp;#34;&lt;/span>);
+field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+field.&lt;span style="color:#658b00">set&lt;/span>(test, &lt;span style="color:#cd5555">&amp;#34;HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(field.&lt;span style="color:#658b00">get&lt;/span>(test));
+PrintStream var10000 = System.&lt;span style="color:#658b00">out&lt;/span>;
+test.&lt;span style="color:#658b00">getClass&lt;/span>();
+var10000.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>);
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看出 使用对象.属性的已经被替换了，这是由于&lt;code>JVM&lt;/code> 的内联优化（方法调用(参数压栈,跳转到方法处执行,再调回,处理栈参数,处理返回值)）导致的，会直接替换掉使用 final 修饰的字段。【当然也可以关闭内联优化】&lt;/p>
+&lt;h3 id="修改使用-final-修饰的-static-类属性">修改使用 &lt;code>final&lt;/code> 修饰的 &lt;code>static&lt;/code> 类属性&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> String NAME = &lt;span style="color:#cd5555">&amp;#34;static hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+&lt;span style="color:#228b22">//修改NAME
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Field sfield = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>);
+sfield.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+sfield.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;STATIC HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(sfield.&lt;span style="color:#658b00">get&lt;/span>(test));
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">NAME&lt;/span>);
+}
+}
+输出异常 Can not set &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>修改&lt;code>Field&lt;/code>中的&lt;code>modifiers&lt;/code>数据域，清除代表&lt;code>final&lt;/code>的那个bit，才可以成功修改。&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> String NAME = &lt;span style="color:#cd5555">&amp;#34;static hello world&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
+Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
+&lt;span style="color:#228b22">//修改NAME
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Field sfield = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>);
+Field modifiers = sfield.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;modifiers&amp;#34;&lt;/span>);
+modifiers.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+modifiers.&lt;span style="color:#658b00">setInt&lt;/span>(sfield, sfield.&lt;span style="color:#658b00">getModifiers&lt;/span>() &amp;amp; ~Modifier.&lt;span style="color:#658b00">FINAL&lt;/span>);&lt;span style="color:#228b22">//fianl标志位置0
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+sfield.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+sfield.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;STATIC HELLO, WORLD!&amp;#34;&lt;/span>);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(sfield.&lt;span style="color:#658b00">get&lt;/span>(test));
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">NAME&lt;/span>);
+}
+}
+输出
+STATIC HELLO, WORLD!
+&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> hello world
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ - PinkHello, All Rights Reserved</description></item><item><title>01 一致性哈希算法</title><link>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate><guid>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ -&lt;h1 id="分布式均衡寻址算法">分布式均衡寻址算法&lt;/h1>
 &lt;p>在分布式集群中，对机器的添加删除，或者机器故障后自动脱落集群的操作是分布式集群管理的基本功能。&lt;/p>
 &lt;blockquote>
 &lt;p>在集群环境中，判断分布式寻址算法好坏的原则：&lt;/p>

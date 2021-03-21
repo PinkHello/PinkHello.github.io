@@ -1,4 +1,157 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Sun, 21 Mar 2021 17:17:13 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>11 几个关于kafka的知识点</title><link>https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</link><pubDate>Wed, 10 Feb 2021 08:55:19 +0800</pubDate><guid>https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</guid><description>PinkHello https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/ -&lt;h1 id="认识kafka">认识kafka&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Sun, 21 Mar 2021 23:10:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>12 聊聊蝙蝠Chat</title><link>https://pinkhello.me/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/</link><pubDate>Wed, 10 Feb 2021 09:10:14 +0800</pubDate><guid>https://pinkhello.me/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/</guid><description>PinkHello https://pinkhello.me/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/ -&lt;hr>
+&lt;p>title: 老司机聊聊BatChat
+date: 2021-01-31 21:37:07
+tags:&lt;/p>
+&lt;ul>
+&lt;li>BatChat/加密聊天&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;!-- raw HTML omitted -->
+&lt;p>今天，在浏览&lt;code>小众软件&lt;/code>的时候，突然看见一个早期小编的推广～～～蝙蝠APP，联想到之前新闻中看到的有个贩卖个人信息的人说在蝙蝠APP上，勾起了我的好奇心，作为一个程序🐶，默默的想探究一下这个蝙蝠APP玩的什么套路。&lt;/p>
+&lt;h1 id="什么是蝙蝠batchat">什么是蝙蝠（BatChat）&lt;/h1>
+&lt;p>一款免费的端到端加密的蝙蝠APP，随时畅聊！
+应用 IOS、Android
+&lt;a href="https://batchat.com">https://batchat.com&lt;/a>&lt;/p>
+&lt;h1 id="它的特性">它的特性&lt;/h1>
+&lt;ul>
+&lt;li>安全 ｜ 畅聊时、端到端加密（所有消息经过端到端加密，任何聊天记录不进行云存储，让你的信息想象中更安全）&lt;/li>
+&lt;li>隐私 ｜ 畅聊时、双向撤回（聊天记录一键双向撤回，同时删除你和对方设备上所有的聊天记录，撤回数据多次覆盖删除、不可恢复、保证双方的隐私安全）&lt;/li>
+&lt;li>匿名群聊 ｜ 开启匿名群聊，群里面的每一个成员都可以&amp;quot;变身&amp;quot;，隐藏真实身份，群内不受身份约束&lt;/li>
+&lt;/ul>
+&lt;h1 id="什么是端到端加密">什么是端到端加密？&lt;/h1>
+&lt;p>端到端加密是在源结点和目的结点中对传送的数据进行加密和解密， 因此数据的安全性不会因中间结点的不可靠而受到影响。&lt;code> 蝙蝠APP的所有数据都通过用户端生成的私钥进行加密后再发送，任何第三方包括开发者都不能解开此数据&lt;/code>.&lt;/p>
+&lt;h1 id="蝙蝠app采用的安全层级">蝙蝠APP采用的安全层级？&lt;/h1>
+&lt;ul>
+&lt;li>
+&lt;p>通道加密
+通道加密中采用了哪些加密算法？
+通道加密中使用到的 RSA, ECDHE, AES256_CBC, SHA256, SHA1等等(如下图)。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E9%80%9A%E9%81%93%E5%8A%A0%E5%AF%86.png" alt="通道加密">
+步骤:&lt;/p>
+&lt;ul>
+&lt;li>(1. 客户端和服务器先产生随机数&lt;/li>
+&lt;li>(2. 服务器下发随机数。&lt;/li>
+&lt;li>(3. 客户端用 RSA 对客户端随机数进行加密，并发送给服务器。&lt;/li>
+&lt;li>(4. 服务器用 RSA 解密客户端随机数（使用 RSA 的目的是防止中间人攻击）。&lt;/li>
+&lt;li>(5. 客户端，服务器用自己的随机数加上对方的随机数生成临时密钥 TempKey 和临时偏移量 TempIV (此时双方均持有相同的 TempKey和TempIV)。&lt;/li>
+&lt;li>(6. 客户端服务器均使用 ECDHE 生成各自的公私钥对。&lt;/li>
+&lt;li>(7. 客户端用 TempKey, TempIV 对自己的 ECDHE 公钥进行加密，并将密文发送给服务器。&lt;/li>
+&lt;li>(8. 服务器收到客户端的 ECDHE 公钥密文，并解密。&lt;/li>
+&lt;li>(9. 服务器使用 TempKey, TempIV 对自己的 ECDHE 公钥进行加密，并使用 RSA 对 ECDHE。&lt;/li>
+&lt;li>(10. 服务器使用 ECDHE 算法，使用客户端 ECDHE 公钥明文+服务器 ECDHE 私钥明文生成ShareKey。&lt;/li>
+&lt;li>(11. 客户端收到服务器的 ECDHE 公钥密文和签名，然后进行解密和验证签名，如果没有问题，就使用客户端 ECDHE 私钥明文+服务器ECDHE 公钥明文生成 ShareKey。&lt;/li>
+&lt;li>(12. 服务器初始化各个参数，下发给客户端,参数包含：
+&lt;ul>
+&lt;li>
+&lt;p>AuthKeyID： 服务器随机生成的客户端临时标识符&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>MsgKey： 由 ShareKey, AuthkeyID, MsgID, SessionID, Salt, SeqNo 以及真实的消息内容相加后进行 Sha256 后的值&lt;/p>
+&lt;blockquote>
+&lt;p>本参数用于：&lt;/p>
+&lt;blockquote>
+&lt;p>(a. 进行防止数据篡改的验证&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>(b. 与 ShareKey 一起使用，生成 Aes256 key, IV，用来对各条消息进行加密。&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;/li>
+&lt;li>
+&lt;p>MsgID：时间相关的消息 ID，用于防止重放和去重。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>SessionID：每次登录唯一的会话 ID。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Salt：每次登录唯一的盐值。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>SeqNo：用于防止重放。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>(13. 后续每条消息均会有不同的 MsgID, SessionID, Salt, SeqNo 和真实的消息内容；这些变化的值会导致 MsgKey 每次都不同。 这个每次都 不同的 MsgKey 加上 ShareKey 可以为每一条消息生成对应的 32 字节密钥和偏移量。&lt;/li>
+&lt;li>(14. ShareKey 会过期，过期后需要重新进行密钥协商。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>内容加密&lt;/p>
+&lt;ul>
+&lt;li>(1. 用户生成 ECDHE 公私钥，保存在本地。&lt;/li>
+&lt;li>(2. 将公钥发送到服务器，私钥保存在本地。&lt;/li>
+&lt;li>(3. 用户登录，获取所有好友信息的更新，包含每个好友的公钥。&lt;/li>
+&lt;li>(4. 发送消息，和接收消息时均采用自己的私钥+对方的公钥生成 ShareKey。&lt;/li>
+&lt;li>(5. 使用 ShareKey 生成 AES256 的密钥，进行加密和解密。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86.png" alt="内容加密">&lt;/p>
+&lt;p>蝙蝠 双棘轮算法 如下：
+Alice(A)发送的消息传送了她的新公钥。 最终，Bob(B)将收到以下消息之一，并执行第二个DH棘轮步骤； 在每个DH棘轮步骤中生成的DH 输出用于导出新的发送和接收链密钥。当各方轮流执行DH棘轮步骤时，他们轮流引入新的发送链，依此类推。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E5%8F%8C%E6%A3%98%E8%BD%AE%E7%AE%97%E6%B3%95.png" alt="双棘轮算法">&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>服务器数据库安全&lt;/p>
+&lt;ul>
+&lt;li>(1. 数据库有签名字段。&lt;/li>
+&lt;li>(2. 服务器上生成 ECDSA 公私钥。&lt;/li>
+&lt;li>(3. 服务器代码中对数据库敏感字段，比如：password, userID, friend 等做增删改操作时均通过 ECDSA 生成签名，并更新到签名字段。&lt;/li>
+&lt;li>(4. 服务器代码对 password, userID, friend 等数据进行读取，判断等操作时进行 ECDSA验证签名，只有通过验证才能进行后续流程，否则 给客户端报错。&lt;/li>
+&lt;li>(5. 服务端程序进行加密和签名保护。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h1 id="好了上面的都是摘自-batchat-官网介绍现在进入正题">好了，上面的都是摘自 BatChat 官网介绍！现在进入正题！&lt;/h1>
+&lt;p>先来一个重磅&lt;/p>
+&lt;blockquote>
+&lt;p>《网络安全法》 第二十一条规定，网络运营者应当按照网络安全等级保护制度的要求,履行安全保护义务,保障网络免受干扰、破坏或者未经授权的访问,防止网络数据泄露或者被窃取、篡改。网络运营者的安全义务包括采取监测、记录网络运行状态、网络安全事件的技术措施,并按照规定留存相关的网络日志不少于六个月。&lt;/p>
+&lt;/blockquote>
+&lt;p>嘿嘿 ，按照小弟的理解，&lt;code>BatChat&lt;/code> 号称端到端加密，那么信息加密和国内备案明显冲突了，所以要么这其中有一个是假的，要么就是在违&lt;code>法&lt;/code>的边缘疯狂试探。&lt;/p>
+&lt;p>正因为看到这些，所以小弟默默的 &lt;code>Download&lt;/code> 了下来, 然后默默的 &lt;code>Install&lt;/code>, 然后默默的注册登录进入了 😯 💐 ～～～～&lt;/p>
+&lt;p>进入是基础Tab功能菜单&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/app-%E6%88%91%E7%9A%84.png" alt="app">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/app-%E8%81%94%E7%B3%BB%E4%BA%BA.jpeg" alt="app">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/app-%E8%9D%99%E8%9D%A0%E6%88%91%E7%9A%84.png" alt="app">&lt;/p>
+&lt;p>进入瞬间的内容，我呵呵咯～～&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E7%9E%AC%E9%97%B4-%E8%BF%9D%E8%A7%84.jpeg" alt="app">&lt;/p>
+&lt;p>有没有看出来什么，人脸识别自动识别造假（黑灰产业链）&lt;/p>
+&lt;p>下面是我的一些截图，你们自己看咯&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>标签搜索 点击换一组，这是官方的推荐的。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E6%A0%87%E7%AD%BE%E6%90%9C%E7%B4%A21.jpeg" alt="标签">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E6%A0%87%E7%AD%BE%E6%90%9C%E7%B4%A22.jpeg" alt="标签">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E6%A0%87%E7%AD%BE%E6%90%9C%E7%B4%A23.jpeg" alt="标签">&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>搜索敏感词群&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E7%BE%A4%E6%90%9C%E7%B4%A2%E6%94%AF%E4%BB%98.jpeg" alt="群搜索">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E7%BE%A4%E6%90%9C%E7%B4%A2%E7%A6%8F%E5%88%A9.jpeg" alt="群搜索">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E7%BE%A4%E6%90%9C%E7%B4%A2%E8%8F%A0%E8%8F%9C%E5%A4%9A.jpeg" alt="群搜索">&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>我默默的加了一个看似正常的群，进群后我风化了！！！！&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E7%BE%A4%E8%BF%9D%E8%A7%84%E5%86%85%E5%AE%B91.jpeg" alt="进群信息">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E7%BE%A4%E8%BF%9D%E8%A7%84%E5%86%85%E5%AE%B92.jpeg" alt="进群信息">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E8%BF%9D%E8%A7%84%E7%BE%A4%E5%86%85%E5%AE%B95.png" alt="进群信息">&lt;/p>
+&lt;p>下面是防骗官方群里的&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0Chat/%E5%AE%A3%E4%BC%A0%E7%BE%A4%E8%BF%9D%E8%A7%843.jpeg" alt="进群信息">&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h1 id="好了总结一下batchat">好了，总结一下BatChat！&lt;/h1>
+&lt;p>蝙蝠APP聚合了哪些人？&lt;/p>
+&lt;ul>
+&lt;li>绝大部分黑灰产业链上下游人员！&lt;/li>
+&lt;li>极小部分尝鲜的小白&lt;/li>
+&lt;li>当然因为陌生人聊天，我能进入的只有群搜索，应该还有更深的。&lt;/li>
+&lt;/ul>
+&lt;p>当然个人认为，此平台竟然能运行到现在，后面想象的空间很大啊&lt;/p>
+&lt;p>补个刀，知乎专栏 &lt;a href="https://zhuanlan.zhihu.com/p/158261618">https://zhuanlan.zhihu.com/p/158261618&lt;/a>&lt;/p>
+&lt;blockquote>
+&lt;p>这尼玛就是为黑灰产业搭建聚合平台啊！虽说你不想，但是就宣传的端到端加密以及消息撤回，这个不正是他们在意的么？
+当然某腾也宣称不存储**啥的？你信？&lt;/p>
+&lt;/blockquote>
+&lt;p>现在我要郑重声明：我默默的删除了此款APP！！！&lt;/p>
+- https://pinkhello.me/posts/12-%E8%81%8A%E8%81%8A%E8%9D%99%E8%9D%A0chat/ - PinkHello, All Rights Reserved</description></item><item><title>11 几个关于kafka的知识点</title><link>https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</link><pubDate>Wed, 10 Feb 2021 08:55:19 +0800</pubDate><guid>https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</guid><description>PinkHello https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/ -&lt;h1 id="认识kafka">认识kafka&lt;/h1>
 &lt;p>&lt;code>Kafka&lt;/code> 是分布式消息系统， &lt;code>Apache&lt;/code> 的子项目。标语也变了&amp;quot;分布式流平台&amp;quot;，
 与传统的消息系统不同点在于&lt;/p>
 &lt;ul>
@@ -1311,78 +1464,4 @@ String s2 = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String
 &lt;li>运行时，在堆中产生 &amp;ldquo;3&amp;rdquo; 的副本两个 &lt;code>String&lt;/code> 对象，并产生 &lt;code>StringBuilder(&amp;quot;11&amp;quot;)&lt;/code> 对象以及 &lt;code>toString&lt;/code> 的 &lt;code>String&lt;/code> 对象&lt;/li>
 &lt;/ul>
 &lt;/blockquote>
-- https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ - PinkHello, All Rights Reserved</description></item><item><title>02 关于final的思考</title><link>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate><guid>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>PinkHello https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ -&lt;h2 id="关于final的思考">关于&lt;code>final&lt;/code>的思考&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>final&lt;/code> 是声明数据域最终的,不可以修改的，常见的 是类的 序列化&lt;code>ID&lt;/code>&lt;/li>
-&lt;li>&lt;code>String&lt;/code> 类，其数据域都是 &lt;code>final&lt;/code> 的&lt;/li>
-&lt;/ul>
-&lt;h3 id="修改-final-修饰的属性">修改 &lt;code>final&lt;/code> 修饰的属性&lt;/h3>
-&lt;p>反射修改 &lt;code>final&lt;/code> 修饰的数据域【非常成功的修改了】&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String name = &lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
-Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
-Field field = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;name&amp;#34;&lt;/span>);
-field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
-field.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;HELLO, WORLD!&amp;#34;&lt;/span>);
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(field.&lt;span style="color:#658b00">get&lt;/span>(test));
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">name&lt;/span>);
-}
-}
-输出
-Hello, WORLD!
-hello world
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>第一个输出是因为说明运行成功，修改&lt;code>final&lt;/code>修饰的对象的属性成功修改；&lt;/p>
-&lt;p>但是第二个输出，表明了我直接使用 &lt;code>name&lt;/code> 的属性却还是输出端额原来的值.&lt;/p>
-&lt;p>反编译后的代码&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String name = &lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#008b45">Test&lt;/span>() {
-}
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
-Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
-Field field = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;name&amp;#34;&lt;/span>);
-field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
-field.&lt;span style="color:#658b00">set&lt;/span>(test, &lt;span style="color:#cd5555">&amp;#34;HELLO, WORLD!&amp;#34;&lt;/span>);
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(field.&lt;span style="color:#658b00">get&lt;/span>(test));
-PrintStream var10000 = System.&lt;span style="color:#658b00">out&lt;/span>;
-test.&lt;span style="color:#658b00">getClass&lt;/span>();
-var10000.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;hello world&amp;#34;&lt;/span>);
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看出 使用对象.属性的已经被替换了，这是由于&lt;code>JVM&lt;/code> 的内联优化（方法调用(参数压栈,跳转到方法处执行,再调回,处理栈参数,处理返回值)）导致的，会直接替换掉使用 final 修饰的字段。【当然也可以关闭内联优化】&lt;/p>
-&lt;h3 id="修改使用-final-修饰的-static-类属性">修改使用 &lt;code>final&lt;/code> 修饰的 &lt;code>static&lt;/code> 类属性&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> String NAME = &lt;span style="color:#cd5555">&amp;#34;static hello world&amp;#34;&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
-Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
-&lt;span style="color:#228b22">//修改NAME
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> Field sfield = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>);
-sfield.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
-sfield.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;STATIC HELLO, WORLD!&amp;#34;&lt;/span>);
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(sfield.&lt;span style="color:#658b00">get&lt;/span>(test));
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">NAME&lt;/span>);
-}
-}
-输出异常 Can not set &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>修改&lt;code>Field&lt;/code>中的&lt;code>modifiers&lt;/code>数据域，清除代表&lt;code>final&lt;/code>的那个bit，才可以成功修改。&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Test&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> String NAME = &lt;span style="color:#cd5555">&amp;#34;static hello world&amp;#34;&lt;/span>;
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> NoSuchFieldException, IllegalAccessException {
-Test test = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Test();
-&lt;span style="color:#228b22">//修改NAME
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> Field sfield = test.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>);
-Field modifiers = sfield.&lt;span style="color:#658b00">getClass&lt;/span>().&lt;span style="color:#658b00">getDeclaredField&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;modifiers&amp;#34;&lt;/span>);
-modifiers.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
-modifiers.&lt;span style="color:#658b00">setInt&lt;/span>(sfield, sfield.&lt;span style="color:#658b00">getModifiers&lt;/span>() &amp;amp; ~Modifier.&lt;span style="color:#658b00">FINAL&lt;/span>);&lt;span style="color:#228b22">//fianl标志位置0
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-sfield.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
-sfield.&lt;span style="color:#658b00">set&lt;/span>(test,&lt;span style="color:#cd5555">&amp;#34;STATIC HELLO, WORLD!&amp;#34;&lt;/span>);
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(sfield.&lt;span style="color:#658b00">get&lt;/span>(test));
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(test.&lt;span style="color:#658b00">NAME&lt;/span>);
-}
-}
-输出
-STATIC HELLO, WORLD!
-&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> hello world
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ - PinkHello, All Rights Reserved</description></item></channel></rss>
