@@ -1,4 +1,136 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 22:48:35 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>10 多域名下的SSH</title><link>https://pinkhello.me/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</link><pubDate>Wed, 10 Feb 2021 08:52:57 +0800</pubDate><guid>https://pinkhello.me/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</guid><description>PinkHello https://pinkhello.me/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ -&lt;h1 id="前言">前言&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Sun, 21 Mar 2021 17:17:13 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>11 几个关于kafka的知识点</title><link>https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</link><pubDate>Wed, 10 Feb 2021 08:55:19 +0800</pubDate><guid>https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/</guid><description>PinkHello https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/ -&lt;h1 id="认识kafka">认识kafka&lt;/h1>
+&lt;p>&lt;code>Kafka&lt;/code> 是分布式消息系统， &lt;code>Apache&lt;/code> 的子项目。标语也变了&amp;quot;分布式流平台&amp;quot;，
+与传统的消息系统不同点在于&lt;/p>
+&lt;ul>
+&lt;li>分布式的，易于扩展&lt;/li>
+&lt;li>为发布和订阅提供了高吞吐&lt;/li>
+&lt;li>支持多订阅者，在失败的时候能自动平衡消费者&lt;/li>
+&lt;li>消息的持久化&lt;/li>
+&lt;/ul>
+&lt;h1 id="kafka-的架构">&lt;code>kafka&lt;/code> 的架构&lt;/h1>
+&lt;p>几点？&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Kafka&lt;/code> 的 &lt;code>Topic&lt;/code> 和 &lt;code>Partition&lt;/code> 内部如何存储？&lt;/li>
+&lt;li>与传统的消息系统相比， &lt;code>Kafka&lt;/code> 消费模型有啥优点？&lt;/li>
+&lt;li>&lt;code>Kafka&lt;/code> 是如何实现分布式数据存储和数据的读取？&lt;/li>
+&lt;/ul>
+&lt;h2 id="kafka-架构">&lt;code>Kafka&lt;/code> 架构&lt;/h2>
+&lt;p>一个 &lt;code>Kafka&lt;/code> 集群，多个 &lt;code>Producer&lt;/code> ，多个 &lt;code>Consumer&lt;/code> ，多个 &lt;code>Broker&lt;/code> ， 选举 &lt;code>Leader&lt;/code> 以及在 &lt;code>Consumer Group&lt;/code> 发生变化时进行 &lt;code>reblance&lt;/code> 。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Broker&lt;/code> 消息中间件的处理节点，一个 &lt;code>Kafka&lt;/code> 节点就是一个 &lt;code>Broker&lt;/code> ， 一个或者多个 &lt;code>Broker&lt;/code> 组成 &lt;code>Kafka&lt;/code> 集群&lt;/li>
+&lt;li>&lt;code>Topic&lt;/code> &lt;code>Kafka&lt;/code> 根据 &lt;code>Topic&lt;/code> 对 &lt;code>Message&lt;/code> 进行归类，发布到 &lt;code>Kafka&lt;/code> 的每条 &lt;code>Message&lt;/code> 都要指定 &lt;code>Topic&lt;/code>&lt;/li>
+&lt;li>&lt;code>Producer&lt;/code> 向 &lt;code>Broker&lt;/code> 发生 &lt;code>message&lt;/code>&lt;/li>
+&lt;li>&lt;code>Consumer&lt;/code> 从 &lt;code>Broker&lt;/code> 读取 &lt;code>message&lt;/code>&lt;/li>
+&lt;li>&lt;code>Consumer Group&lt;/code> 每个 Consumer 属于特定的 Group，一个 Message 可以发送给不同的 &lt;code>Consumer Group&lt;/code> ，但是同一个 &lt;code>Group&lt;/code> 下的只有一个 &lt;code>Consumer&lt;/code> 能消费该 &lt;code>Message&lt;/code>&lt;/li>
+&lt;li>&lt;code>Partition&lt;/code> 物理概念，一个 &lt;code>Topic&lt;/code> 下可以分为多个 &lt;code>Partition&lt;/code>, 每个 &lt;code>Partition&lt;/code> 下是有序的。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-%E6%A1%86%E6%9E%B6%E5%9B%BE.jpeg" alt="kafka 框架图">
+&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-%E6%95%B0%E6%8D%AE%E6%B5%81%E5%90%91.png" alt="kafka 数据流向">&lt;/p>
+&lt;p>下面来讲述 上面为问题啊&lt;/p>
+&lt;h2 id="kafka-的-topic-和-partition-内部如何存储">&lt;code>Kafka&lt;/code> 的 &lt;code>Topic&lt;/code> 和 &lt;code>Partition&lt;/code> 内部如何存储?&lt;/h2>
+&lt;p>&lt;code>Kafka&lt;/code> 为每个 &lt;code>Topic&lt;/code> 维护了分区（ &lt;code>Partition&lt;/code> ）的日志文件，每个 &lt;code>Partition&lt;/code> 在 &lt;code>kafka&lt;/code> 存储层为 &lt;code>Append Log&lt;/code>。任何发布到此 &lt;code>Partition&lt;/code> 的消息都会被追加到 &lt;code>Log&lt;/code> 文件尾部。
+在每个 &lt;code>Partition&lt;/code> 每个消息是按照 &lt;code>Timeline&lt;/code> 分配到一个单调递增的顺序编号的，就是我们说的 &lt;code>Offset&lt;/code>, &lt;code>Offset&lt;/code> 是一个 &lt;code>long&lt;/code> 型的数字，也是我们可以通过这个 &lt;code>Offset&lt;/code> 确定一条在该 &lt;code>Partition&lt;/code> 下的唯一消息。&lt;/p>
+&lt;p>这样就有个特性： &lt;code>Partition&lt;/code> 下有序, &lt;code>Topic&lt;/code> 下无法保证有序。&lt;/p>
+&lt;p>那么，问题来了？这些 &lt;code>Message&lt;/code> 如何发送到各个 &lt;code>Partition&lt;/code> 的呢？如何指定的呢？&lt;/p>
+&lt;ul>
+&lt;li>发送至哪个 &lt;code>Partition&lt;/code> 是由 生产者决定的。&lt;/li>
+&lt;li>如果没有 &lt;code>Key&lt;/code> 值，则轮询发送&lt;/li>
+&lt;li>如果有 &lt;code>key&lt;/code> 值，对 &lt;code>key&lt;/code> 值进行 &lt;code>Hash&lt;/code> ，然后对分区数量取余，保证同一个 &lt;code>Key&lt;/code> 值的会路由到同一个 &lt;code>Partition&lt;/code> 。如果想队列强顺序一致，可以让所有的消息设置为同一个 &lt;code>Key&lt;/code> 。&lt;/li>
+&lt;/ul>
+&lt;h2 id="与传统的消息系统相比-kafka-消费模型有啥优点">与传统的消息系统相比， &lt;code>Kafka&lt;/code> 消费模型有啥优点？&lt;/h2>
+&lt;h3 id="kafka-consumer-消费模型">&lt;code>Kafka Consumer&lt;/code> 消费模型&lt;/h3>
+&lt;p>消息由 &lt;code>producer&lt;/code> 发送到 &lt;code>Kafka&lt;/code> 集群后，被 &lt;code>Consumer&lt;/code> 消费，一般来说我们的消费模型有两种： &lt;code>Push&lt;/code> 推送模型 和 &lt;code>Pull&lt;/code> 拉取模型&lt;/p>
+&lt;p>&lt;code>Push&lt;/code> 推送模型：&lt;/p>
+&lt;blockquote>
+&lt;p>消息 &lt;code>Broker&lt;/code> 记录消费状态。消息 &lt;code>Broker&lt;/code> 将消息推送给消费者后，记录这条消息已经被消费，但是这种方式无法很好的保证消费处理的语义。
+消息推送完成后，消费者挂掉或者线程 Hang 住 ，或者网络原因未收到，但是 消息 &lt;code>Broker&lt;/code> 将其标记为已消费，这个消息将永远丢失了。
+也就是说，采用 &lt;code>Push&lt;/code> ，消息消费完全依赖 消息 &lt;code>Broker&lt;/code> 控制，一旦 &lt;code>Consumer&lt;/code> 发生阻塞，会出现问题。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;code>Pull&lt;/code> 拉取模型：&lt;/p>
+&lt;blockquote>
+&lt;p>由 &lt;code>Consumer&lt;/code> 控制 &lt;code>Speed&lt;/code> ，以及消费 &lt;code>Offset&lt;/code> ， &lt;code>Consumer&lt;/code> 可以按照任意的偏移量进行 &lt;code>Consumer&lt;/code>
+&lt;code>Consumer&lt;/code> 可以回放已经消费过的消息，进行重新处理或者消费最近的消息&lt;/p>
+&lt;/blockquote>
+&lt;h3 id="kafka-的网络模型">&lt;code>Kafka&lt;/code> 的网络模型&lt;/h3>
+&lt;p>&lt;code>Kafka Client&lt;/code> 单线程 &lt;code>Selector&lt;/code>&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-client-selector.png" alt="kafka 单线程模型">&lt;/p>
+&lt;blockquote>
+&lt;p>并发链接数目小，逻辑简单，数据量小。在 &lt;code>Kafka Consumer&lt;/code> 和 &lt;code>Kafka Producer&lt;/code> 都是采用的 单线程模型。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;code>kafka Server&lt;/code> 多线程 &lt;code>Selector&lt;/code>&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-server-selector.png" alt="kafka 多线程模型">&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;code>Acceptor&lt;/code> 运行于一个单独的线程，对于读取操作的线程池中线程都是在 &lt;code>selector&lt;/code> 注册 &lt;code>Op_Read&lt;/code> 事件，负责服务端读取请求。
+成功读取后，将请求放入 &lt;code>Message Queue&lt;/code> 共享队列中，然后在 写操作的线程池中，取出这个请求，对其进行逻辑处理。
+即使某个线程阻塞了，后面还有后续的线程从 &lt;code>Message Queue&lt;/code> 共享队列里面获取请求进行处理。
+写线程处理完逻辑后，由于注册了 &lt;code>Op_Write&lt;/code> 事件，还需要发送响应。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="kafka-是如何实现分布式数据存储和数据的读取">&lt;code>Kafka&lt;/code> 是如何实现分布式数据存储和数据的读取？&lt;/h2>
+&lt;h3 id="kafka-高可靠的分布式存储模型">&lt;code>Kafka&lt;/code> 高可靠的分布式存储模型&lt;/h3>
+&lt;p>主要依靠 副本 机制，有了副本机制，机器宕机，也会恢复。&lt;/p>
+&lt;h3 id="kafka-高性能日志存储">&lt;code>Kafka&lt;/code> 高性能日志存储&lt;/h3>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-segement.png" alt="kafka 高性能日志存储">
+&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-append-log.png" alt="kafka 高性能日志存储">&lt;/p>
+&lt;p>&lt;code>Kafka&lt;/code> 的一个 &lt;code>Topic&lt;/code> 下的所有的 &lt;code>Message&lt;/code> 都是以 &lt;code>Partition&lt;/code> 的方式，分布式存储在多个节点上。&lt;/p>
+&lt;p>同时在 kafka 机器上，每个 &lt;code>Partition&lt;/code> 都会对应一个日志目录，在目录下面会对应对歌 日志分段（&lt;code>LogSegment&lt;/code>）。
+LogSegment 组成 &amp;ldquo;.index&amp;rdquo; 与 &amp;ldquo;.log&amp;rdquo; , 分别表示 &lt;code>segment&lt;/code> 索引文件 和 数据文件。
+两个文件的命名规则: &lt;code>partition&lt;/code> 全局的第一个 &lt;code>segment&lt;/code> 从 0 开始，后续的每个 &lt;code>Segment&lt;/code> 文件名为上一个 &lt;code>Segment&lt;/code> 文件最后一条消息的 &lt;code>offset&lt;/code> 值。
+数值为 64 位， 20 位数字字符长度，没有数字用 0 填充。&lt;/p>
+&lt;p>假如有 1000 条消息，每个 &lt;code>LogSegment&lt;/code> 的大小为 100，那么展现 900-1000 的索引 和 Log：
+&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-log.jpg" alt="kafka LogSegment">&lt;/p>
+&lt;p>&lt;code>kafka&lt;/code> 消息数据量打，采用的是 &lt;code>稀疏索引&lt;/code> 的方式，加快偏查询速度。&lt;/p>
+&lt;p>如何读取数据？ 如果我们要读取第 911 条数据&lt;/p>
+&lt;ul>
+&lt;li>先找到它属于哪个段？ 二分法查找属于文件，找到 0000900.index 和 0000900.log 之后&lt;/li>
+&lt;li>去索引文件 0000900.index 查找 (911-900)=11 这个索引 或者 小于11 最近的索引&lt;/li>
+&lt;li>后面通过 二分法我们找到索引 [10,1367]&lt;/li>
+&lt;li>然后通过这条索引的物理位置 1367，开始往后找，知道找到 第 911 条数据&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>为什么分区？只有一个分区不行么？分区是为了干啥？那么日志为什么要分段呢？&lt;/code>&lt;/p>
+&lt;h2 id="kafka-的副本机制">&lt;code>Kafka&lt;/code> 的副本机制&lt;/h2>
+&lt;p>&lt;code>Kafka&lt;/code> 副本机制为 多个节点对其他服务端节点的主题分区的日志进行复制。当集群某个节点出现问题，访问该故障节点的请求可以被转移到其他正常的节点（过程脚 &lt;code>reblance&lt;/code> ）&lt;/p>
+&lt;p>&lt;code>kafka&lt;/code> 的每个 &lt;code>Topic&lt;/code> 的每个 &lt;code>Partition&lt;/code> 都有一个 主副本以及 &lt;code>0-n&lt;/code> 个副本，副本保持与主副本的数据同步，当 主副本 出现故障时会被替代。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-partition-replicas.png" alt="kafka 高性能副本机制">&lt;/p>
+&lt;p>在 &lt;code>kafka&lt;/code> 中，并不是所有的副本都被拿来代替主副本的，所以在 &lt;code>kafka&lt;/code> 的 &lt;code>leader&lt;/code> 节点中维护者一个 &lt;code>ISR（In Sync Replicas）&lt;/code>集合
+&lt;code>ISR (In Sync Replicas)&lt;/code> 副本 &lt;code>follower&lt;/code> 同步队列, 维护着有资格的 &lt;code>follower&lt;/code> 的节点&lt;/p>
+&lt;ul>
+&lt;li>副本的所有节点必须和 &lt;code>ZK&lt;/code> 保持链接&lt;/li>
+&lt;li>在同步过程中，这个副本不能落后主副本太多(即副本最后一条消息的 &lt;code>offset&lt;/code> 和 &lt;code>leader&lt;/code> 副本的最好一条消息的 &lt;code>offset&lt;/code> 之间的差值不能超过阈值)
+(&lt;code>replica.lag.max.messages&lt;/code>)&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>AR（Assigned Replicas）&lt;/code>标记副本的全集 ，&lt;code>OSR&lt;/code> 表示落后被剔除的副本集合&lt;/p>
+&lt;p>ISR = leader + 没有落后太多的副本
+AR = OSR + ISR&lt;/p>
+&lt;p>&lt;code>HW &amp;amp; LEO&lt;/code>
+&lt;code>Follower&lt;/code> 副本同步过程中，两个概念 &lt;code>HW&lt;/code> &lt;code>HighWatermark&lt;/code> 和 &lt;code>LEO&lt;/code> &lt;code>Log End Offset&lt;/code>，与 &lt;code>ISR&lt;/code> 紧密相关。&lt;/p>
+&lt;p>&lt;code>HW&lt;/code> 是一个特殊的 &lt;code>Offset&lt;/code> ，当 &lt;code>Consumer&lt;/code> 处理消息的时候，只能 &lt;code>Pull&lt;/code> 到 &lt;code>HW&lt;/code> 之前的消息， &lt;code>HW&lt;/code> 之后的消息对 &lt;code>Consumer&lt;/code> 不可见。
+也就是说 &lt;code>Partition&lt;/code> 对应的 ISR 中最小的 &lt;code>LEO&lt;/code> 作为 &lt;code>HW&lt;/code> ， &lt;code>Consumer&lt;/code> 最多只能消费到 &lt;code>HW&lt;/code> 所在的位置，每个 &lt;code>Replica&lt;/code> 都有 &lt;code>HW&lt;/code> ，
+&lt;code>leader&lt;/code> 和 &lt;code>follower&lt;/code> 各自维护更新自己的 &lt;code>HW&lt;/code> 的状态，对于 &lt;code>Leader&lt;/code> 新写入的消息， &lt;code>Consumer&lt;/code> 不能立刻消费， &lt;code>Leader&lt;/code> 会等待
+该消息被所有的 &lt;code>ISR&lt;/code> 中的 &lt;code>Replicas&lt;/code> 同步更新 &lt;code>HW&lt;/code> ，此时消息才能被 &lt;code>Consumer&lt;/code> 消费，这样保证了如果 &lt;code>Leader&lt;/code> 副本损坏，
+该消息仍然可以从新选举的 &lt;code>Leader&lt;/code> 获取。&lt;/p>
+&lt;p>&lt;code>LEO&lt;/code> 是所有副都会有的一个 &lt;code>offset&lt;/code> 标记，它指向追加到当前副本的最后一个消息的 &lt;code>offset&lt;/code> ，当生产者向 &lt;code>Leader&lt;/code> 副本追加消息时候， &lt;code>Leader&lt;/code> 副本的 &lt;code>LEO&lt;/code> 标记就会递增；
+当 &lt;code>follower&lt;/code> 副本成功从 &lt;code>leader&lt;/code> 副本 &lt;code>pull&lt;/code> 消息并更新到本地的时候， &lt;code>follower&lt;/code> 副本也会增肌&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;code>producer&lt;/code> 向 &lt;code>leader&lt;/code> 发送消息，可以通过 &lt;code>request.required.acks&lt;/code> 参数来设置数据可靠性级别：&lt;/p>
+&lt;ul>
+&lt;li>1 默认， &lt;code>producer&lt;/code> 在 &lt;code>ISR&lt;/code> 中的 &lt;code>leader&lt;/code> 已成功收到数据并得到确认后发送下一条 &lt;code>Message&lt;/code> 。如果 &lt;code>Leader&lt;/code> 宕机，会丢失数据&lt;/li>
+&lt;li>0 &lt;code>producer&lt;/code> 无需等待，继续发送下一批消息，效率高，但是数据可靠性低&lt;/li>
+&lt;li>-1 &lt;code>producer&lt;/code> 需要等待 &lt;code>ISR&lt;/code> 中所以的 &lt;code>follower&lt;/code> 都确认接收到数据才算发送完成。可靠性高，但是没有也不能保证数据不丢失，比如 &lt;code>ISR&lt;/code> 里只有 &lt;code>leader&lt;/code> （其他节点和 &lt;code>ZK&lt;/code> 断链，或者没有追上），这样就变成了 &lt;code>acks=1&lt;/code> 的情况&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h1 id="kafka-到底会不会丢消息">&lt;code>kafka&lt;/code> 到底会不会丢消息&lt;/h1>
+&lt;p>一个消息的流转&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Producer&lt;/code> 发送给 &lt;code>Kafka Broker&lt;/code>&lt;/li>
+&lt;li>&lt;code>kafka Broker&lt;/code> 消息同步和持久化&lt;/li>
+&lt;li>&lt;code>Kafka Brokder&lt;/code> 将消息传递给消费者&lt;/li>
+&lt;/ul>
+&lt;h1 id="如何优雅的使用-kafka-consumer">如何优雅的使用 Kafka Consumer&lt;/h1>
+&lt;p>注意点等等&amp;hellip;..&lt;/p>
+&lt;h1 id="kafka-producer-流程详细">&lt;code>kafka Producer&lt;/code> 流程详细&lt;/h1>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-producer-flow.png" alt="kafkaProducer流程解读">
+&lt;img src="https://pinkhello.me/%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/kafka-meta-get.png" alt="kafka 获取元数据">&lt;/p>
+- https://pinkhello.me/posts/11-%E5%87%A0%E4%B8%AA%E5%85%B3%E4%BA%8Ekafka%E7%9A%84%E7%9F%A5%E8%AF%86%E7%82%B9/ - PinkHello, All Rights Reserved</description></item><item><title>10 多域名下的SSH</title><link>https://pinkhello.me/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</link><pubDate>Wed, 10 Feb 2021 08:52:57 +0800</pubDate><guid>https://pinkhello.me/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/</guid><description>PinkHello https://pinkhello.me/posts/10-%E5%A4%9A%E5%9F%9F%E5%90%8D%E4%B8%8B%E7%9A%84ssh/ -&lt;h1 id="前言">前言&lt;/h1>
 &lt;p>有时候我们，有多个 git 账号（Gitlab、GitHub），这时候如果是同一个账号（邮箱注册），那不会有问题，但是如果不是相同的账号呢，我们在使用 SSH KEY 做免密登录时候，头痛了。&lt;/p>
 &lt;p>这个时候我们需要针对不同的账号，生成不同的 SSH Key，并且配置不同的域名使用不同的Key&lt;/p>
 &lt;h1 id="生成一个-ssh-key">生成一个 SSH KEY&lt;/h1>
@@ -1253,233 +1385,4 @@ System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b0
 输出
 STATIC HELLO, WORLD!
 &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> hello world
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ - PinkHello, All Rights Reserved</description></item><item><title>01 一致性哈希算法</title><link>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate><guid>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ -&lt;h1 id="分布式均衡寻址算法">分布式均衡寻址算法&lt;/h1>
-&lt;p>在分布式集群中，对机器的添加删除，或者机器故障后自动脱落集群的操作是分布式集群管理的基本功能。&lt;/p>
-&lt;blockquote>
-&lt;p>在集群环境中，判断分布式寻址算法好坏的原则：&lt;/p>
-&lt;ul>
-&lt;li>平衡性（Balance）&lt;/li>
-&lt;li>单调性（Monotonicity）&lt;/li>
-&lt;li>分散性（Spread）&lt;/li>
-&lt;li>负载（Load）&lt;/li>
-&lt;/ul>
-&lt;/blockquote>
-&lt;h2 id="hashobjectn">Hash(Object)%N&lt;/h2>
-&lt;p>集群N台机器，根据N取模，路由到对应的机器，但是缺点在于，对于机器的添加删除，已经缓存的数据都失效、严重违反单调性，
-大量的缓存重建&lt;/p>
-&lt;blockquote>
-&lt;p>假设0-3个节点、20个数据:
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash.png" alt="哈希数据">&lt;/p>
-&lt;p>进行取模后分布:
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash1.png" alt="哈希取模后分布">&lt;/p>
-&lt;p>扩容后:
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash3.png" alt="扩容后">
-当前只有4个数据能命中。命中率 4/20 = 20% ,命中率底下，并且有大量缓存需要重建&lt;/p>
-&lt;/blockquote>
-&lt;h2 id="一致性hash--dht-">一致性Hash ( DHT )&lt;/h2>
-&lt;blockquote>
-&lt;p>公共哈希函数和哈希环
-Hash算法设计: 采取取模方式，按常用的 Hash 算法将对应的 Key 哈希到一个具有 2^32 次方的桶空间中，即 0 ~ (2^32)-1 的数字空间。想想一下，将数字首位相连，组成一个闭合的环形。
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash4.png" alt="环形Hash空间">&lt;/p>
-&lt;/blockquote>
-&lt;blockquote>
-&lt;p>对象(Object)映射到哈希环
-把对象映射到 0-2^32-1 空间里，假设有4个对象 object1-4 ，映射进hash环状
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash5.png" alt="对象映射环形Hash空间">&lt;/p>
-&lt;/blockquote>
-&lt;blockquote>
-&lt;p>缓存(Cache)映射到哈希环
-下面将 Cache 映射进 Hash 空间，假设现在有三个cache：&lt;/p>
-&lt;blockquote>
-&lt;p>基本思想就是 Object 和 Cache 都映射到同一 Hash 数值空间中，并且使用相同的 Hash算法，可以使用 Cache 的 IP地址或者其他因子）&lt;/p>
-&lt;/blockquote>
-&lt;p>&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash6.png" alt="Cache映射环形Hash空间">&lt;/p>
-&lt;/blockquote>
-&lt;blockquote>
-&lt;p>对象（Object映射到缓存(Cache)节点
-每个 Cache 的 Key 顺时针，找到第一个 Cache 节点就是存储位置:
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash7.png" alt="找到Cache存储位置">&lt;/p>
-&lt;/blockquote>
-&lt;blockquote>
-&lt;p>移除一个缓存节点
-移除一个 CacheB 节点, 这时候 key4 无法找寻到 Cache，key4将继续使用一致性Hash算法算出最新的 CacheC, 以后存储与读取都在 CacheC 上。
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash8.png" alt="移除CacheB节点">&lt;/p>
-&lt;blockquote>
-&lt;p>移除节点后的影响范围在该节点逆时针计算到遇到的第一个cache节点之间的数据节点。&lt;/p>
-&lt;/blockquote>
-&lt;/blockquote>
-&lt;blockquote>
-&lt;p>增加一个缓存节点
-增加一个 Cache节点
-&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash9.png" alt="新增Cache节点">&lt;/p>
-&lt;blockquote>
-&lt;p>影响范围为：添加节点逆时针遇到的第一个cache节点之间的数据节点&lt;/p>
-&lt;/blockquote>
-&lt;/blockquote>
-&lt;blockquote>
-&lt;p>虚拟Cache节点
-物理上不可能部署节点有限，所以需要虚拟出足够多的虚拟节点，最终达到数据在哈希换上均匀分布&lt;/p>
-&lt;blockquote>
-&lt;p>假如只有两个节点,每个节点都复制成3倍，结果看上去部署了6个节点。可以想象当复制倍数是 2^32 时候，就达到绝对的均匀，通常可取的复制倍数为32 或者更高&lt;/p>
-&lt;/blockquote>
-&lt;p>虚拟节点哈希值计算方法调整为 对 &amp;ldquo;节点IP（或机器名）+虚拟节点的序号（1~N）&amp;rdquo; 作哈希&lt;/p>
-&lt;/blockquote>
-&lt;h1 id="redis-cluster">Redis Cluster&lt;/h1>
-&lt;p>Redis Cluster 是 Redis 官方出品的分布式解决方案&lt;/p>
-&lt;p>Redis Cluster 由多个 Redis 实例组成的整体，数据按照 &lt;em>槽(slot)&lt;/em> 存储分布在多个实例上，通过 Gossip 协议来进行节点通信。&lt;/p>
-&lt;p>redis 为什么使用 16384 slots? &lt;a href="https://github.com/antirez/redis/issues/2576">redis 作者给出答案&lt;/a>&lt;/p>
-&lt;h1 id="一致性hash算法的java实现与检验">一致性hash算法的JAVA实现与检验&lt;/h1>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">ConsistentHashing&lt;/span> {
-&lt;span style="color:#228b22">// 物理节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> Set&amp;lt;String&amp;gt; physicalNodes = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeSet&amp;lt;String&amp;gt;() {
-{
-add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.101&amp;#34;&lt;/span>);
-add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.102&amp;#34;&lt;/span>);
-add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.103&amp;#34;&lt;/span>);
-add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.104&amp;#34;&lt;/span>);
-add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.105&amp;#34;&lt;/span>);
-add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.106&amp;#34;&lt;/span>);
-}
-};
-&lt;span style="color:#228b22">//虚拟节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> VIRTUAL_COPIES = 1; &lt;span style="color:#228b22">// 物理节点至虚拟节点的复制倍数
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> TreeMap&amp;lt;Long, String&amp;gt; virtualNodes = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeMap&amp;lt;&amp;gt;(); &lt;span style="color:#228b22">// 哈希值 =&amp;gt; 物理节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-&lt;span style="color:#228b22">// 32位的 Fowler-Noll-Vo 哈希算法
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> Long &lt;span style="color:#008b45">FNVHash&lt;/span>(String key) {
-&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> p = 16777619;
-Long hash = 2166136261L;
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0, num = key.&lt;span style="color:#658b00">length&lt;/span>(); idx &amp;lt; num; ++idx) {
-hash = (hash ^ key.&lt;span style="color:#658b00">charAt&lt;/span>(idx)) * p;
-}
-hash += hash &amp;lt;&amp;lt; 13;
-hash ^= hash &amp;gt;&amp;gt; 7;
-hash += hash &amp;lt;&amp;lt; 3;
-hash ^= hash &amp;gt;&amp;gt; 17;
-hash += hash &amp;lt;&amp;lt; 5;
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (hash &amp;lt; 0) {
-hash = Math.&lt;span style="color:#658b00">abs&lt;/span>(hash);
-}
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> hash;
-}
-&lt;span style="color:#228b22">// 根据物理节点，构建虚拟节点映射表
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#008b45">ConsistentHashing&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (String nodeIp : physicalNodes) {
-addPhysicalNode(nodeIp);
-}
-}
-&lt;span style="color:#228b22">// 添加物理节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">addPhysicalNode&lt;/span>(String nodeIp) {
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0; idx &amp;lt; VIRTUAL_COPIES; ++idx) {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(nodeIp + &lt;span style="color:#cd5555">&amp;#34;#&amp;#34;&lt;/span> + idx);
-virtualNodes.&lt;span style="color:#658b00">put&lt;/span>(hash, nodeIp);
-}
-}
-&lt;span style="color:#228b22">// 删除物理节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">removePhysicalNode&lt;/span>(String nodeIp) {
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0; idx &amp;lt; VIRTUAL_COPIES; ++idx) {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(nodeIp + &lt;span style="color:#cd5555">&amp;#34;#&amp;#34;&lt;/span> + idx);
-virtualNodes.&lt;span style="color:#658b00">remove&lt;/span>(hash);
-}
-}
-&lt;span style="color:#228b22">// 查找对象映射的节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> String &lt;span style="color:#008b45">getObjectNode&lt;/span>(String object) {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(object);
-SortedMap&amp;lt;Long, String&amp;gt; tailMap = virtualNodes.&lt;span style="color:#658b00">tailMap&lt;/span>(hash); &lt;span style="color:#228b22">// 所有大于 hash 的节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> Long key = tailMap.&lt;span style="color:#658b00">isEmpty&lt;/span>() ? virtualNodes.&lt;span style="color:#658b00">firstKey&lt;/span>() : tailMap.&lt;span style="color:#658b00">firstKey&lt;/span>();
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> virtualNodes.&lt;span style="color:#658b00">get&lt;/span>(key);
-}
-&lt;span style="color:#228b22">// 统计对象与节点的映射关系
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">dumpObjectNodeMap&lt;/span>(String label, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> objectMin, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> objectMax) {
-&lt;span style="color:#228b22">// 统计
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> Map&amp;lt;String, Integer&amp;gt; objectNodeMap = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeMap&amp;lt;&amp;gt;(); &lt;span style="color:#228b22">// IP =&amp;gt; COUNT
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> object = objectMin; object &amp;lt;= objectMax; ++object) {
-String nodeIp = getObjectNode(Integer.&lt;span style="color:#658b00">toString&lt;/span>(object));
-Integer count = objectNodeMap.&lt;span style="color:#658b00">get&lt;/span>(nodeIp);
-objectNodeMap.&lt;span style="color:#658b00">put&lt;/span>(nodeIp, (count == &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> ? 0 : count + 1));
-}
-&lt;span style="color:#228b22">// 打印
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">double&lt;/span> totalCount = objectMax - objectMin + 1;
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;======== &amp;#34;&lt;/span> + label + &lt;span style="color:#cd5555">&amp;#34; ========&amp;#34;&lt;/span>);
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (Map.&lt;span style="color:#658b00">Entry&lt;/span>&amp;lt;String, Integer&amp;gt; entry : objectNodeMap.&lt;span style="color:#658b00">entrySet&lt;/span>()) {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> percent = (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span>) (100 * entry.&lt;span style="color:#658b00">getValue&lt;/span>() / totalCount);
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;IP=&amp;#34;&lt;/span> + entry.&lt;span style="color:#658b00">getKey&lt;/span>() + &lt;span style="color:#cd5555">&amp;#34;: RATE=&amp;#34;&lt;/span> + percent + &lt;span style="color:#cd5555">&amp;#34;%&amp;#34;&lt;/span>);
-}
-}
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) {
-ConsistentHashing ch = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ConsistentHashing();
-&lt;span style="color:#228b22">// 初始情况
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;初始情况&amp;#34;&lt;/span>, 0, 65536);
-&lt;span style="color:#228b22">// 删除物理节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">removePhysicalNode&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;192.168.1.105&amp;#34;&lt;/span>);
-ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;删除物理节点&amp;#34;&lt;/span>, 0, 65536);
-&lt;span style="color:#228b22">// 添加物理节点
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">addPhysicalNode&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;192.168.1.107&amp;#34;&lt;/span>);
-ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;添加物理节点&amp;#34;&lt;/span>, 0, 65536);
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>复制倍数为 1 时的均衡性（VIRTUAL_COPIES = 1）&lt;/p>
-&lt;pre>&lt;code> ======== 初始情况 ========
-IP=192.168.1.101: RATE=28%
-IP=192.168.1.102: RATE=3%
-IP=192.168.1.103: RATE=28%
-IP=192.168.1.104: RATE=19%
-IP=192.168.1.105: RATE=16%
-IP=192.168.1.106: RATE=2%
-======== 删除物理节点 ========
-IP=192.168.1.101: RATE=45%
-IP=192.168.1.102: RATE=3%
-IP=192.168.1.103: RATE=28%
-IP=192.168.1.104: RATE=19%
-IP=192.168.1.106: RATE=2%
-======== 添加物理节点 ========
-IP=192.168.1.101: RATE=45%
-IP=192.168.1.102: RATE=3%
-IP=192.168.1.103: RATE=25%
-IP=192.168.1.104: RATE=19%
-IP=192.168.1.106: RATE=2%
-IP=192.168.1.107: RATE=3%
-&lt;/code>&lt;/pre>&lt;p>复制倍数为 32 时的均衡性（VIRTUAL_COPIES = 32）&lt;/p>
-&lt;pre>&lt;code> ======== 初始情况 ========
-IP=192.168.1.101: RATE=17%
-IP=192.168.1.102: RATE=12%
-IP=192.168.1.103: RATE=23%
-IP=192.168.1.104: RATE=12%
-IP=192.168.1.105: RATE=12%
-IP=192.168.1.106: RATE=21%
-======== 删除物理节点 ========
-IP=192.168.1.101: RATE=17%
-IP=192.168.1.102: RATE=12%
-IP=192.168.1.103: RATE=25%
-IP=192.168.1.104: RATE=23%
-IP=192.168.1.106: RATE=21%
-======== 添加物理节点 ========
-IP=192.168.1.101: RATE=16%
-IP=192.168.1.102: RATE=12%
-IP=192.168.1.103: RATE=14%
-IP=192.168.1.104: RATE=23%
-IP=192.168.1.106: RATE=15%
-IP=192.168.1.107: RATE=17%
-&lt;/code>&lt;/pre>&lt;p>复制倍数为 1M 时的均衡性（VIRTUAL_COPIES = 1048576）&lt;/p>
-&lt;pre>&lt;code> ======== 初始情况 ========
-IP=192.168.1.101: RATE=16%
-IP=192.168.1.102: RATE=16%
-IP=192.168.1.103: RATE=16%
-IP=192.168.1.104: RATE=16%
-IP=192.168.1.105: RATE=16%
-IP=192.168.1.106: RATE=16%
-======== 删除物理节点 ========
-IP=192.168.1.101: RATE=19%
-IP=192.168.1.102: RATE=19%
-IP=192.168.1.103: RATE=20%
-IP=192.168.1.104: RATE=19%
-IP=192.168.1.106: RATE=19%
-======== 添加物理节点 ========
-IP=192.168.1.101: RATE=16%
-IP=192.168.1.102: RATE=16%
-IP=192.168.1.103: RATE=16%
-IP=192.168.1.104: RATE=16%
-IP=192.168.1.106: RATE=16%
-IP=192.168.1.107: RATE=16%
-&lt;/code>&lt;/pre>- https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ - PinkHello, All Rights Reserved</description></item></channel></rss>

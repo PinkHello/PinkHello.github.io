@@ -1,4 +1,233 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 16 Feb 2021 22:48:35 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Sun, 21 Mar 2021 17:17:13 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>01 一致性哈希算法</title><link>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate><guid>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ -&lt;h1 id="分布式均衡寻址算法">分布式均衡寻址算法&lt;/h1>
+&lt;p>在分布式集群中，对机器的添加删除，或者机器故障后自动脱落集群的操作是分布式集群管理的基本功能。&lt;/p>
+&lt;blockquote>
+&lt;p>在集群环境中，判断分布式寻址算法好坏的原则：&lt;/p>
+&lt;ul>
+&lt;li>平衡性（Balance）&lt;/li>
+&lt;li>单调性（Monotonicity）&lt;/li>
+&lt;li>分散性（Spread）&lt;/li>
+&lt;li>负载（Load）&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="hashobjectn">Hash(Object)%N&lt;/h2>
+&lt;p>集群N台机器，根据N取模，路由到对应的机器，但是缺点在于，对于机器的添加删除，已经缓存的数据都失效、严重违反单调性，
+大量的缓存重建&lt;/p>
+&lt;blockquote>
+&lt;p>假设0-3个节点、20个数据:
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash.png" alt="哈希数据">&lt;/p>
+&lt;p>进行取模后分布:
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash1.png" alt="哈希取模后分布">&lt;/p>
+&lt;p>扩容后:
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash3.png" alt="扩容后">
+当前只有4个数据能命中。命中率 4/20 = 20% ,命中率底下，并且有大量缓存需要重建&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="一致性hash--dht-">一致性Hash ( DHT )&lt;/h2>
+&lt;blockquote>
+&lt;p>公共哈希函数和哈希环
+Hash算法设计: 采取取模方式，按常用的 Hash 算法将对应的 Key 哈希到一个具有 2^32 次方的桶空间中，即 0 ~ (2^32)-1 的数字空间。想想一下，将数字首位相连，组成一个闭合的环形。
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash4.png" alt="环形Hash空间">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>对象(Object)映射到哈希环
+把对象映射到 0-2^32-1 空间里，假设有4个对象 object1-4 ，映射进hash环状
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash5.png" alt="对象映射环形Hash空间">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>缓存(Cache)映射到哈希环
+下面将 Cache 映射进 Hash 空间，假设现在有三个cache：&lt;/p>
+&lt;blockquote>
+&lt;p>基本思想就是 Object 和 Cache 都映射到同一 Hash 数值空间中，并且使用相同的 Hash算法，可以使用 Cache 的 IP地址或者其他因子）&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash6.png" alt="Cache映射环形Hash空间">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>对象（Object映射到缓存(Cache)节点
+每个 Cache 的 Key 顺时针，找到第一个 Cache 节点就是存储位置:
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash7.png" alt="找到Cache存储位置">&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>移除一个缓存节点
+移除一个 CacheB 节点, 这时候 key4 无法找寻到 Cache，key4将继续使用一致性Hash算法算出最新的 CacheC, 以后存储与读取都在 CacheC 上。
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash8.png" alt="移除CacheB节点">&lt;/p>
+&lt;blockquote>
+&lt;p>移除节点后的影响范围在该节点逆时针计算到遇到的第一个cache节点之间的数据节点。&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>增加一个缓存节点
+增加一个 Cache节点
+&lt;img src="https://pinkhello.me/%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/hash9.png" alt="新增Cache节点">&lt;/p>
+&lt;blockquote>
+&lt;p>影响范围为：添加节点逆时针遇到的第一个cache节点之间的数据节点&lt;/p>
+&lt;/blockquote>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>虚拟Cache节点
+物理上不可能部署节点有限，所以需要虚拟出足够多的虚拟节点，最终达到数据在哈希换上均匀分布&lt;/p>
+&lt;blockquote>
+&lt;p>假如只有两个节点,每个节点都复制成3倍，结果看上去部署了6个节点。可以想象当复制倍数是 2^32 时候，就达到绝对的均匀，通常可取的复制倍数为32 或者更高&lt;/p>
+&lt;/blockquote>
+&lt;p>虚拟节点哈希值计算方法调整为 对 &amp;ldquo;节点IP（或机器名）+虚拟节点的序号（1~N）&amp;rdquo; 作哈希&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="redis-cluster">Redis Cluster&lt;/h1>
+&lt;p>Redis Cluster 是 Redis 官方出品的分布式解决方案&lt;/p>
+&lt;p>Redis Cluster 由多个 Redis 实例组成的整体，数据按照 &lt;em>槽(slot)&lt;/em> 存储分布在多个实例上，通过 Gossip 协议来进行节点通信。&lt;/p>
+&lt;p>redis 为什么使用 16384 slots? &lt;a href="https://github.com/antirez/redis/issues/2576">redis 作者给出答案&lt;/a>&lt;/p>
+&lt;h1 id="一致性hash算法的java实现与检验">一致性hash算法的JAVA实现与检验&lt;/h1>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java"> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">ConsistentHashing&lt;/span> {
+&lt;span style="color:#228b22">// 物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> Set&amp;lt;String&amp;gt; physicalNodes = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeSet&amp;lt;String&amp;gt;() {
+{
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.101&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.102&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.103&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.104&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.105&amp;#34;&lt;/span>);
+add(&lt;span style="color:#cd5555">&amp;#34;192.168.1.106&amp;#34;&lt;/span>);
+}
+};
+&lt;span style="color:#228b22">//虚拟节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> VIRTUAL_COPIES = 1; &lt;span style="color:#228b22">// 物理节点至虚拟节点的复制倍数
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> TreeMap&amp;lt;Long, String&amp;gt; virtualNodes = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeMap&amp;lt;&amp;gt;(); &lt;span style="color:#228b22">// 哈希值 =&amp;gt; 物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">// 32位的 Fowler-Noll-Vo 哈希算法
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> Long &lt;span style="color:#008b45">FNVHash&lt;/span>(String key) {
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> p = 16777619;
+Long hash = 2166136261L;
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0, num = key.&lt;span style="color:#658b00">length&lt;/span>(); idx &amp;lt; num; ++idx) {
+hash = (hash ^ key.&lt;span style="color:#658b00">charAt&lt;/span>(idx)) * p;
+}
+hash += hash &amp;lt;&amp;lt; 13;
+hash ^= hash &amp;gt;&amp;gt; 7;
+hash += hash &amp;lt;&amp;lt; 3;
+hash ^= hash &amp;gt;&amp;gt; 17;
+hash += hash &amp;lt;&amp;lt; 5;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (hash &amp;lt; 0) {
+hash = Math.&lt;span style="color:#658b00">abs&lt;/span>(hash);
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> hash;
+}
+&lt;span style="color:#228b22">// 根据物理节点，构建虚拟节点映射表
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#008b45">ConsistentHashing&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (String nodeIp : physicalNodes) {
+addPhysicalNode(nodeIp);
+}
+}
+&lt;span style="color:#228b22">// 添加物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">addPhysicalNode&lt;/span>(String nodeIp) {
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0; idx &amp;lt; VIRTUAL_COPIES; ++idx) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(nodeIp + &lt;span style="color:#cd5555">&amp;#34;#&amp;#34;&lt;/span> + idx);
+virtualNodes.&lt;span style="color:#658b00">put&lt;/span>(hash, nodeIp);
+}
+}
+&lt;span style="color:#228b22">// 删除物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">removePhysicalNode&lt;/span>(String nodeIp) {
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> idx = 0; idx &amp;lt; VIRTUAL_COPIES; ++idx) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(nodeIp + &lt;span style="color:#cd5555">&amp;#34;#&amp;#34;&lt;/span> + idx);
+virtualNodes.&lt;span style="color:#658b00">remove&lt;/span>(hash);
+}
+}
+&lt;span style="color:#228b22">// 查找对象映射的节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> String &lt;span style="color:#008b45">getObjectNode&lt;/span>(String object) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> hash = FNVHash(object);
+SortedMap&amp;lt;Long, String&amp;gt; tailMap = virtualNodes.&lt;span style="color:#658b00">tailMap&lt;/span>(hash); &lt;span style="color:#228b22">// 所有大于 hash 的节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Long key = tailMap.&lt;span style="color:#658b00">isEmpty&lt;/span>() ? virtualNodes.&lt;span style="color:#658b00">firstKey&lt;/span>() : tailMap.&lt;span style="color:#658b00">firstKey&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> virtualNodes.&lt;span style="color:#658b00">get&lt;/span>(key);
+}
+&lt;span style="color:#228b22">// 统计对象与节点的映射关系
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">dumpObjectNodeMap&lt;/span>(String label, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> objectMin, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> objectMax) {
+&lt;span style="color:#228b22">// 统计
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Map&amp;lt;String, Integer&amp;gt; objectNodeMap = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TreeMap&amp;lt;&amp;gt;(); &lt;span style="color:#228b22">// IP =&amp;gt; COUNT
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> object = objectMin; object &amp;lt;= objectMax; ++object) {
+String nodeIp = getObjectNode(Integer.&lt;span style="color:#658b00">toString&lt;/span>(object));
+Integer count = objectNodeMap.&lt;span style="color:#658b00">get&lt;/span>(nodeIp);
+objectNodeMap.&lt;span style="color:#658b00">put&lt;/span>(nodeIp, (count == &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> ? 0 : count + 1));
+}
+&lt;span style="color:#228b22">// 打印
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">double&lt;/span> totalCount = objectMax - objectMin + 1;
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;======== &amp;#34;&lt;/span> + label + &lt;span style="color:#cd5555">&amp;#34; ========&amp;#34;&lt;/span>);
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (Map.&lt;span style="color:#658b00">Entry&lt;/span>&amp;lt;String, Integer&amp;gt; entry : objectNodeMap.&lt;span style="color:#658b00">entrySet&lt;/span>()) {
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> percent = (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span>) (100 * entry.&lt;span style="color:#658b00">getValue&lt;/span>() / totalCount);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;IP=&amp;#34;&lt;/span> + entry.&lt;span style="color:#658b00">getKey&lt;/span>() + &lt;span style="color:#cd5555">&amp;#34;: RATE=&amp;#34;&lt;/span> + percent + &lt;span style="color:#cd5555">&amp;#34;%&amp;#34;&lt;/span>);
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) {
+ConsistentHashing ch = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ConsistentHashing();
+&lt;span style="color:#228b22">// 初始情况
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;初始情况&amp;#34;&lt;/span>, 0, 65536);
+&lt;span style="color:#228b22">// 删除物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">removePhysicalNode&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;192.168.1.105&amp;#34;&lt;/span>);
+ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;删除物理节点&amp;#34;&lt;/span>, 0, 65536);
+&lt;span style="color:#228b22">// 添加物理节点
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ch.&lt;span style="color:#658b00">addPhysicalNode&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;192.168.1.107&amp;#34;&lt;/span>);
+ch.&lt;span style="color:#658b00">dumpObjectNodeMap&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;添加物理节点&amp;#34;&lt;/span>, 0, 65536);
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>复制倍数为 1 时的均衡性（VIRTUAL_COPIES = 1）&lt;/p>
+&lt;pre>&lt;code> ======== 初始情况 ========
+IP=192.168.1.101: RATE=28%
+IP=192.168.1.102: RATE=3%
+IP=192.168.1.103: RATE=28%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.105: RATE=16%
+IP=192.168.1.106: RATE=2%
+======== 删除物理节点 ========
+IP=192.168.1.101: RATE=45%
+IP=192.168.1.102: RATE=3%
+IP=192.168.1.103: RATE=28%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.106: RATE=2%
+======== 添加物理节点 ========
+IP=192.168.1.101: RATE=45%
+IP=192.168.1.102: RATE=3%
+IP=192.168.1.103: RATE=25%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.106: RATE=2%
+IP=192.168.1.107: RATE=3%
+&lt;/code>&lt;/pre>&lt;p>复制倍数为 32 时的均衡性（VIRTUAL_COPIES = 32）&lt;/p>
+&lt;pre>&lt;code> ======== 初始情况 ========
+IP=192.168.1.101: RATE=17%
+IP=192.168.1.102: RATE=12%
+IP=192.168.1.103: RATE=23%
+IP=192.168.1.104: RATE=12%
+IP=192.168.1.105: RATE=12%
+IP=192.168.1.106: RATE=21%
+======== 删除物理节点 ========
+IP=192.168.1.101: RATE=17%
+IP=192.168.1.102: RATE=12%
+IP=192.168.1.103: RATE=25%
+IP=192.168.1.104: RATE=23%
+IP=192.168.1.106: RATE=21%
+======== 添加物理节点 ========
+IP=192.168.1.101: RATE=16%
+IP=192.168.1.102: RATE=12%
+IP=192.168.1.103: RATE=14%
+IP=192.168.1.104: RATE=23%
+IP=192.168.1.106: RATE=15%
+IP=192.168.1.107: RATE=17%
+&lt;/code>&lt;/pre>&lt;p>复制倍数为 1M 时的均衡性（VIRTUAL_COPIES = 1048576）&lt;/p>
+&lt;pre>&lt;code> ======== 初始情况 ========
+IP=192.168.1.101: RATE=16%
+IP=192.168.1.102: RATE=16%
+IP=192.168.1.103: RATE=16%
+IP=192.168.1.104: RATE=16%
+IP=192.168.1.105: RATE=16%
+IP=192.168.1.106: RATE=16%
+======== 删除物理节点 ========
+IP=192.168.1.101: RATE=19%
+IP=192.168.1.102: RATE=19%
+IP=192.168.1.103: RATE=20%
+IP=192.168.1.104: RATE=19%
+IP=192.168.1.106: RATE=19%
+======== 添加物理节点 ========
+IP=192.168.1.101: RATE=16%
+IP=192.168.1.102: RATE=16%
+IP=192.168.1.103: RATE=16%
+IP=192.168.1.104: RATE=16%
+IP=192.168.1.106: RATE=16%
+IP=192.168.1.107: RATE=16%
+&lt;/code>&lt;/pre>- https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
 &lt;h2 id="前言">前言&lt;/h2>
 &lt;p>对于 &lt;code>ThreadLocal&lt;/code> 的使用，并不难，这次主要讲述 &lt;code>ThreadLocal&lt;/code> 的实现方式以及原理&lt;/p>
 &lt;h2 id="threadlocal-是什么">&lt;code>ThreadLocal&lt;/code> 是什么&lt;/h2>
