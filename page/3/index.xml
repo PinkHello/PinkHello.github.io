@@ -520,9 +520,9 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;img src="https://github-readme-stats.vercel.app/api/top-langs/?username=pinkhello&amp;amp;layout=compact&amp;amp;hide_border=true&amp;amp;hide=html,vim&amp;amp;count_private=true" alt="">&lt;/p>
 &lt;h2 id="个人开源项目">个人开源项目&lt;/h2>
 &lt;blockquote>
-&lt;p>&lt;a href="https://github.com/PinkHello/GoPush">GoPush&lt;/a> 一个实时推送组件&lt;/p>
-&lt;p>&lt;a href="https://github.com/PinkHello/spring-boot-starter-dubbo">spring-boot-starter-dubbo&lt;/a> dubbo springboot 脚手架&lt;/p>
-&lt;p>&lt;a href="https://github.com/PinkHello/go-starter">go-starter&lt;/a> golang 微服务第三方库脚手架&lt;/p>
+&lt;p>&lt;a href="https://github.com/PinkHello/GoPush">GoPush&lt;/a> &lt;!-- raw HTML omitted -->一个实时推送组件&lt;!-- raw HTML omitted -->&lt;/p>
+&lt;p>&lt;a href="https://github.com/PinkHello/spring-boot-starter-dubbo">spring-boot-starter-dubbo&lt;/a> &lt;!-- raw HTML omitted -->dubbo springboot 脚手架&lt;!-- raw HTML omitted -->&lt;/p>
+&lt;p>&lt;a href="https://github.com/PinkHello/go-starter">go-starter&lt;/a> &lt;!-- raw HTML omitted -->Go服务开发脚手架&lt;!-- raw HTML omitted -->&lt;/p>
 &lt;/blockquote>
 &lt;hr>
 &lt;h2 id="2021-okr-进度">2021 OKR 进度&lt;/h2>
@@ -537,13 +537,13 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td style="text-align:left">👯 构建Go完整第三方库服务化脚手架&lt;/td>
+&lt;td style="text-align:left">👯 Go服务开发脚手架&lt;/td>
 &lt;td style="text-align:left">done&lt;/td>
 &lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/go-starter">go-starter&lt;/a>&lt;/td>
-&lt;td style="text-align:left">lint&lt;/td>
+&lt;td style="text-align:left">ut&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align:left">💵 Go服务脚手架单独完成前后端系统&lt;/td>
+&lt;td style="text-align:left">💵 Go服务开发脚手架开发一个简单前后端系统&lt;/td>
 &lt;td style="text-align:left">done&lt;/td>
 &lt;td style="text-align:left">&lt;a href="http://crm.pinkhello.me">房产CRM信息系统&lt;/a> test/123456&lt;/td>
 &lt;td style="text-align:left">-&lt;/td>
