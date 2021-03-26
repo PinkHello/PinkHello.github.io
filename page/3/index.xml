@@ -505,12 +505,9 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
 &lt;/ul>
 - https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>链接</title><link>https://pinkhello.me/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.me/links/</guid><description>PinkHello https://pinkhello.me/links/ -- https://pinkhello.me/links/ - PinkHello, All Rights Reserved</description></item><item><title>关于我</title><link>https://pinkhello.me/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.me/about/</guid><description>PinkHello https://pinkhello.me/about/ -&lt;hr>
-&lt;h2 id="个人介绍">个人介绍&lt;/h2>
-&lt;p>PinkHello &lt;img src="https://views.whatilearened.today/views/github/pinkhello/pinkhello.svg" alt="views">
-&lt;img src="https://github-readme-stats.vercel.app/api?username=pinkhello&amp;amp;show_icons=true&amp;amp;theme=vue&amp;amp;hide_border=true&amp;amp;line_height=20&amp;amp;count_private=true" alt="">
-&lt;img src="https://github-readme-stats.vercel.app/api/top-langs/?username=pinkhello&amp;amp;layout=compact&amp;amp;hide_border=true&amp;amp;hide=html,vim&amp;amp;count_private=true" alt="">&lt;/p>
-&lt;p>&lt;img src="https://pinkhello.me/%E5%85%B6%E4%BB%96/wechat.png" alt="Wechat">&lt;/p>
-&lt;!-- raw HTML omitted -->
+&lt;h2 id="-个人介绍">👷 个人介绍&lt;/h2>
+&lt;p>PinkHello &lt;img src="https://views.whatilearened.today/views/github/pinkhello/pinkhello.svg" alt="views">&lt;/p>
+&lt;p>&lt;img src="https://github-readme-stats.vercel.app/api?username=pinkhello&amp;amp;show_icons=true&amp;amp;theme=vue&amp;amp;hide_border=true&amp;amp;line_height=20&amp;amp;count_private=true" alt="">&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-go" data-lang="go">PinkHello := &amp;amp;Info {
 Name: &lt;span style="color:#cd5555">&amp;#34;PinkHello&amp;#34;&lt;/span>,
 Occupation: &lt;span style="color:#cd5555">&amp;#34;Full Stack Developer&amp;#34;&lt;/span>,
@@ -519,8 +516,7 @@ Wechat: &lt;span style="color:#cd5555">&amp;#34;chess_1&amp;#34;&lt;/span>,
 Website: &lt;span style="color:#cd5555">&amp;#34;https://pinkhello.me&amp;#34;&lt;/span>,
 Location: &lt;span style="color:#cd5555">&amp;#34;Shanghai China&amp;#34;&lt;/span>
 }
-&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
-&lt;h2 id="-技能">⚡ 技能&lt;/h2>
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="-技能">⚡ 技能&lt;/h2>
 &lt;p>Lanuage&lt;br>
 &lt;img src="https://img.shields.io/badge/-Java-black?style=flat-square&amp;amp;logo=Java" alt="Java">
 &lt;img src="https://img.shields.io/badge/-Go-black?style=flat-square&amp;amp;logo=Go" alt="Go">
@@ -549,7 +545,7 @@ Location: &lt;span style="color:#cd5555">&amp;#34;Shanghai China&amp;#34;&lt;/sp
 &lt;img src="https://img.shields.io/badge/-Deepin-007CFF?style=flat-square&amp;amp;logo=deepin" alt="Deepin">
 &lt;img src="https://img.shields.io/badge/-Centos-262577?style=flat-square&amp;amp;logo=Centos" alt="Centos">
 &lt;img src="https://img.shields.io/badge/-Raspberry%20Pi-C51A4A?style=flat-square&amp;amp;logo=Raspberry-Pi" alt="Raspberry Pi">&lt;/p>
-&lt;h2 id="个人开源项目">个人开源项目&lt;/h2>
+&lt;h2 id="-个人开源项目">🐳 个人开源项目&lt;/h2>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -573,7 +569,7 @@ Location: &lt;span style="color:#cd5555">&amp;#34;Shanghai China&amp;#34;&lt;/sp
 &lt;/tbody>
 &lt;/table>
 &lt;hr>
-&lt;h2 id="2021-okr-进度">2021 OKR 进度&lt;/h2>
+&lt;h2 id="-2021-okr-进度">🚀 2021 OKR 进度&lt;/h2>
 &lt;table>
 &lt;thead>
 &lt;tr>
