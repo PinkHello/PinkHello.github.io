@@ -506,18 +506,49 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;/ul>
 - https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>链接</title><link>https://pinkhello.me/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.me/links/</guid><description>PinkHello https://pinkhello.me/links/ -- https://pinkhello.me/links/ - PinkHello, All Rights Reserved</description></item><item><title>关于我</title><link>https://pinkhello.me/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.me/about/</guid><description>PinkHello https://pinkhello.me/about/ -&lt;hr>
 &lt;h2 id="个人介绍">个人介绍&lt;/h2>
-&lt;p>我，一个包含粉红色之心的老Boy。专注与后端服务、写过&lt;code>C++&lt;/code>、执过&lt;code>Python&lt;/code>、干过&lt;code>Java&lt;/code>、&lt;code>Golang&lt;/code>. 一个给诸位大佬端茶倒水的技术小二。&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://github.com/PinkHello">Github&lt;/a> &lt;img src="https://views.whatilearened.today/views/github/pinkhello/pinkhello.svg" alt="">&lt;/li>
-&lt;li>Email: &lt;a href="mailto:lee123lee123@163.com">lee123lee123@163.com&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;h2 id="我的微信">我的微信&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E5%85%B6%E4%BB%96/wechat.png" alt="Wechat">&lt;/p>
-&lt;h2 id="个人标签">个人标签&lt;/h2>
-&lt;p>&lt;code>Go&lt;/code>、&lt;code>Java&lt;/code>、&lt;code>Python&lt;/code>、&lt;code>后端开发&lt;/code>、&lt;code>架构&lt;/code>、&lt;code>大数据&lt;/code>、&lt;code>分布式系统&lt;/code>&lt;/p>
-&lt;h2 id="github-相关">Github 相关&lt;/h2>
-&lt;p>&lt;img src="https://github-readme-stats.vercel.app/api?username=pinkhello&amp;amp;show_icons=true&amp;amp;theme=vue&amp;amp;hide_border=true&amp;amp;line_height=20&amp;amp;count_private=true" alt="">
+&lt;p>PinkHello &lt;img src="https://views.whatilearened.today/views/github/pinkhello/pinkhello.svg" alt="views">
+&lt;img src="https://github-readme-stats.vercel.app/api?username=pinkhello&amp;amp;show_icons=true&amp;amp;theme=vue&amp;amp;hide_border=true&amp;amp;line_height=20&amp;amp;count_private=true" alt="">
 &lt;img src="https://github-readme-stats.vercel.app/api/top-langs/?username=pinkhello&amp;amp;layout=compact&amp;amp;hide_border=true&amp;amp;hide=html,vim&amp;amp;count_private=true" alt="">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%85%B6%E4%BB%96/wechat.png" alt="Wechat">&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-go" data-lang="go">PinkHello := &amp;amp;Info {
+Name: &lt;span style="color:#cd5555">&amp;#34;PinkHello&amp;#34;&lt;/span>,
+Occupation: &lt;span style="color:#cd5555">&amp;#34;Full Stack Developer&amp;#34;&lt;/span>,
+Email: &lt;span style="color:#cd5555">&amp;#34;lee123lee123@163.com&amp;#34;&lt;/span>,
+Wechat: &lt;span style="color:#cd5555">&amp;#34;chess_1&amp;#34;&lt;/span>,
+Website: &lt;span style="color:#cd5555">&amp;#34;https://pinkhello.me&amp;#34;&lt;/span>,
+Location: &lt;span style="color:#cd5555">&amp;#34;Shanghai China&amp;#34;&lt;/span>
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;!-- raw HTML omitted -->
+&lt;h2 id="-技能">⚡ 技能&lt;/h2>
+&lt;p>Lanuage&lt;br>
+&lt;img src="https://img.shields.io/badge/-Java-black?style=flat-square&amp;amp;logo=Java" alt="Java">
+&lt;img src="https://img.shields.io/badge/-Go-black?style=flat-square&amp;amp;logo=Go" alt="Go">
+&lt;img src="https://img.shields.io/badge/-Python-black?style=flat-square&amp;amp;logo=Python" alt="Python">&lt;/p>
+&lt;p>Framework&lt;br>
+&lt;img src="https://img.shields.io/badge/-Vue-000000?style=flat-square&amp;amp;logo=Vue.js" alt="Vue">
+&lt;img src="https://img.shields.io/badge/-SpringBoot-black?style=flat-square&amp;amp;logo=SpringBoot" alt="SpringBoot">
+&lt;img src="https://img.shields.io/badge/-SpringCloud-black?style=flat-square&amp;amp;logo=SpringCloud" alt="SpringCloud">
+&lt;img src="https://img.shields.io/badge/-Echo-black?style=flat-square&amp;amp;logo=Echo" alt="Echo">
+&lt;img src="https://img.shields.io/badge/-Gin-black?style=flat-square&amp;amp;logo=Gin" alt="Gin">
+&lt;img src="https://img.shields.io/badge/-Grpc-black?style=flat-square&amp;amp;logo=Grpc" alt="Grpc">
+&lt;img src="https://img.shields.io/badge/-Flask-black?style=flat-square&amp;amp;logo=Flask" alt="Flask">&lt;/p>
+&lt;p>Tools&lt;br>
+&lt;img src="https://img.shields.io/badge/-Docker-black?style=flat-square&amp;amp;logo=Docker" alt="Docker">
+&lt;img src="https://img.shields.io/badge/-Redis-black?style=flat-square&amp;amp;logo=Redis" alt="Redis">
+&lt;img src="https://img.shields.io/badge/-MySQL-black?style=flat-square&amp;amp;logo=mysql" alt="MySQL">
+&lt;img src="https://img.shields.io/badge/-Nginx-black?style=flat-square&amp;amp;logo=Nginx" alt="Nginx">
+&lt;img src="https://img.shields.io/badge/-MongoDB-black?style=flat-square&amp;amp;logo=MongoDB" alt="MongoDB">
+&lt;img src="https://img.shields.io/badge/-Kubernetes-black?style=flat-square&amp;amp;logo=Kubernetes" alt="Kubernetes">
+&lt;img src="https://img.shields.io/badge/-Pulsar-black?style=flat-square&amp;amp;logo=Pulsar" alt="Pulsar">
+&lt;img src="https://img.shields.io/badge/-Kafka-black?style=flat-square&amp;amp;logo=Kafka" alt="Kafka">
+&lt;img src="https://img.shields.io/badge/-Nsq-black?style=flat-square&amp;amp;logo=Nsq" alt="Nsq">
+&lt;img src="https://img.shields.io/badge/-GitHub-181717?style=flat-square&amp;amp;logo=github" alt="GitHub">&lt;/p>
+&lt;p>Others&lt;br>
+&lt;img src="https://img.shields.io/badge/-Linux-black?style=flat-square&amp;amp;logo=Linux" alt="Linux">
+&lt;img src="https://img.shields.io/badge/-Deepin-007CFF?style=flat-square&amp;amp;logo=deepin" alt="Deepin">
+&lt;img src="https://img.shields.io/badge/-Centos-262577?style=flat-square&amp;amp;logo=Centos" alt="Centos">
+&lt;img src="https://img.shields.io/badge/-Raspberry%20Pi-C51A4A?style=flat-square&amp;amp;logo=Raspberry-Pi" alt="Raspberry Pi">&lt;/p>
 &lt;h2 id="个人开源项目">个人开源项目&lt;/h2>
 &lt;table>
 &lt;thead>
