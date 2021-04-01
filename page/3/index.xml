@@ -538,12 +538,14 @@ Location: &lt;span style="color:#cd5555">&amp;#34;Shanghai China&amp;#34;&lt;/sp
 &lt;img src="https://img.shields.io/badge/-MySQL-black?style=flat-square&amp;amp;logo=mysql" alt="MySQL">
 &lt;img src="https://img.shields.io/badge/-Nginx-black?style=flat-square&amp;amp;logo=Nginx" alt="Nginx">
 &lt;img src="https://img.shields.io/badge/-MongoDB-black?style=flat-square&amp;amp;logo=MongoDB" alt="MongoDB">
-&lt;img src="https://img.shields.io/badge/-Kubernetes-black?style=flat-square&amp;amp;logo=Kubernetes" alt="Kubernetes">
 &lt;img src="https://img.shields.io/badge/-Pulsar-black?style=flat-square&amp;amp;logo=Pulsar" alt="Pulsar">
 &lt;img src="https://img.shields.io/badge/-Kafka-black?style=flat-square&amp;amp;logo=Kafka" alt="Kafka">
 &lt;img src="https://img.shields.io/badge/-Nsq-black?style=flat-square&amp;amp;logo=Nsq" alt="Nsq">
+&lt;img src="https://img.shields.io/badge/-RabbitMQ-black?style=flat-square&amp;amp;logo=RabbitMQ" alt="RabbitMQ">
 &lt;img src="https://img.shields.io/badge/-GitHub-181717?style=flat-square&amp;amp;logo=github" alt="GitHub">&lt;/p>
-&lt;h2 id="raspberry-pihttpsimgshieldsiobadge-raspberry20pi-c51a4astyleflat-squarelogoraspberry-pi">Others&lt;br>
+&lt;h2 id="raspberry-pihttpsimgshieldsiobadge-raspberry20pi-c51a4astyleflat-squarelogoraspberry-pi">Others
+&lt;img src="https://img.shields.io/badge/-Kubernetes-black?style=flat-square&amp;amp;logo=Kubernetes" alt="Kubernetes">
+&lt;img src="https://img.shields.io/badge/-Docker-black?style=flat-square&amp;amp;logo=Docker" alt="Docker">
 &lt;img src="https://img.shields.io/badge/-Linux-black?style=flat-square&amp;amp;logo=Linux" alt="Linux">
 &lt;img src="https://img.shields.io/badge/-Deepin-007CFF?style=flat-square&amp;amp;logo=deepin" alt="Deepin">
 &lt;img src="https://img.shields.io/badge/-Centos-262577?style=flat-square&amp;amp;logo=Centos" alt="Centos">
