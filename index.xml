@@ -11,6 +11,40 @@
 &lt;blockquote>
 &lt;p>字符串也可映射，只不过需要经过一个&lt;code>Hash&lt;/code>步骤,通过映射关系可以判断字符串是否存在。但是因为 &lt;code>Hash&lt;/code>是将不确定长度的值变更为确定大小的值,存在&lt;code>Hash&lt;/code>冲突性，所以一般要最大化的判断一个字符串是否真的存在，可以将这个字符串经过不同的&lt;code>Hash&lt;/code>函数映射不同的位置。&lt;/p>
 &lt;/blockquote>
+&lt;h2 id="bitmap-的-建立查找添加删除判断-原理">bitmap 的 建立、查找、添加、删除、判断 原理&lt;/h2>
+&lt;h3 id="建立">建立&lt;/h3>
+&lt;p>Bitmap 的创建可以使用 byte 数组， &lt;code>1 byte = 8 bit &lt;/code>(也可使用 int 数组, &lt;code>1 int = 32 bit&lt;/code>, long 数组, &lt;code>1 long = 64 bit&lt;/code>)
+也就是说到最后的数据的大小建立只需要创建 数组长度为
+&lt;code>int[ 1 + N/32 ]&lt;/code> &lt;code>byte[ 1 + N/8 ]&lt;/code> &lt;code>long[ 1 + N/64 ]&lt;/code>
+即可存储，&lt;code>N&lt;/code>表示要存储的最大的值。&lt;/p>
+&lt;p>下面我们都使用 &lt;code>int数组&lt;/code> 表示&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">arr[0] 表述 0-31
+arr[1] 表述 32-63
+arr[2] 表述 64-95
+...
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="查找">查找&lt;/h3>
+&lt;p>按照上面 &lt;code>int数组&lt;/code> 的例子，要找到任意整数 &lt;code>M&lt;/code> 映射到数组上的位置为 &lt;code>M / 32&lt;/code> 得到下标,&lt;code>M % 32&lt;/code> 得到它在这个下标对应的二进制的哪个位置&lt;/p>
+&lt;h3 id="添加">添加&lt;/h3>
+&lt;p>我们将 5 这个数对应的值放入到 bitmap 中
+&lt;code>5 / 32 = 0&lt;/code>, &lt;code>5 % 32 = 5&lt;/code> , &lt;code>5&lt;/code> 在 &lt;code>arr[0]&lt;/code> 的第 &lt;code>5&lt;/code> 个位置
+&lt;img src="https://pinkhello.me/%E7%AE%97%E6%B3%95-Bitmap/bitmap-add.png" alt="bitmao">&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 想插入一个数的值，只需要将 1 左移代表该数字的这一位( M % 32 )（备注：因为我这边是 int 类型，所以是 32 位）, 然后与原来数字按位或&lt;/span>
+arr[0] = arr[0] | (&lt;span style="color:#b452cd">1&lt;/span> &amp;lt;&amp;lt; 5)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="删除">删除&lt;/h3>
+&lt;p>&lt;img src="https://pinkhello.me/%E7%AE%97%E6%B3%95-Bitmap/bitmap-remove.png" alt="bitmao">&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 想插入一个数的值，只需要将 1 左移代表该数字的这一位( M % 32 )（备注：因为我这边是 int 类型，所以是 32 位）, 然后取反后与原来数字按位与，则达到清除目的&lt;/span>
+arr[0] = arr[0] &amp;amp; (~(&lt;span style="color:#b452cd">1&lt;/span> &amp;lt;&amp;lt; 5))
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="判断">判断&lt;/h3>
+&lt;p>借助 &lt;code>查找&lt;/code> 做定位，然后判断 当前位上的值是 &lt;code>0&lt;/code> 还是 &lt;code>1&lt;/code> 来达到判断的目的&lt;/p>
+&lt;h2 id="语言实现-bitmap">语言实现 Bitmap&lt;/h2>
+&lt;h1 id="bitmap-应用">bitmap 应用&lt;/h1>
+&lt;h2 id="大数据量快速排序">大数据量快速排序&lt;/h2>
+&lt;h2 id="大数据量快速去重">大数据量快速去重&lt;/h2>
+&lt;h2 id="大数据量快速查找">大数据量快速查找&lt;/h2>
+&lt;h1 id="bitmap-拓展">bitmap 拓展&lt;/h1>
+&lt;h2 id="bitset">BitSet&lt;/h2>
+&lt;h2 id="bloom-filter">Bloom Filter&lt;/h2>
+&lt;h2 id="heading">&lt;/h2>
 - https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/ - PinkHello, All Rights Reserved</description></item><item><title>23 回望K8S 容器网络</title><link>https://pinkhello.me/posts/23-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/</link><pubDate>Sun, 21 Mar 2021 23:10:20 +0800</pubDate><guid>https://pinkhello.me/posts/23-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/</guid><description>PinkHello https://pinkhello.me/posts/23-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/ -&lt;h1 id="洽谈容器网络">洽谈容器网络&lt;/h1>
 &lt;p>Linux 容器能看见&amp;quot;网络栈&amp;quot;, 实际上是被隔离在它自己的 Network Namespace 当中的。而所谓的&amp;quot;网络栈&amp;quot;, 包含了 网卡、回环设备、路由表 和 Iptables 规则。&lt;/p>
 &lt;p>在 Linux 中，能够起到虚拟交换机的设备是网桥（Bridge）,工作在数据链路层（Data Link）的设备，主要功能是根据 Mac 地址学习来将数据包转发到网桥的不同端口（PORT）上。&lt;/p>
