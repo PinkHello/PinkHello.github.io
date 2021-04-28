@@ -65,10 +65,42 @@ arr[0] = arr[0] &amp;amp; (~(&lt;span style="color:#b452cd">1&lt;/span> &amp;lt;
 &lt;li>高16位为 &lt;code>0001H&lt;/code> 的 container，存储有 &lt;code>[2^16, 2^16+100)&lt;/code> 区间内的 &lt;code>100&lt;/code> 个数。&lt;/li>
 &lt;li>高16位为 &lt;code>0002H&lt;/code> 的 container，存储有 &lt;code>[2×2^16, 3×2^16)&lt;/code> 区间内的所有偶数，共&lt;code>215&lt;/code>个。&lt;/li>
 &lt;/ul>
-&lt;p>作者：LittleMagic
-链接：https://www.jianshu.com/p/818ac4e90daf
-来源：简书
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。&lt;/p>
+&lt;p>RoaringBitmap 结构&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#00688b;font-weight:bold">short&lt;/span>[] keys;
+Container[] values;
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> size;
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>每个&lt;code>32位&lt;/code>的整形，&lt;code>高16位&lt;/code>会被作为 &lt;code>key&lt;/code> 存储到 &lt;code>short[] keys&lt;/code> 中, &lt;code>低16位&lt;/code>看作&lt;code>value&lt;/code>存储到 &lt;code>values&lt;/code> 中的某个 &lt;code>Container&lt;/code> 中&lt;/li>
+&lt;li>&lt;code>keys&lt;/code> 和 &lt;code>values&lt;/code> 通过下标一一对应&lt;/li>
+&lt;li>&lt;code>keys&lt;/code> 数组永远保证有序，方便二分查找&lt;/li>
+&lt;li>&lt;code>size&lt;/code> 标示了包含 &lt;code>key-value pair&lt;/code> 的数量(即 &lt;code>keys&lt;/code> 和 &lt;code>values&lt;/code> 中有效数据的数量)&lt;/li>
+&lt;/ul>
+&lt;h3 id="array-container">Array Container&lt;/h3>
+&lt;p>当桶内数据基数 &lt;code>&amp;lt; 4096&lt;/code> 的时候，采用它来存储, 数组初始长度伟为 &lt;code>4&lt;/code> 随着数据增多会字段扩容, 最大长度为 &lt;code>4096&lt;/code>。 在样例途中是 数组容器的 &lt;code>size&lt;/code> 都没有超过半数 4096.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> DEFAULT_MAX_SIZE = 4096
+&lt;span style="color:#00688b;font-weight:bold">short&lt;/span>[] content;
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>低16位直接存入到 &lt;code>content&lt;/code> 中, 始终保证有序，方便二分查找。且不会存储重复数据。&lt;/li>
+&lt;li>因为没有数据压缩，适合存储少量的数据&lt;/li>
+&lt;/ul>
+&lt;h3 id="bitmap-container">Bitmap Container&lt;/h3>
+&lt;p>当桶内数据基数 &lt;code>&amp;gt; 4096&lt;/code> 的时候，采用它来存储. 是普通位图。用固定长度的 &lt;code>1024&lt;/code> 的&lt;code>long数组&lt;/code>并表示，即位图大小固定为 &lt;code>2^16&lt;/code> 位 (8KB)&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#00688b;font-weight:bold">long&lt;/span>[] bitmap; &lt;span style="color:#228b22">// 每个bitmap初始化长度都是固定的 1024 的 long[]
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>每个 &lt;code>Container&lt;/code> 处理 16位的整形数据，也就是 &lt;code>0-65535&lt;/code>。&lt;/li>
+&lt;li>根据 &lt;code>bitmap&lt;/code> 原来，需要存储 &lt;code>65535 个bit&lt;/code> 的存储数据，每个 &lt;code>比特位&lt;/code> 用 &lt;code>1&lt;/code> 表示有, 用 &lt;code>0&lt;/code> 表示无。&lt;/li>
+&lt;li>&lt;code>每个 long 有 64 bit&lt;/code>, 需要 &lt;code>1024个 long&lt;/code> 来提供 &lt;code>65536&lt;/code> 个bit。(8KB)&lt;/li>
+&lt;/ul>
+&lt;h3 id="run-container">Run Container&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#00688b;font-weight:bold">short&lt;/span>[] valuesLength;
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> nbrruns = 0;
+&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="时间空间分析">时间空间分析&lt;/h3>
+&lt;p>时间&lt;/p>
+&lt;ul>
+&lt;li>增删改查方面 Bitmap Container 只设计位运算 O(1)&lt;/li>
+&lt;li>Array Container 和 Run Coatainer 都是 二分查找 有序数组定位元素 O(logN)
+空间&lt;/li>
+&lt;/ul>
 &lt;h2 id="bitset">BitSet&lt;/h2>
 - https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/ - PinkHello, All Rights Reserved</description></item><item><title>23 回望K8S 容器网络</title><link>https://pinkhello.me/posts/23-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/</link><pubDate>Sun, 21 Mar 2021 23:10:20 +0800</pubDate><guid>https://pinkhello.me/posts/23-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/</guid><description>PinkHello https://pinkhello.me/posts/23-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/ -&lt;h1 id="洽谈容器网络">洽谈容器网络&lt;/h1>
 &lt;p>Linux 容器能看见&amp;quot;网络栈&amp;quot;, 实际上是被隔离在它自己的 Network Namespace 当中的。而所谓的&amp;quot;网络栈&amp;quot;, 包含了 网卡、回环设备、路由表 和 Iptables 规则。&lt;/p>
