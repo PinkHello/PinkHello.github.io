@@ -66,6 +66,12 @@ arr[0] = arr[0] &amp;amp; (~(&lt;span style="color:#b452cd">1&lt;/span> &amp;lt;
 &lt;li>可以看出重叠点在 &lt;code>9&lt;/code> 上, 所以存在一定的误判&lt;/li>
 &lt;/ul>
 &lt;h3 id="counting-bloom-filter">Counting Bloom Filter&lt;/h3>
+&lt;p>&lt;img src="https://pinkhello.me/%E7%AE%97%E6%B3%95-Bitmap/bitmap-counting-bloom-filter.png" alt="hash">&lt;/p>
+&lt;ul>
+&lt;li>为了解决 &lt;code>bloom filter&lt;/code> 无法删除的问题&lt;/li>
+&lt;li>比正常的 &lt;code>bloom filter&lt;/code> 加入了对 位的计数器&lt;/li>
+&lt;li>当发生删除动作的时候，对应位置的&lt;code>计数器-1&lt;/code>&lt;/li>
+&lt;/ul>
 &lt;h2 id="稀松问题-roaring-bitmaphttpsgithubcomroaringbitmaproaringbitmap">(稀松问题) &lt;a href="https://github.com/RoaringBitmap/RoaringBitmap">Roaring BitMap&lt;/a>&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>RoaringBitmap&lt;/code> 算法是将 &lt;code>32&lt;/code> 位 的 int 类型数据划分位 &lt;code>2^16&lt;/code> 个数据块，每个数据快对应整数的 &lt;code>高16位&lt;/code>，并使用一个容器（&lt;code>Container&lt;/code>）来存放数值的低16位。&lt;/li>
