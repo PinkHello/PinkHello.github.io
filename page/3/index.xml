@@ -1,4 +1,79 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Sun, 21 Mar 2021 23:10:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>02 关于final的思考</title><link>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate><guid>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>PinkHello https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ -&lt;h2 id="关于final的思考">关于&lt;code>final&lt;/code>的思考&lt;/h2>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>03 String为什么设计成final</title><link>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Wed, 10 Feb 2021 08:19:51 +0800</pubDate><guid>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>PinkHello https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">String&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> java.&lt;span style="color:#658b00">io&lt;/span>.&lt;span style="color:#658b00">Serializable&lt;/span>, Comparable&amp;lt;String&amp;gt;, CharSequence {
+&lt;span style="color:#228b22">/** The value is used for character storage. */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">char&lt;/span> value[];
+&lt;span style="color:#228b22">/** Cache the hash code for the string */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> hash; &lt;span style="color:#228b22">// Default to 0
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">/** use serialVersionUID from JDK 1.0.2 for interoperability */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> serialVersionUID = -6849794470754667710L;
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * Class String is special cased within the Serialization Stream Protocol.
+&lt;/span>&lt;span style="color:#228b22"> *
+&lt;/span>&lt;span style="color:#228b22"> * A String instance is written into an ObjectOutputStream according to
+&lt;/span>&lt;span style="color:#228b22"> * &amp;lt;a href=&amp;#34;{@docRoot}/../platform/serialization/spec/output.html&amp;#34;&amp;gt;
+&lt;/span>&lt;span style="color:#228b22"> * Object Serialization Specification, Section 6.2, &amp;#34;Stream Elements&amp;#34;&amp;lt;/a&amp;gt;
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ObjectStreamField[] serialPersistentFields =
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ObjectStreamField[0];
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>String&lt;/code> 如何保证 不可变的呢？&lt;/p>
+&lt;blockquote>
+&lt;p>字符数组使用了 &lt;code>final&lt;/code> 修饰，这也只是表示了 字符数组的引用地址不可变，并不代表内容不可变。
+其使用 &lt;code>private&lt;/code> 修饰，外部没有入口达到变动，从而保证了 String 的不可变性&lt;/p>
+&lt;/blockquote>
+&lt;p>为什么保证 &lt;code>String&lt;/code> 是 &lt;code>final&lt;/code> 的呢？特点：&lt;/p>
+&lt;blockquote>
+&lt;ul>
+&lt;li>因为只有保证 &lt;code>String&lt;/code> 是 &lt;code>final&lt;/code> 的呢 &lt;strong>只有当字符串不可变的，字符串池才可能实现&lt;/strong>;字符串池的实现可以节省很多的 &lt;code>Heap&lt;/code>空间，因为不同的字符串变量都指向池中的同一个字符串.&lt;/li>
+&lt;li>假如字符串可变，那么&lt;code>String&lt;/code> &lt;code>interning&lt;/code> 不能实现，那么变量改变了这个字符串的值，那么其他指向这个值的变量的值也改变了。 （安全问题来了，用户名密码，端口、IP等）&lt;/li>
+&lt;li>字符串不可变，多线程安全，同一个字符串实例可以被对歌线程共享，不需要考虑同步问题&lt;/li>
+&lt;li>上面看出，在字符串不可变的情况下，创建的时候 &lt;code>hashcode&lt;/code>也被缓存了，不需要重新计算。一部分性能问题可以很好的选择字符串&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h1 id="string-在-jvm-层理解-拓展">&lt;code>String&lt;/code> 在 &lt;code>JVM&lt;/code> 层理解 拓展&lt;/h1>
+&lt;p>&lt;code>JVM&lt;/code> 层面有 虚拟机栈、本地方法栈、堆、程序计数器、元数据区(方法区)
+&lt;img src="https://pinkhello.me/String%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final%E5%BD%A2%E6%80%81/%E8%BF%90%E8%A1%8C%E6%97%B6%E6%95%B0%E6%8D%AE%E5%8C%BA.png" alt="运行时数据区">&lt;/p>
+&lt;ul>
+&lt;li>字符串创建形式&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s1 = &lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>;
+String s2 = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>);
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>编译期间 &amp;ldquo;1&amp;rdquo; 作为常量进入字符串常量池（这时候是静态常量池）;&lt;/li>
+&lt;li>当编译 &lt;code>s1&lt;/code> 时候，将 &lt;code>s1&lt;/code> 推进局部变量区（栈帧内部）; 先判断 &amp;ldquo;1&amp;rdquo; 在字符串常量池在不在，不存在的话创建常量 &amp;ldquo;1&amp;rdquo; 加入常量池，并直接将 &lt;code>s1&lt;/code> 指向字符串常量池的对象 &amp;ldquo;1&amp;rdquo; 地址；&lt;/li>
+&lt;li>当代码运行 &lt;code>s2&lt;/code> 时候，使用的 &lt;code>new&lt;/code> 字段，&lt;code>JVM&lt;/code> 先检查字符串常量在常量池存不存在，如果已经存在，直接在堆中复制改对象的副本，并且将 &lt;code>s2&lt;/code> 指向堆中的刚刚创建的对象地址。
+如果不存在，则会实例化该字符串 &amp;ldquo;1&amp;rdquo; 并且将其放到常量池中（这时候是运行时常量池）,然后在堆中复制刚刚加入常量池对象的副本创建出新的对象，并将 &lt;code>s2&lt;/code> 指向它&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>&amp;lsquo;+&amp;lsquo;号连接的字符串&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s1 = &lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>+&lt;span style="color:#cd5555">&amp;#34;2&amp;#34;&lt;/span>+&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>;
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>编译期间就能确定，直接作为 &amp;ldquo;123&amp;rdquo; 的常量进入常量池;&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s2 = &lt;span style="color:#cd5555">&amp;#34;1&amp;#34;&lt;/span>+&lt;span style="color:#cd5555">&amp;#34;2&amp;#34;&lt;/span>+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>)+&lt;span style="color:#cd5555">&amp;#34;4&amp;#34;&lt;/span>;
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>当 &amp;lsquo;+&amp;rsquo; 中间有变量时候，也只能在运行期才能确定，但是在编译期间会尽量的将字符串常量连接起来，形成新的字符串常量;&lt;/li>
+&lt;li>反编译后 &lt;code>String s2 = new StringBuilder(&amp;quot;12&amp;quot;).append(new String(&amp;quot;3&amp;quot;&amp;quot;)).append(&amp;quot;4&amp;quot;).toString()&lt;/code>;&lt;/li>
+&lt;li>也就是说用 &amp;lsquo;+&amp;rsquo; 连接中间有变量的时候，&amp;ldquo;13&amp;rdquo;, &amp;ldquo;3&amp;rdquo;, &amp;ldquo;4&amp;rdquo; 在常量池中，在堆中有 &lt;code>StringBuilder(&amp;quot;1234&amp;quot;)&lt;/code>, &lt;code>String(&amp;quot;4&amp;quot;)&lt;/code>,以及&lt;code>toString&lt;/code>后产生的&lt;code>String&lt;/code>对象&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">String s3 = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>) + &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String(&lt;span style="color:#cd5555">&amp;#34;3&amp;#34;&lt;/span>);
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;ul>
+&lt;li>&amp;ldquo;3&amp;rdquo; 在常量池中（编译的时候）&lt;/li>
+&lt;li>运行时，在堆中产生 &amp;ldquo;3&amp;rdquo; 的副本两个 &lt;code>String&lt;/code> 对象，并产生 &lt;code>StringBuilder(&amp;quot;11&amp;quot;)&lt;/code> 对象以及 &lt;code>toString&lt;/code> 的 &lt;code>String&lt;/code> 对象&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+- https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ - PinkHello, All Rights Reserved</description></item><item><title>02 关于final的思考</title><link>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate><guid>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>PinkHello https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ -&lt;h2 id="关于final的思考">关于&lt;code>final&lt;/code>的思考&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>final&lt;/code> 是声明数据域最终的,不可以修改的，常见的 是类的 序列化&lt;code>ID&lt;/code>&lt;/li>
 &lt;li>&lt;code>String&lt;/code> 类，其数据域都是 &lt;code>final&lt;/code> 的&lt;/li>
