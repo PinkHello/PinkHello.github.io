@@ -96,7 +96,7 @@ Container[] values;
 &lt;li>&lt;code>size&lt;/code> 标示了包含 &lt;code>key-value pair&lt;/code> 的数量(即 &lt;code>keys&lt;/code> 和 &lt;code>values&lt;/code> 中有效数据的数量)&lt;/li>
 &lt;/ul>
 &lt;h3 id="array-container">Array Container&lt;/h3>
-&lt;p>当桶内数据基数 &lt;code>&amp;lt; 4096&lt;/code> 的时候，采用它来存储, 数组初始长度伟为 &lt;code>4&lt;/code> 随着数据增多会字段扩容, 最大长度为 &lt;code>4096&lt;/code>。 在样例途中是 数组容器的 &lt;code>size&lt;/code> 都没有超过半数 4096.&lt;/p>
+&lt;p>当桶内数据基数 &lt;code>&amp;lt; 4096&lt;/code> 的时候，采用它来存储, 数组初始长度伟为 &lt;code>4&lt;/code> 随着数据增多会字段扩容, 最大长度为 &lt;code>4096&lt;/code>。 在样例途中是 数组容器的 &lt;code>size&lt;/code> 都没有超过 &lt;code>4096&lt;/code>.&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> DEFAULT_MAX_SIZE = 4096
 &lt;span style="color:#00688b;font-weight:bold">short&lt;/span>[] content;
 &lt;/code>&lt;/pre>&lt;/div>&lt;ul>
