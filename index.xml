@@ -67,7 +67,6 @@ arr[0] = arr[0] &amp;amp; (~(&lt;span style="color:#b452cd">1&lt;/span> &amp;lt;
 &lt;/ul>
 &lt;h3 id="counting-bloom-filter">Counting Bloom Filter&lt;/h3>
 &lt;h2 id="稀松问题-roaring-bitmaphttpsgithubcomroaringbitmaproaringbitmap">(稀松问题) &lt;a href="https://github.com/RoaringBitmap/RoaringBitmap">Roaring BitMap&lt;/a>&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E7%AE%97%E6%B3%95-Bitmap/roaring-bitmap.png" alt="Roaring BitMap">&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>RoaringBitmap&lt;/code> 算法是将 &lt;code>32&lt;/code> 位 的 int 类型数据划分位 &lt;code>2^16&lt;/code> 个数据块，每个数据快对应整数的 &lt;code>高16位&lt;/code>，并使用一个容器（&lt;code>Container&lt;/code>）来存放数值的低16位。&lt;/li>
 &lt;li>&lt;code>RoaringBitmap&lt;/code> 将这些 &lt;code>Container&lt;/code> 保存在一个动态数组中作为一级索引。&lt;/li>
@@ -78,7 +77,7 @@ arr[0] = arr[0] &amp;amp; (~(&lt;span style="color:#b452cd">1&lt;/span> &amp;lt;
 &lt;ul>
 &lt;li>高16位为 &lt;code>0000H&lt;/code> 的 container，存储有前 &lt;code>1000个62&lt;/code> 的倍数。&lt;/li>
 &lt;li>高16位为 &lt;code>0001H&lt;/code> 的 container，存储有 &lt;code>[2^16, 2^16+100)&lt;/code> 区间内的 &lt;code>100&lt;/code> 个数。&lt;/li>
-&lt;li>高16位为 &lt;code>0002H&lt;/code> 的 container，存储有 &lt;code>[2×2^16, 3×2^16)&lt;/code> 区间内的所有偶数，共&lt;code>215&lt;/code>个。&lt;/li>
+&lt;li>高16位为 &lt;code>0002H&lt;/code> 的 container，存储有 &lt;code>[2×2^16, 3×2^16)&lt;/code> 区间内的所有偶数，共&lt;code>2^15&lt;/code>个。&lt;/li>
 &lt;/ul>
 &lt;p>RoaringBitmap 结构&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#00688b;font-weight:bold">short&lt;/span>[] keys;
