@@ -1,4 +1,202 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>13 Kafka与Debezium构建CDC管道</title><link>https://pinkhello.me/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</link><pubDate>Wed, 10 Feb 2021 09:53:51 +0800</pubDate><guid>https://pinkhello.me/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</guid><description>PinkHello https://pinkhello.me/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/ -&lt;h1 id="建设篇">建设篇&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>14 工作纪实2020</title><link>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</link><pubDate>Wed, 10 Feb 2021 10:00:19 +0800</pubDate><guid>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</guid><description>PinkHello https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ -&lt;h1 id="每日一思篇">每日一思篇&lt;/h1>
+&lt;h2 id="2019-10-12-每日一思-mysql-wal技术-和-ringbuffer-思想好一致">[2019-10-12 每日一思] Mysql WAL技术 和 RingBuffer 思想好一致?&lt;/h2>
+&lt;h2 id="2019-10-14-每日一思-jwt-续签该如何做">[2019-10-14 每日一思] JWT 续签该如何做?&lt;/h2>
+&lt;h2 id="2019-10-16-每日一思-tcpip-协议具体指哪些">[2019-10-16 每日一思] TCP/IP 协议具体指哪些?&lt;/h2>
+&lt;blockquote>
+&lt;p>我们都知道网络是7层模型，应表会传网数物，
+现在我只讨论应传网数这4层。TCP/IP协议应该被称为TCP/IP族，
+我的理解他不是属于单个的协议类型，是一个统称，知道网络模型核心设计思想是分层，为什么分层，分层从设计上和实现难度上都简单很多，哪一层需要修改只需要修改这一层。&lt;/p>
+&lt;ul>
+&lt;li>应用层，像最常见的http、ftp、dns、rtsp、rtmp等等协议都是属于这类，&lt;/li>
+&lt;li>传输层呢按照传输类型又分了TCP和UDP,&lt;/li>
+&lt;li>网络层，是数据包交互的层面，&lt;/li>
+&lt;li>数据链路层是处理网卡、操作系统等等软硬抽象出的可见部分。&lt;/li>
+&lt;/ul>
+&lt;p>举一个栗子，一个http请求，在应用层面是完整的，后面被传输层（TCP层）被分包，并打上序号标记，再进入网络层（IP层）添加IP首部（目标mac地址等等），
+下面就是开始疯狂的发送了，接收方一样是这个过程的逆序。应用处理完成后面的响应过程与请求过程一样的一个过程。同时可以扩展出L4与L7的问题，
+各自是如何去实现负载均衡的？L4是可以看出是基于传输层即TCP层工作（通过发布VIP（第三层）以及第四层端口），L7基于应用层工作（第四层基础上+考虑应用特征），
+比如HTTP的URL、客户端的类别、语言类型等等。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-10-18-每日一思一种场景rabbitmq-的-exchange-为-fanout-类型绑定到多个queue-什么情况会触发-rabbitmq-流控如何解决">[2019-10-18 每日一思]一种场景，rabbitmq 的 Exchange 为 fanout 类型，绑定到多个queue, 什么情况会触发 rabbitmq 流控？如何解决？&lt;/h2>
+&lt;h2 id="2019-10-22-每日一思id序列生产器怎么实现呢">[2019-10-22 每日一思]ID序列生产器怎么实现呢？&lt;/h2>
+&lt;blockquote>
+&lt;p>uuid生成&lt;/p>
+&lt;ul>
+&lt;li>基于时间（60位utc时间 和 时间序列值14位，以及mac地址）&lt;/li>
+&lt;li>基于名称（针对命名空间dns、url等分配，把名称转成字节序列，再用md5或sha-1与命名空间标识进行计算，产生哈希结果）&lt;/li>
+&lt;li>基于随机数（密码学随机数，系统的硬盘内存线程堆栈进程句柄等sha-1生成哈希结果）&lt;/li>
+&lt;/ul>
+&lt;p>snowflake，64bit，long型ID&lt;/p>
+&lt;ul>
+&lt;li>ID生成方式 1bit（不使用），41bit时间戳（当前毫秒数、69年一轮回），10bit机器码（1024台，5bit数据中心，5bit机器ID），12bit作为毫秒内序列号（单机理论 409.6w/s）&lt;/li>
+&lt;li>雪花算法，多台机器，有因为时钟回拨导致的ID生成问题，当然可以通过发生时钟回拨后一个阈值，在阈值内则不允许产生新的ID，同步阻塞，在阈值外重新设置机器ID来解决&lt;/li>
+&lt;li>github.com/baidu/uid-generator 技术老铁百度开源的基于snowflake实现的ID生成器，可以借鉴研读一下&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="2019-11-01-每日一思我们常说的限流是什么为什么要限流限流有哪些方式">[2019-11-01 每日一思]我们常说的限流是什么？为什么要限流？限流有哪些方式？&lt;/h2>
+&lt;blockquote>
+&lt;p>我们常说的限流，顾名思义即限制流量. 限制系统的输入和输出
+常用的限流发展至今，有四种方式&lt;/p>
+&lt;ul>
+&lt;li>固定时间计数器&lt;/li>
+&lt;li>漏桶&lt;/li>
+&lt;li>令牌桶&lt;/li>
+&lt;li>滑动窗口计数器&lt;/li>
+&lt;/ul>
+&lt;p>固定窗口计数器：以单位时间内进入系统（系统级别）或者某一个单一接口服务（系统服务级别）请求次数，在这个单位时间内的超过次数，拒绝服务或者更换其他方案（降级、熔断）达到限流目的。&lt;/p>
+&lt;blockquote>
+&lt;p>可以看出，明显的缺点，从整体曲线上，毛刺现象非常严重，假设单位时间 1s 内限制 100 次，在0-10ms内我已经请求超过100次了，后面的请求全部拒绝或者做其他处理了。无法控制单位时间内的突发流量。&lt;/p>
+&lt;/blockquote>
+&lt;p>漏桶: 桶的容量固定，桶流出的速率恒定。桶满则限流。也是无法应对突发流量&lt;/p>
+&lt;p>令牌桶： 还是桶的方式， 桶中存放的是 token ，根据限流的大小， token 以恒定速率进入桶中，设置桶的最大的 token 容量，当桶满时候拒绝新添加的token
+，或者直接丢弃。所有请求进入先获取令牌，得到令牌继续下面的业务逻辑，处理完成删除 token。&lt;/p>
+&lt;blockquote>
+&lt;p>相比 漏桶， 一定程度上允许突发流量，平滑限流，因为 桶 中的 token 是匀速放入的，抵御突发流量。桶的 token 数量不会超过给定的最大值。
+参考 guava rate limiter&lt;/p>
+&lt;/blockquote>
+&lt;p>滑动窗口计数器:(参考Sentinel中使用的默认限流方式)
+是对固定时间窗口计数器的优化，就是为了解决固定时间计数器的无法面对突发流量，何为滑动窗口呢？
+假设单位时间定位 1s， 计数器限制在 1000 次， 再将者 1s 划分为 100ms 为一个小格子，总共 10 个格子，
+每个格子还有计数器，当一个请求进来，在对应的时间格子里面的计数器 +1 ，只要总的这个单位时间内所有的时间格子计数器总和小于 限制次数，就不会启动限流作用。
+可以看出来，假如我的划分的格子很小，滑动窗口滚动将是越平滑的。
+ps： 0.00 - 1.00 有 10 个格子，这是一个滑动窗口期，然后 0.10-1.10是一个窗口期，这样计算的&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-11-04-每日一思-假如mq消息队列产生了堆积如何更快的消费">[2019-11-04 每日一思] 假如MQ消息队列产生了堆积，如何更快的消费？&lt;/h2>
+&lt;blockquote>
+&lt;p>会从多种队列去分析，rabbitmq，kafka，rocketmq，pulsar等多个消息中间件去分析。
+RabbitMq得看是什么模式，如果是生产消费者模式是可以的，发布订阅模式就没卵用，加个订阅者而已。kafka看consumer的数量吧，如果已经大于等于partition数量了，加consumer也没卵用。pulsar
+是也一样啊，有生产者消费者模式，也有独占和失败替补模式。&lt;/p>
+&lt;p>对的，先说kafka和RocketMQ，他们都是基于partition的存储模型，也就是说每个subject分为一个或多个partition，Server收到消息分发到某个partition上，而consumer
+消费时候是与partition相对应的，当partition与consumer数量相等时，是一对一，当小于时候，会有consumer空闲，大于时候，看数量，有consumer
+会负责多个，比较繁忙。在产生队列积压时候，这时候最合理的分配减压策略是 partition数量和consumer数量成倍数关系，单个增加consumer
+数量并不能有效提高时候，并且并不能马上提高消费效率，需要添加对应的partition数量，但是就带来了另外的问题，partition数量增加，特别是kafka，partition资源是一个比较重的资源，增加partition
+数量还需要考虑集群的处理能力，另外在高峰过后，想要consumer缩容也比较麻烦哦，因为partition只能增加不能减少。&lt;/p>
+&lt;p>针对partition存储方式的，扩容相关的问题，已经堆积的消息是不能快速消费的，假设是2partition对2个consumer，这时候增加partition和consumer是无用的，因为已经堆积的只能由这两个consumer
+消费，横向扩展不可能了，只能纵向扩展，这时候要么只能接受已经堆积慢慢消费，并且尽量减少入这两个partition的消息，或者执行比较重点再均衡策略！&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-11-18-每日一思-httpdns有啥好处-httpdns-为什么一般只适用于-app-或者-cs-架构bs-为何不适用">[2019-11-18 每日一思] HttpDNS有啥好处, HttpDNS 为什么一般只适用于 APP 或者 C/S 架构，B/S 为何不适用?#&lt;/h2>
+&lt;blockquote>
+&lt;p>HttpDNS 是基于HTTP协议发起服务器A记录的地址，不存在向本地运营商询问 domain 解析过程
+适用于APP或者C/S架构，是它的特殊性导致的，&lt;/p>
+&lt;ul>
+&lt;li>一般在终端这种信号差、信号不稳定下，要想尽量的介绍交互&lt;/li>
+&lt;li>跑马机制选取就近地址&lt;/li>
+&lt;li>SDK嵌入&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="2019-12-12-每日一思我们知道许多长链接情况下保证链接有效大部分是通过-tcp-keepalive-与-应用心跳-来确定各自的定位是什么为什么大多数情况下很多im系统同时使用-tcp-keepalive-与-应用层心跳去确认-应用层心跳设计上有啥讲究">[2019-12-12 每日一思]我们知道许多长链接情况下，保证链接有效大部分是通过 TCP Keepalive 与 应用心跳 来确定，各自的定位是什么？为什么大多数情况下很多IM系统同时使用 TCP Keepalive 与 应用层心跳去确认？ 应用层心跳设计上有啥讲究？&lt;/h2>
+&lt;blockquote>
+&lt;p>TCP Keepalive 是 TCP/IP 协议自带，无需额外的开发，但是不灵活，而且我们一般在应用层面是无法感知。更改TCP Keepalive 相关参数需要修改/etc/sysctl.conf&lt;/p>
+&lt;p>应用层心跳是为了保活，保证链接的可用性&lt;/p>
+&lt;ul>
+&lt;li>运营商的环境，，存在 NAT 超时断链问题&lt;/li>
+&lt;li>让应用知晓网络可用情况，酌情处理断链重连问题&lt;/li>
+&lt;li>可以有效的江都服务端为了维护无效链接的开销&lt;/li>
+&lt;/ul>
+&lt;p>应用层心跳设计上&lt;/p>
+&lt;ul>
+&lt;li>固定频率，通常只有请求头，消息体空包（在判断这类心跳处理时候，客户端一般要判断超时时间大于心跳间隔【可能存在网络延迟】）&lt;/li>
+&lt;li>智能心跳，根据网络状况自动调整发送的频率，来适配当前网络情况的最佳心跳频率（各个地区各个服务商 NAT 超时设计不一样，长的多达几个小时，少的只有几秒）&lt;/li>
+&lt;/ul>
+&lt;p>智能心跳，一般采用二分法来逐渐逼近服务商的 NAT 超时设计。心跳设计上不会是空包，而是传输的是客户端的心跳频率是多少。
+（假设 最小值 20 s 最大值 1小时）===&amp;gt; 逐渐二分下去&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-12-14-每日一思-如何判断任意用户上传的文件在服务端是否存在呢网盘的秒传的实现思路">[2019-12-14 每日一思] 如何判断任意用户上传的文件在服务端是否存在呢？网盘的“秒传”的实现思路？&lt;/h2>
+&lt;blockquote>
+&lt;p>对比文件，确实是使用的文件的提取的特征值（单项哈希算法）,哈希算法是有冲突的，虽然概率较小， 那么如何这种冲突呢：在服务端，
+对该文件进行不同的单向Hash算法（MD5，SHA-1）等等得到多个值，一一对比，只有全部相同才认为是同一个文件。&lt;/p>
+&lt;p>为什么要哈希？为了将一个不定长、不确定的东东 转化成 固定长度的固化的特征值，并要保证唯一性。&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="填坑记录">填坑记录&lt;/h1>
+&lt;h2 id="docker相关">docker相关&lt;/h2>
+&lt;ul>
+&lt;li>docker默认网桥问题&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>服务器默认网桥 172.19.0.0, 而 docker 网桥默认172.17.0.0,
+在启动多个的docker容器的时候会导致地址冲突，桥接网卡凉，
+需要更改docker 默认的网桥地址&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-markdown" data-lang="markdown"> {
+&amp;#34;debug&amp;#34; : true,
+&amp;#34;default-address-pools&amp;#34; : [
+{
+&amp;#34;base&amp;#34; : &amp;#34;172.31.0.0/16&amp;#34;,
+&amp;#34;size&amp;#34; : 24
+}
+]
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>更改成和主机不一样的的网段地址&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="redis分布式锁">redis分布式锁&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
+&lt;span style="color:#8b008b;font-weight:bold">package&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">com.kezaihui.thor.biz.core.adapter.redis.lock&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">lombok.extern.slf4j.Slf4j&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.beans.factory.annotation.Autowired&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.data.redis.core.RedisTemplate&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.data.redis.core.script.DefaultRedisScript&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.stereotype.Component&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">java.util.Collections&lt;/span>;
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * RedisTemplateDistributeLockUtil
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#707a7c">@Slf4j&lt;/span>
+&lt;span style="color:#707a7c">@Component&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RedisTemplateDistributeLockUtil&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String LOCK_SCRIPT =
+&lt;span style="color:#cd5555">&amp;#34;local key = KEYS[1]; local value = ARGV[1]; if redis.call(&amp;#39;set&amp;#39;, key, value, &amp;#39;NX&amp;#39; ,&amp;#39;PX&amp;#39;, %d) &amp;#34;&lt;/span>
++ &lt;span style="color:#cd5555">&amp;#34;then return 1 else return 0 end&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String UNLOCK_SCRIPT =
+&lt;span style="color:#cd5555">&amp;#34;if redis.call(&amp;#39;get&amp;#39;, KEYS[1]) == ARGV[1] then return redis.call(&amp;#39;del&amp;#39;,KEYS[1]) else return 0 end&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> EXPIRE = 5000;
+&lt;span style="color:#707a7c">@Autowired&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> RedisTemplate redisTemplate;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String &lt;span style="color:#008b45">lockExpireScript&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (expireMills &amp;lt;= 0) {
+expireMills = EXPIRE;
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> String.&lt;span style="color:#658b00">format&lt;/span>(LOCK_SCRIPT, expireMills);
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">lock&lt;/span>(String key, String value, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) {
+String script = lockExpireScript(expireMills);
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long execute = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key),
+Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(value));
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> execute != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; execute != 0;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">blockLock&lt;/span>(String key, String value, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> DistributeLockTimeoutException {
+&lt;span style="color:#228b22">// 被阻塞的时间超过5秒就停止获取锁
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> blockTime = expireMills;
+&lt;span style="color:#228b22">// 默认的间隔时间
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (; ; ) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (blockTime &amp;gt;= 0) {
+String script = lockExpireScript(expireMills);
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long result = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key), value);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (result != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; result == 1) {
+&lt;span style="color:#228b22">// 得到了锁
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>;
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+blockTime -= 300;
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+Thread.&lt;span style="color:#658b00">sleep&lt;/span>(300);
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (InterruptedException e) {
+log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;RedisTemplateDistributeLockUtil.blockLock error!&amp;#34;&lt;/span>, e);
+}
+}
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#228b22">// 已经超时
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DistributeLockTimeoutException(&lt;span style="color:#cd5555">&amp;#34;Distribute Lock Timeout&amp;#34;&lt;/span>);
+}
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">unlock&lt;/span>(String key, String value) {
+String script = UNLOCK_SCRIPT;
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long execute = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key), value);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> execute != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; execute != 0;
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ - PinkHello, All Rights Reserved</description></item><item><title>13 Kafka与Debezium构建CDC管道</title><link>https://pinkhello.me/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</link><pubDate>Wed, 10 Feb 2021 09:53:51 +0800</pubDate><guid>https://pinkhello.me/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/</guid><description>PinkHello https://pinkhello.me/posts/13-kafka%E4%B8%8Edebezium%E6%9E%84%E5%BB%BAcdc%E7%AE%A1%E9%81%93/ -&lt;h1 id="建设篇">建设篇&lt;/h1>
 &lt;h2 id="1什么是-debezium">1、什么是 debezium?&lt;/h2>
 &lt;p>&lt;a href="https://debezium.io/">https://debezium.io/&lt;/a>&lt;/p>
 &lt;!-- raw HTML omitted -->
@@ -1875,134 +2073,4 @@ System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b0
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
-- https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ - PinkHello, All Rights Reserved</description></item><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>PinkHello https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ -&lt;p>1、什么叫RPC?&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1%E8%BF%87%E7%A8%8B.jpg" alt="RPC调用服务过程">&lt;/p>
-&lt;p>RPC构成&lt;/p>
-&lt;ul>
-&lt;li>RPC Consumer&lt;/li>
-&lt;li>RPC Provider&lt;/li>
-&lt;li>ConfigServer&lt;/li>
-&lt;/ul>
-&lt;ul>
-&lt;li>1、&lt;code>Provider&lt;/code> 启动 &lt;code>ConfigServer&lt;/code> 注册服务&lt;/li>
-&lt;li>2、&lt;code>Consumer&lt;/code> 启动 &lt;code>ConfigServer&lt;/code> 订阅服务，&lt;/li>
-&lt;li>3、发起调用 &lt;code>Consumer&lt;/code> &amp;mdash;&amp;gt; &lt;code>Provider&lt;/code>&lt;/li>
-&lt;li>4、响应调用 &lt;code>Consumer&lt;/code> &amp;lt;&amp;mdash; &lt;code>Provider&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;p>2、什么是 &lt;code>Netty&lt;/code> ? &lt;a href="https://netty.io/">https://netty.io/&lt;/a>&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/netty%E6%A1%86%E6%9E%B6%E5%9B%BE.png" alt="netty框架图">&lt;/p>
-&lt;p>3、现有的开源的项目是否使用了 &lt;code>Netty&lt;/code> ?&lt;/p>
-&lt;ul>
-&lt;li>Dubbo&lt;/li>
-&lt;li>Grpc&lt;/li>
-&lt;li>Spark&lt;/li>
-&lt;li>&amp;hellip;.&lt;/li>
-&lt;/ul>
-&lt;p>4、&lt;code>RPC Provider&lt;/code> 启动&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>Netty Server&lt;/code> 方式启动&lt;/li>
-&lt;li>&lt;code>Rpc&lt;/code> 服务的注册
-&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E4%B8%8ENetty%E7%BB%93%E5%90%88Provider%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B.png" alt="RPC与Netty结合Provider调用过程">&lt;/li>
-&lt;/ul>
-&lt;p>5、&lt;code>RPC Consumer&lt;/code> 启动&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>Netty Client&lt;/code> 方式启动&lt;/li>
-&lt;li>&lt;code>RPC&lt;/code> 泛化调用、通过字节码基于反射来实现远程调度&lt;/li>
-&lt;li>&lt;code>Consumer&lt;/code> 服务订阅&lt;/li>
-&lt;li>启动时建立长连接
-&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E4%B8%8ENetty%E7%BB%93%E5%90%88Consumer%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B.png" alt="RPC与Netty结合Consumer调用过程">&lt;/li>
-&lt;/ul>
-&lt;p>6、从第四可以看出，多个 &lt;code>Provider&lt;/code> 是由一个 &lt;code>NettyServer&lt;/code> 提供的，通过 &lt;code>HandlerMap&lt;/code> 映射找到对应的 &lt;code>Ioc Bean&lt;/code>，完成服务调用&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">服务端
-EventLoopGroup bossGroup = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup(1);
-EventLoopGroup workerGroup = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup();
-&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
-ServerBootstrap b = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ServerBootstrap();
-b.&lt;span style="color:#658b00">group&lt;/span>(bossGroup, workerGroup)
-.&lt;span style="color:#658b00">channel&lt;/span>(NioServerSocketChannel.&lt;span style="color:#658b00">class&lt;/span>)
-.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_BACKLOG&lt;/span>, 100)
-.&lt;span style="color:#658b00">handler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> LoggingHandler(LogLevel.&lt;span style="color:#658b00">INFO&lt;/span>))
-.&lt;span style="color:#658b00">childHandler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ChannelInitializer&amp;lt;SocketChannel&amp;gt;() {
-&lt;span style="color:#707a7c">@Override&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">initChannel&lt;/span>(SocketChannel ch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-ChannelPipeline p = ch.&lt;span style="color:#658b00">pipeline&lt;/span>();
-p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcEncoder(RpcRequest.&lt;span style="color:#658b00">class&lt;/span>));
-p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcDecoder(RpcResponse.&lt;span style="color:#658b00">class&lt;/span>));
-p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcHandler());
-}});
-&lt;span style="color:#228b22">// Start the server.
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ChannelFuture f = b.&lt;span style="color:#658b00">bind&lt;/span>(PORT).&lt;span style="color:#658b00">sync&lt;/span>();
-&lt;span style="color:#228b22">// Wait until the server socket is closed.
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> f.&lt;span style="color:#658b00">channel&lt;/span>().&lt;span style="color:#658b00">closeFuture&lt;/span>().&lt;span style="color:#658b00">sync&lt;/span>();
-} &lt;span style="color:#8b008b;font-weight:bold">finally&lt;/span> {
-&lt;span style="color:#228b22">// Shut down all event loops to terminate all threads.
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> bossGroup.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
-workerGroup.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/Netty%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E5%AE%A2%E6%88%B7%E7%AB%AFTCP%E9%93%BE%E6%8E%A5%E4%B8%8A%E7%9A%84%E8%AF%B7%E6%B1%82.jpg" alt="Netty如何处理客户端TCP链接上的请求">&lt;/p>
-&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/NettyReactor%E5%B7%A5%E4%BD%9C%E6%A1%86%E6%9E%B6%E5%9B%BE.jpg" alt="NettyReactor工作框架图">&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>BossGroup&lt;/code> -&amp;gt; 处理客户端的请求&lt;/li>
-&lt;li>&lt;code>EventGroup&lt;/code> —&amp;gt; 处理IO &lt;code>Read/Write&lt;/code> 操作、执行任务系统Task、定时任务&lt;/li>
-&lt;li>&lt;code>ChildChannelHandler&lt;/code> 方式是对 &lt;code>ChannelPipeline&lt;/code> 的设置、&lt;/li>
-&lt;li>&lt;code>ChannelPipeline&lt;/code> 是相当于任务链的模式, 是一串 &lt;code>ChannelHandler&lt;/code> 的实例&lt;/li>
-&lt;li>&lt;code>ChannelHandlerContext&lt;/code> 是 &lt;code>ChannelPipeline&lt;/code> 和 &lt;code>ChannelHandler&lt;/code> 的关系&lt;/li>
-&lt;li>每个链接对于 &lt;code>Sever&lt;/code> 端都会创建一个 &lt;code>Channel&lt;/code> ，可以将 &lt;code>Channel&lt;/code> 理解为 &lt;code>Connection&lt;/code> （其实真正的是 &lt;code>Connection&lt;/code> 属于 &lt;code>Channel&lt;/code> 的一部分）&lt;/li>
-&lt;li>每个 &lt;code>Channel&lt;/code> 都有一个自己的唯一的 &lt;code>ChannelPipeline&lt;/code> 操作，对于其他的 &lt;code>Channel&lt;/code> 的 &lt;code>ChannelPipeline&lt;/code> 是隔离的&lt;/li>
-&lt;li>&lt;code>RPC Handler&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 服务处理的 &lt;code>Handler&lt;/code> 实现&lt;/li>
-&lt;li>&lt;code>RPC Encoder&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 序列化的编码的 &lt;code>Handler&lt;/code> 实现&lt;/li>
-&lt;li>&lt;code>RPC Decoder&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 序列化的解码的 &lt;code>Handler&lt;/code> 实现&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">客户端
-EventLoopGroup group = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup();
-&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
-Bootstrap b = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Bootstrap();
-b.&lt;span style="color:#658b00">group&lt;/span>(group)
-.&lt;span style="color:#658b00">channel&lt;/span>(NioSocketChannel.&lt;span style="color:#658b00">class&lt;/span>)
-.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">TCP_NODELAY&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>)
-.&lt;span style="color:#658b00">handler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ChannelInitializer&amp;lt;SocketChannel&amp;gt;() {
-&lt;span style="color:#707a7c">@Override&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">initChannel&lt;/span>(SocketChannel ch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-ChannelPipeline p = ch.&lt;span style="color:#658b00">pipeline&lt;/span>();
-p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcEncoder(RpcResponse.&lt;span style="color:#658b00">class&lt;/span>));
-p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcDecoder(RpcRequest.&lt;span style="color:#658b00">class&lt;/span>));
-p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcClientHandler());
-}});
-&lt;span style="color:#228b22">// Start the client.
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ChannelFuture f = b.&lt;span style="color:#658b00">connect&lt;/span>(HOST, PORT).&lt;span style="color:#658b00">sync&lt;/span>();
-&lt;span style="color:#228b22">// Wait until the connection is closed.
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> f.&lt;span style="color:#658b00">channel&lt;/span>().&lt;span style="color:#658b00">closeFuture&lt;/span>().&lt;span style="color:#658b00">sync&lt;/span>();
-} &lt;span style="color:#8b008b;font-weight:bold">finally&lt;/span> {
-&lt;span style="color:#228b22">// Shut down the event loop to terminate all threads.
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> group.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>7、&lt;code>RPC&lt;/code> 序列化&lt;/p>
-&lt;ul>
-&lt;li>二进制数据&lt;/li>
-&lt;li>Hessian&lt;/li>
-&lt;li>Avro&lt;/li>
-&lt;li>ProtoBuffer (Protobuf)&lt;/li>
-&lt;li>JSON&lt;/li>
-&lt;li>XML&lt;/li>
-&lt;/ul>
-&lt;p>8、关于 &lt;code>RPC&lt;/code> 的实现思考与技术讨论&lt;/p>
-&lt;ul>
-&lt;li>业务方法、因为是收到请求消息而触发的后续动作调用，不做额外设置，肯定是使用的 &lt;code>WorkGroup&lt;/code> 里面的线程操作的。
-而作为业务层，不应该与底层关联，应该切割开来，势必会引入真的业务侧线程池。
-那么如何引用、怎么引用？(关于 业务线程池 与 &lt;code>WorkGroup&lt;/code> 的 &lt;code>EvenLoop&lt;/code> 的思考 )&lt;/li>
-&lt;li>关于 &lt;code>RPC&lt;/code> 调用大部分是同步的调用，而 &lt;code>Netty&lt;/code> 底层是完全异步事件机制，在RPC框架层面如何实现同步的调用方式的？&lt;/li>
-&lt;li>基于 &lt;code>TCP&lt;/code> 的长链接调用，在 &lt;code>RPC&lt;/code> 上你会想到其他的哪些东东？&lt;/li>
-&lt;li>在此环境下，我没有介绍 &lt;code>RPC&lt;/code> 服务于 IOC容器的结合，可以思考一下，如何做到 注解机制、&lt;code>JAVA CONFIG&lt;/code> 机制、&lt;code>XML SCHEMA&lt;/code> 机制来做?
-&lt;ul>
-&lt;li>GUICE&lt;/li>
-&lt;li>SPRING&lt;/li>
-&lt;li>SPI&lt;/li>
-&lt;li>&amp;hellip;.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-- https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ - PinkHello, All Rights Reserved</description></item></channel></rss>

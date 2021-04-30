@@ -1,4 +1,134 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>03 String为什么设计成final</title><link>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Wed, 10 Feb 2021 08:19:51 +0800</pubDate><guid>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>PinkHello https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>PinkHello https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ -&lt;p>1、什么叫RPC?&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1%E8%BF%87%E7%A8%8B.jpg" alt="RPC调用服务过程">&lt;/p>
+&lt;p>RPC构成&lt;/p>
+&lt;ul>
+&lt;li>RPC Consumer&lt;/li>
+&lt;li>RPC Provider&lt;/li>
+&lt;li>ConfigServer&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>1、&lt;code>Provider&lt;/code> 启动 &lt;code>ConfigServer&lt;/code> 注册服务&lt;/li>
+&lt;li>2、&lt;code>Consumer&lt;/code> 启动 &lt;code>ConfigServer&lt;/code> 订阅服务，&lt;/li>
+&lt;li>3、发起调用 &lt;code>Consumer&lt;/code> &amp;mdash;&amp;gt; &lt;code>Provider&lt;/code>&lt;/li>
+&lt;li>4、响应调用 &lt;code>Consumer&lt;/code> &amp;lt;&amp;mdash; &lt;code>Provider&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>2、什么是 &lt;code>Netty&lt;/code> ? &lt;a href="https://netty.io/">https://netty.io/&lt;/a>&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/netty%E6%A1%86%E6%9E%B6%E5%9B%BE.png" alt="netty框架图">&lt;/p>
+&lt;p>3、现有的开源的项目是否使用了 &lt;code>Netty&lt;/code> ?&lt;/p>
+&lt;ul>
+&lt;li>Dubbo&lt;/li>
+&lt;li>Grpc&lt;/li>
+&lt;li>Spark&lt;/li>
+&lt;li>&amp;hellip;.&lt;/li>
+&lt;/ul>
+&lt;p>4、&lt;code>RPC Provider&lt;/code> 启动&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Netty Server&lt;/code> 方式启动&lt;/li>
+&lt;li>&lt;code>Rpc&lt;/code> 服务的注册
+&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E4%B8%8ENetty%E7%BB%93%E5%90%88Provider%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B.png" alt="RPC与Netty结合Provider调用过程">&lt;/li>
+&lt;/ul>
+&lt;p>5、&lt;code>RPC Consumer&lt;/code> 启动&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Netty Client&lt;/code> 方式启动&lt;/li>
+&lt;li>&lt;code>RPC&lt;/code> 泛化调用、通过字节码基于反射来实现远程调度&lt;/li>
+&lt;li>&lt;code>Consumer&lt;/code> 服务订阅&lt;/li>
+&lt;li>启动时建立长连接
+&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E4%B8%8ENetty%E7%BB%93%E5%90%88Consumer%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B.png" alt="RPC与Netty结合Consumer调用过程">&lt;/li>
+&lt;/ul>
+&lt;p>6、从第四可以看出，多个 &lt;code>Provider&lt;/code> 是由一个 &lt;code>NettyServer&lt;/code> 提供的，通过 &lt;code>HandlerMap&lt;/code> 映射找到对应的 &lt;code>Ioc Bean&lt;/code>，完成服务调用&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">服务端
+EventLoopGroup bossGroup = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup(1);
+EventLoopGroup workerGroup = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup();
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+ServerBootstrap b = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ServerBootstrap();
+b.&lt;span style="color:#658b00">group&lt;/span>(bossGroup, workerGroup)
+.&lt;span style="color:#658b00">channel&lt;/span>(NioServerSocketChannel.&lt;span style="color:#658b00">class&lt;/span>)
+.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_BACKLOG&lt;/span>, 100)
+.&lt;span style="color:#658b00">handler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> LoggingHandler(LogLevel.&lt;span style="color:#658b00">INFO&lt;/span>))
+.&lt;span style="color:#658b00">childHandler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ChannelInitializer&amp;lt;SocketChannel&amp;gt;() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">initChannel&lt;/span>(SocketChannel ch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+ChannelPipeline p = ch.&lt;span style="color:#658b00">pipeline&lt;/span>();
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcEncoder(RpcRequest.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcDecoder(RpcResponse.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcHandler());
+}});
+&lt;span style="color:#228b22">// Start the server.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ChannelFuture f = b.&lt;span style="color:#658b00">bind&lt;/span>(PORT).&lt;span style="color:#658b00">sync&lt;/span>();
+&lt;span style="color:#228b22">// Wait until the server socket is closed.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> f.&lt;span style="color:#658b00">channel&lt;/span>().&lt;span style="color:#658b00">closeFuture&lt;/span>().&lt;span style="color:#658b00">sync&lt;/span>();
+} &lt;span style="color:#8b008b;font-weight:bold">finally&lt;/span> {
+&lt;span style="color:#228b22">// Shut down all event loops to terminate all threads.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> bossGroup.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
+workerGroup.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/Netty%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E5%AE%A2%E6%88%B7%E7%AB%AFTCP%E9%93%BE%E6%8E%A5%E4%B8%8A%E7%9A%84%E8%AF%B7%E6%B1%82.jpg" alt="Netty如何处理客户端TCP链接上的请求">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/NettyReactor%E5%B7%A5%E4%BD%9C%E6%A1%86%E6%9E%B6%E5%9B%BE.jpg" alt="NettyReactor工作框架图">&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>BossGroup&lt;/code> -&amp;gt; 处理客户端的请求&lt;/li>
+&lt;li>&lt;code>EventGroup&lt;/code> —&amp;gt; 处理IO &lt;code>Read/Write&lt;/code> 操作、执行任务系统Task、定时任务&lt;/li>
+&lt;li>&lt;code>ChildChannelHandler&lt;/code> 方式是对 &lt;code>ChannelPipeline&lt;/code> 的设置、&lt;/li>
+&lt;li>&lt;code>ChannelPipeline&lt;/code> 是相当于任务链的模式, 是一串 &lt;code>ChannelHandler&lt;/code> 的实例&lt;/li>
+&lt;li>&lt;code>ChannelHandlerContext&lt;/code> 是 &lt;code>ChannelPipeline&lt;/code> 和 &lt;code>ChannelHandler&lt;/code> 的关系&lt;/li>
+&lt;li>每个链接对于 &lt;code>Sever&lt;/code> 端都会创建一个 &lt;code>Channel&lt;/code> ，可以将 &lt;code>Channel&lt;/code> 理解为 &lt;code>Connection&lt;/code> （其实真正的是 &lt;code>Connection&lt;/code> 属于 &lt;code>Channel&lt;/code> 的一部分）&lt;/li>
+&lt;li>每个 &lt;code>Channel&lt;/code> 都有一个自己的唯一的 &lt;code>ChannelPipeline&lt;/code> 操作，对于其他的 &lt;code>Channel&lt;/code> 的 &lt;code>ChannelPipeline&lt;/code> 是隔离的&lt;/li>
+&lt;li>&lt;code>RPC Handler&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 服务处理的 &lt;code>Handler&lt;/code> 实现&lt;/li>
+&lt;li>&lt;code>RPC Encoder&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 序列化的编码的 &lt;code>Handler&lt;/code> 实现&lt;/li>
+&lt;li>&lt;code>RPC Decoder&lt;/code> 是我们对于自己的找寻 &lt;code>RPC&lt;/code> 序列化的解码的 &lt;code>Handler&lt;/code> 实现&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">客户端
+EventLoopGroup group = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NioEventLoopGroup();
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+Bootstrap b = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Bootstrap();
+b.&lt;span style="color:#658b00">group&lt;/span>(group)
+.&lt;span style="color:#658b00">channel&lt;/span>(NioSocketChannel.&lt;span style="color:#658b00">class&lt;/span>)
+.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">TCP_NODELAY&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>)
+.&lt;span style="color:#658b00">handler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ChannelInitializer&amp;lt;SocketChannel&amp;gt;() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">initChannel&lt;/span>(SocketChannel ch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+ChannelPipeline p = ch.&lt;span style="color:#658b00">pipeline&lt;/span>();
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcEncoder(RpcResponse.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcDecoder(RpcRequest.&lt;span style="color:#658b00">class&lt;/span>));
+p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RpcClientHandler());
+}});
+&lt;span style="color:#228b22">// Start the client.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ChannelFuture f = b.&lt;span style="color:#658b00">connect&lt;/span>(HOST, PORT).&lt;span style="color:#658b00">sync&lt;/span>();
+&lt;span style="color:#228b22">// Wait until the connection is closed.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> f.&lt;span style="color:#658b00">channel&lt;/span>().&lt;span style="color:#658b00">closeFuture&lt;/span>().&lt;span style="color:#658b00">sync&lt;/span>();
+} &lt;span style="color:#8b008b;font-weight:bold">finally&lt;/span> {
+&lt;span style="color:#228b22">// Shut down the event loop to terminate all threads.
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> group.&lt;span style="color:#658b00">shutdownGracefully&lt;/span>();
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>7、&lt;code>RPC&lt;/code> 序列化&lt;/p>
+&lt;ul>
+&lt;li>二进制数据&lt;/li>
+&lt;li>Hessian&lt;/li>
+&lt;li>Avro&lt;/li>
+&lt;li>ProtoBuffer (Protobuf)&lt;/li>
+&lt;li>JSON&lt;/li>
+&lt;li>XML&lt;/li>
+&lt;/ul>
+&lt;p>8、关于 &lt;code>RPC&lt;/code> 的实现思考与技术讨论&lt;/p>
+&lt;ul>
+&lt;li>业务方法、因为是收到请求消息而触发的后续动作调用，不做额外设置，肯定是使用的 &lt;code>WorkGroup&lt;/code> 里面的线程操作的。
+而作为业务层，不应该与底层关联，应该切割开来，势必会引入真的业务侧线程池。
+那么如何引用、怎么引用？(关于 业务线程池 与 &lt;code>WorkGroup&lt;/code> 的 &lt;code>EvenLoop&lt;/code> 的思考 )&lt;/li>
+&lt;li>关于 &lt;code>RPC&lt;/code> 调用大部分是同步的调用，而 &lt;code>Netty&lt;/code> 底层是完全异步事件机制，在RPC框架层面如何实现同步的调用方式的？&lt;/li>
+&lt;li>基于 &lt;code>TCP&lt;/code> 的长链接调用，在 &lt;code>RPC&lt;/code> 上你会想到其他的哪些东东？&lt;/li>
+&lt;li>在此环境下，我没有介绍 &lt;code>RPC&lt;/code> 服务于 IOC容器的结合，可以思考一下，如何做到 注解机制、&lt;code>JAVA CONFIG&lt;/code> 机制、&lt;code>XML SCHEMA&lt;/code> 机制来做?
+&lt;ul>
+&lt;li>GUICE&lt;/li>
+&lt;li>SPRING&lt;/li>
+&lt;li>SPI&lt;/li>
+&lt;li>&amp;hellip;.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+- https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ - PinkHello, All Rights Reserved</description></item><item><title>03 String为什么设计成final</title><link>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Wed, 10 Feb 2021 08:19:51 +0800</pubDate><guid>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>PinkHello https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
 &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">String&lt;/span>
 &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> java.&lt;span style="color:#658b00">io&lt;/span>.&lt;span style="color:#658b00">Serializable&lt;/span>, Comparable&amp;lt;String&amp;gt;, CharSequence {
