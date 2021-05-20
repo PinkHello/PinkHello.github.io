@@ -62,7 +62,7 @@ Consumer Group 由多个 Consumer 实例组成。&lt;/p>
 &lt;/li>
 &lt;/ul>
 &lt;h1 id="rocketmq-部署架构">RocketMQ 部署架构&lt;/h1>
-&lt;p>&lt;img src="https://pinkhello.me/rokcetmq/rocketmq_architecture_3.png" alt="RocketMQ部署架构">&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/rocketmq/rocketmq_architecture_3.png" alt="RocketMQ部署架构">&lt;/p>
 &lt;ul>
 &lt;li>Producer: 消息发布决赛、支持分布式集群部署，Producer 通过MQ的负载均衡莫款选择相应的Broker进行消息投递。&lt;/li>
 &lt;li>Consumer: 消息消费角色、支持分布式集群部署，支持Push方式、Pull方式对消息进行消费，同时也指出集群方式和广播方式进行消费。&lt;/li>
