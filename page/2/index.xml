@@ -1,4 +1,89 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>14 工作纪实2020</title><link>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</link><pubDate>Wed, 10 Feb 2021 10:00:19 +0800</pubDate><guid>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</guid><description>PinkHello https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ -&lt;h1 id="每日一思篇">每日一思篇&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:02:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>15 记一次docker日志磁盘告警问题</title><link>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</link><pubDate>Wed, 10 Feb 2021 10:05:29 +0800</pubDate><guid>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</guid><description>PinkHello https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/ -&lt;h1 id="前景">前景&lt;/h1>
+&lt;p>今日，我正在开开心心的刷着JFX的Coding中，突然线上报警群中爆了个炸弹，EC2磁盘超过80%。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/%E8%B5%84%E6%BA%90%E4%B8%8D%E8%B6%B3%E6%8A%A5%E8%AD%A6.png" alt="资源不足预警">&lt;/p>
+&lt;h1 id="处理过程">处理过程&lt;/h1>
+&lt;p>解决问题姿势就位：&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>赶紧开机 ==》 ❤️中万匹🦙奔腾而过 ❤️中MMP&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>默默的通过跳板机进入目标机器&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>不管三七二十一,执行查看磁盘占用大小，我的乖乖，占用确实超过了87%了，一下子暴涨的&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看磁盘占用大小&lt;/span>
+&amp;gt; sudo df -h
+&lt;span style="color:#228b22"># 查看当前目录总量&lt;/span>
+&amp;gt; sudo du -sh
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>开始定位具体哪个文件或者目录占用这么大,跑到根目录下。&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看当前目录下一级子文件和子目录占用的磁盘容量&lt;/span>
+&amp;gt; sudo du -lh --max-depth=&lt;span style="color:#b452cd">1&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>一开始猜想可能是docker容器的日志占用大，上面执行后，还真 TM 是&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">/var/lib/docker/containers 目录占用 42G
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>开始查看是哪个容器占用的这么大的空间&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看 containers 日志目录排序&lt;/span>
+&amp;gt; sudo du -d1 -h /var/lib/docker/containers | sort -h
+&lt;span style="color:#228b22"># 查看具体的哪个日志文件大&lt;/span>
+&amp;gt; sudo find /var/lib/docker/containers -name *.log
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>当然这个配图是我清理之后的
+&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/docker%E5%AE%B9%E5%99%A8%E6%96%87%E4%BB%B6%E6%8E%92%E5%BA%8F.png" alt="docker容器文件排序">
+&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/%E6%9F%A5%E6%89%BEdocker%E5%AE%B9%E5%99%A8%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6.png" alt="查找docker容器日志文件">&lt;/p>
+&lt;ul>
+&lt;li>定位到最大的文件，一顿操作&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &lt;span style="color:#228b22"># 清空比较大的日志文件&lt;/span>
+&amp;gt; sudo sh -c &lt;span style="color:#cd5555">&amp;#34;cat /dev/null &amp;gt; &lt;/span>&lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">log_file&lt;/span>&lt;span style="color:#cd5555">}&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/%E6%B8%85%E7%90%86docker%E5%AE%B9%E5%99%A8%E6%97%A5%E5%BF%97%E5%90%8E.png" alt="清理docker容器日志后">&lt;/p>
+&lt;h1 id="思考">思考&lt;/h1>
+&lt;ul>
+&lt;li>上面的方式是一种方式解决【临时】
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &lt;span style="color:#228b22"># 查看 docker 的 Logging Driver&lt;/span>
+&amp;gt; docker info | grep &lt;span style="color:#cd5555">&amp;#39;Logging Driver&amp;#39;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>如何彻底解决这个问题：&lt;/p>
+&lt;ul>
+&lt;li>写个&lt;code>shell脚本&lt;/code> 使用 &lt;code>crontab&lt;/code> 定期执行清理
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &lt;span style="color:#228b22">#!/bin/sh&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;======== start clean docker containers logs ========&amp;#34;&lt;/span>
+&lt;span style="color:#00688b">logs&lt;/span>=&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>find /var/lib/docker/containers/ -name *-json.log&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> log in &lt;span style="color:#00688b">$logs&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">do&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;clean logs : &lt;/span>&lt;span style="color:#00688b">$log&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
+cat /dev/null &amp;gt; &lt;span style="color:#00688b">$log&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">done&lt;/span>
+&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;======== end clean docker containers logs ========&amp;#34;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>假如是&lt;code>docker run&lt;/code>创建容器的,指定 &lt;code>--log-opt max-size=${MAX_SIZE}m --log-opt max-file=${NUMBER}&lt;/code>&lt;/li>
+&lt;li>&lt;code>docker-compose&lt;/code> 方式更高&lt;code>docker-compose.yaml&lt;/code>文件
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">logging&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">driver&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;json-file&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">options&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">max-size&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;${MAX_SIZE}m&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">max-file&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>${NUMBER}&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;li>&lt;code>docker&lt;/code> 全局修改 &lt;code>/etc/docker/daemon.json&lt;/code>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-json" data-lang="json"> {
+&lt;span style="color:#8b008b;font-weight:bold">&amp;#34;log-driver&amp;#34;&lt;/span>: &lt;span style="color:#cd5555">&amp;#34;json-file&amp;#34;&lt;/span>,
+&lt;span style="color:#8b008b;font-weight:bold">&amp;#34;log-opts&amp;#34;&lt;/span>: {
+&lt;span style="color:#8b008b;font-weight:bold">&amp;#34;max-size&amp;#34;&lt;/span>: &lt;span style="color:#cd5555">&amp;#34;${MAX_SIZE}m&amp;#34;&lt;/span>
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &amp;gt; systemctl daemon-reload
+&amp;gt; systemctl restart docker
+&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>为什么会瞬间💥式的增长 ???&lt;/li>
+&lt;/ul>
+- https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/ - PinkHello, All Rights Reserved</description></item><item><title>14 工作纪实2020</title><link>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</link><pubDate>Wed, 10 Feb 2021 10:00:19 +0800</pubDate><guid>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</guid><description>PinkHello https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ -&lt;h1 id="每日一思篇">每日一思篇&lt;/h1>
 &lt;h2 id="2019-10-12-每日一思-mysql-wal技术-和-ringbuffer-思想好一致">[2019-10-12 每日一思] Mysql WAL技术 和 RingBuffer 思想好一致?&lt;/h2>
 &lt;h2 id="2019-10-14-每日一思-jwt-续签该如何做">[2019-10-14 每日一思] JWT 续签该如何做?&lt;/h2>
 &lt;h2 id="2019-10-16-每日一思-tcpip-协议具体指哪些">[2019-10-16 每日一思] TCP/IP 协议具体指哪些?&lt;/h2>
@@ -1966,111 +2051,4 @@ service.&lt;span style="color:#658b00">shutdown&lt;/span>();
 System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;总耗时:&amp;#34;&lt;/span>+ (System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>() - start));
 }
 }
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ - PinkHello, All Rights Reserved</description></item><item><title>05 OAuth2.0 那点事</title><link>https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</link><pubDate>Wed, 10 Feb 2021 08:32:02 +0800</pubDate><guid>https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</guid><description>PinkHello https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ -&lt;h2 id="oauth20-是什么">&lt;code>OAuth2.0&lt;/code> 是什么?&lt;/h2>
-&lt;p>&lt;code>OAuth2.0&lt;/code> Framework RFC 6749 [https://tools.ietf.org/html/rfc6749]&lt;/p>
-&lt;p>&lt;code>OAuth&lt;/code> 就是一种授权机制，它介于客户端与资源所有者的授权层，为了分离不同的角色。
-在资源所有者同意并向客户端颁发令牌后，客户端携带令牌可以访问部分或全部资源。&lt;/p>
-&lt;p>&lt;!-- raw HTML omitted -->OAuth2.0&lt;!-- raw HTML omitted --> 是&lt;!-- raw HTML omitted -->OAuth&lt;!-- raw HTML omitted --> 协议的一个版本，为&lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted -->版本。有意思的是 &lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted --> 与 &lt;!-- raw HTML omitted -->1.0&lt;!-- raw HTML omitted --> 并不兼容。&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h2 id="oauth20-授权方式">&lt;code>OAuth2.0&lt;/code> 授权方式&lt;/h2>
-&lt;p>获取授权的过程&lt;/p>
-&lt;ul>
-&lt;li>授权码(&lt;!-- raw HTML omitted -->authorization-code&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;li>隐藏式(&lt;!-- raw HTML omitted -->implicit&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;li>密码(&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;li>客户端凭证(&lt;!-- raw HTML omitted -->client credentials&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;/ul>
-&lt;p>不管哪种方式，都需要在第三方应用申请令牌之前，需要在系统中申请身份唯一标识: 客户端ID &lt;!-- raw HTML omitted -->Client ID&lt;!-- raw HTML omitted --> 和 客户端秘钥 &lt;!-- raw HTML omitted -->Client Secret&lt;!-- raw HTML omitted -->.
-这样能确保Token不被恶意使用。&lt;/p>
-&lt;p>授权重要的参数和指标:&lt;/p>
-&lt;ul>
-&lt;li>&lt;!-- raw HTML omitted -->response_type&lt;!-- raw HTML omitted --> 响应类型: &lt;!-- raw HTML omitted -->code&lt;!-- raw HTML omitted -->(要求返回授权码),&lt;!-- raw HTML omitted -->token&lt;!-- raw HTML omitted -->(要求返回授权Token)&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->client_id&lt;!-- raw HTML omitted --> 客户端身份标识&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->client_secret&lt;!-- raw HTML omitted --> 客户端秘钥&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->redirect_uri&lt;!-- raw HTML omitted --> 重定向地址&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->scope&lt;!-- raw HTML omitted --> 授权范围, &lt;!-- raw HTML omitted -->read&lt;!-- raw HTML omitted --> 只读权限, &lt;!-- raw HTML omitted -->all&lt;!-- raw HTML omitted --> 全部权限&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted --> 授权方式 &lt;!-- raw HTML omitted -->authorization_code&lt;!-- raw HTML omitted -->(授权码)、&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->(密码)、&lt;!-- raw HTML omitted -->client_credentials&lt;!-- raw HTML omitted -->
-(凭证)、&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->(更新令牌)&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->state&lt;!-- raw HTML omitted --> 应用程序传递的一个随机数，防止 &lt;!-- raw HTML omitted -->CSRF&lt;!-- raw HTML omitted --> 攻击&lt;/li>
-&lt;/ul>
-&lt;h3 id="授权码httpswwwoauthcomoauth2-serversaccess-tokensauthorization-code-request-authorization-code-request">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/" title="authorization-code-request">授权码&lt;/a>&lt;/h3>
-&lt;p>在访问第三方应用先申请一个授权码，然后再用授权码获取令牌.这种方式也是最常用的流程，安全性也是最高的，适用于有后端的&lt;!-- raw HTML omitted -->Web&lt;!-- raw HTML omitted -->应用。授权码通过前端传送，令牌存储在后端。所有的和资源服务器的交互都在服务端完成，避免了令牌的泄露。
-授权码和令牌的在 浏览器和客户端&lt;!-- raw HTML omitted -->WEB&lt;!-- raw HTML omitted -->应用以及资源服务器的交互流程大致如下:
-&lt;img src="https://pinkhello.me/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/auth_code.png" alt="authorization-code">&lt;/p>
-&lt;ul>
-&lt;li>1.2.3.4 用户选择 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 登陆 &lt;!-- raw HTML omitted -->yelp.com&lt;!-- raw HTML omitted -->&lt;/li>
-&lt;li>3.4 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 请求用户授权 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 权限&lt;/li>
-&lt;li>5.6 用户同意后返回授权码
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;/li>
-&lt;li>7.8 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 通过授权码 会向 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted -->发起请求&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;/li>
-&lt;li>9 验证必要参数，返回 &lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->&lt;/li>
-&lt;li>10.11 操作请求&lt;/li>
-&lt;/ul>
-&lt;h3 id="隐藏式httpsauth0comblogoauth2-implicit-grant-and-spa-oauth2-implicit-grant-and-spa">&lt;a href="https://auth0.com/blog/oauth2-implicit-grant-and-spa/" title="oauth2-implicit-grant-and-spa">隐藏式&lt;/a>&lt;/h3>
-&lt;p>&lt;img src="https://pinkhello.me/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/implicit.png" alt="implicit">&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h3 id="密码式httpswwwoauthcomoauth2-serversaccess-tokenspassword-grant-password-grant">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/password-grant/" title="password-grant">密码式&lt;/a>&lt;/h3>
-&lt;p>顾名思议,在自己的系统输入第三方系统的账号密码,自己的系统拿账号密码去申请令牌，响应题里面返回token&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h3 id="凭证式httpswwwoauthcomoauth2-serversaccess-tokensclient-credentials-client-credentials">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/client-credentials/" title="client-credentials">凭证式&lt;/a>&lt;/h3>
-&lt;p>凭证式和密码很相似，主要给没有前端输入的项目或者命令行&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h2 id="令牌的使用和更新">令牌的使用和更新&lt;/h2>
-&lt;h3 id="令牌的使用">&lt;a href="">令牌的使用&lt;/a>&lt;/h3>
-&lt;p>令牌的拿到了，就可以调用Google的API进行请求数据了，
-一般讲 Token 放入请求头 Authorization.&lt;/p>
-&lt;h3 id="令牌的更新httpswwwoauthcomoauth2-serversaccess-tokensrefreshing-access-tokens-refreshing-access-tokens">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/refreshing-access-tokens/" title="refreshing-access-tokens">令牌的更新&lt;/a>&lt;/h3>
-&lt;p>&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted --> 是有时效性的，一旦过期就需要重新获取，但是重走一遍授权流程，不仅麻烦而且用户体验也不好，那如何让用户使用的优雅呢？&lt;/p>
-&lt;p>一般在颁发令牌的时候，颁发两个&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->, 一个授权&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->,一个&lt;!-- raw HTML omitted -->Refresh Token&lt;!-- raw HTML omitted -->,
-在更新&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->时候,将&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted -->指定为&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->,
-参数&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->是用于更新&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->的&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h1 id="总结">总结&lt;/h1>
-&lt;h1 id="安利">安利&lt;/h1>
-&lt;ul>
-&lt;li>Client
-&lt;ul>
-&lt;li>Go &lt;a href="https://godoc.org/golang.org/x/oauth2">https://godoc.org/golang.org/x/oauth2&lt;/a>&lt;/li>
-&lt;li>Java
-&lt;ul>
-&lt;li>&lt;a href="https://spring.io/projects/spring-social/">https://spring.io/projects/spring-social/&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://spring.io/projects/spring-security/">https://spring.io/projects/spring-security/&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>Server
-&lt;ul>
-&lt;li>Go
-&lt;ul>
-&lt;li>&lt;a href="https://github.com/go-oauth2/oauth2">https://github.com/go-oauth2/oauth2&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://github.com/zalando/gin-oauth2">https://github.com/zalando/gin-oauth2&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>Java &lt;a href="https://github.com/zalando/tokens">https://github.com/zalando/tokens&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;p>参考&lt;/p>
-&lt;ul>
-&lt;li>jsonwebtoken.io &lt;a href="https://www.jsonwebtoken.io/">https://www.jsonwebtoken.io/&lt;/a>&lt;/li>
-&lt;li>oauth.net &lt;a href="https://oauth.net/2/">https://oauth.net/2/&lt;/a>&lt;/li>
-&lt;li>aliyun.com
-&lt;ul>
-&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N">https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT">https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri">https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-- https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ - PinkHello, All Rights Reserved</description></item></channel></rss>

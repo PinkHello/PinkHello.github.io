@@ -1,4 +1,88 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>算法 Bitmap</title><link>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</link><pubDate>Wed, 28 Apr 2021 11:59:58 +0800</pubDate><guid>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</guid><description>PinkHello https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/ -&lt;h1 id="bitmap-原理">bitmap 原理&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:02:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 开篇</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</link><pubDate>Wed, 19 May 2021 15:02:20 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ -&lt;h1 id="rocketmq-是什么">RocketMQ 是什么?&lt;/h1>
+&lt;p>&lt;a href="http://rocketmq.apache.org/">RocketMQ&lt;/a> 是 Alibaba 捐赠给 Apache 的一款分布式、队列模型的开源消息中间件。&lt;/p>
+&lt;ul>
+&lt;li>Github &lt;a href="https://github.com/apache/rocketmq">https://github.com/apache/rocketmq&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>从官网也能看出它的一些特性:&lt;/p>
+&lt;ul>
+&lt;li>低延迟 ()&lt;/li>
+&lt;li>高可用&lt;/li>
+&lt;li>万亿级的消息支持&lt;/li>
+&lt;li>&amp;hellip;&lt;/li>
+&lt;/ul>
+&lt;h1 id="rocketmq-基本概念">RocketMQ 基本概念&lt;/h1>
+&lt;p>RocketMQ 是由 Producer、Broker、Consumer 三部分组成, Producer 负责生产 Message, Consumer 负责消费 Message, Broker 负责存储 Message。
+每个 Broker 可以存储多个 Topic 的消息, 每个 Topic 的消息也可以分片存储在不同的 Broker上。 Message Queue 用于存储消息的物理地址，每个 Topic 的消息地址存储于对歌 Message Queue 中。
+Consumer Group 由多个 Consumer 实例组成。&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>Producer 负责生产消息，同步发送、异步发送、顺序发送、单向发送。同步和异步需要Broker确认信息，单向发送不需要。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Consumer 负责消费消息，一般异步消费。一个消费者会从 Broker 拉取消息。（拉取式消费、推动式消费）&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Broker Server 负责存储、转发消息。 接收 Producer 发送来的消息并存储、同时为 Consumer 拉取请求做准备。当然也存储这消息相关的元数据（消费组、消费进度偏移、主题、队列消息等）&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Name Server 为消息路由的提供者。Producer 和 Consumer 能够通过 它查找各个 Topic 相应的 Broker IP 列表，多个 Name Server 组成集群，相互独立、没有信息交换。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Message 消息系统所传输信息的物理载体，生产和消费数据的最小单元，每条消息必须属于一个 Topic, RocketMQ 中每个消息拥有一个唯一的 MessageID，且可以携带业务标识的Key。系统提供通过 MessageId 和 Key 查询消息的功能&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Topic 表示一类消息的集合，每个主题包含若干条消息，每条消息智只能属于一个 topic，是 RocketMQ 进行 消息定义的基本单位。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Tag 为消息设置的标志，用于同一个 Topic 下区分不同类型的消息。来自同一个业务单元的消息，可以根据不同的业务在同一个主题下设置不同的标签。Tag 能够有效的保持代码清晰度和连贯性，并优化 RocketMQ 的查询系统。 Consumer 可以根据 Tag 实现不同的子主题的不同消费逻辑。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Pull Consumer&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Push Consumer&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Producer Group&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Consumer Group&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Clustering&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Broadcasting&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Normal Ordered Message&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Strictly Ordered Message&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h1 id="rocketmq-部署架构">RocketMQ 部署架构&lt;/h1>
+&lt;p>&lt;img src="https://pinkhello.me/rokcetmq/rocketmq_architecture_3.png" alt="RocketMQ部署架构">&lt;/p>
+&lt;ul>
+&lt;li>Producer: 消息发布决赛、支持分布式集群部署，Producer 通过MQ的负载均衡莫款选择相应的Broker进行消息投递。&lt;/li>
+&lt;li>Consumer: 消息消费角色、支持分布式集群部署，支持Push方式、Pull方式对消息进行消费，同时也指出集群方式和广播方式进行消费。&lt;/li>
+&lt;li>Name Server: NameServer是一个非常简单的Topic路由注册中心，其角色类似Dubbo中的zookeeper，支持Broker的动态注册与发现。&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;ul>
+&lt;li>Broker 管理，NameServer接受Broker集群的注册信息并且保存下来作为路由信息的基本数据。然后提供心跳检测机制，检查Broker是否还存活；&lt;/li>
+&lt;li>路由信息管理, 每个NameServer将保存关于Broker集群的整个路由信息和用于客户端查询的队列信息。然后Producer和Consumer通过NameServer就可以知道整个Broker集群的路由信息，从而进行消息的投递和消费。
+NameServer通常也是集群的方式部署，各实例间相互不进行信息通讯。Broker是向每一台NameServer注册自己的路由信息，所以每一个NameServer实例上面都保存一份完整的路由信息。当某个NameServer因某种原因下线了，Broker仍然可以向其它NameServer同步其路由信息，Producer,Consumer仍然可以动态感知Broker的路由的信息&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>RocketMQ 网路部署特点:&lt;/p>
+&lt;ul>
+&lt;li>NameSever 是无状态节点，可集群部署，节点之间无任何信息同步。Broker是向每一台NameServer注册自己的路由信息，所以每一个NameServer实例上面都保存一份完整的路由信息。当某个NameServer因某种原因下线了，Broker仍然可以向其它NameServer同步其路由信息，Producer,Consumer仍然可以动态感知Broker的路由的信息。&lt;/li>
+&lt;li>Broker部署相对复杂，Broker分为Master与Slave，一个Master可以对应多个Slave，但是一个Slave只能对应一个Master，Master与Slave 的对应关系通过指定相同的BrokerName，不同的BrokerId 来定义，BrokerId为0表示Master，非0表示Slave。Master也可以部署多个。每个Broker与NameServer集群中的所有节点建立长连接，定时注册Topic信息到所有NameServer。 注意：当前RocketMQ版本在部署架构上支持一Master多Slave，但只有BrokerId=1的从服务器才会参与消息的读负载。&lt;/li>
+&lt;li>Producer与NameServer集群中的其中一个节点（随机选择）建立长连接，定期从NameServer获取Topic路由信息，并向提供Topic 服务的Master建立长连接，且定时向Master发送心跳。Producer完全无状态，可集群部署。&lt;/li>
+&lt;li>Consumer与NameServer集群中的其中一个节点（随机选择）建立长连接，定期从NameServer获取Topic路由信息，并向提供Topic服务的Master、Slave建立长连接，且定时向Master、Slave发送心跳。Consumer既可以从Master订阅消息，也可以从Slave订阅消息，消费者在向Master拉取消息时，Master服务器会根据拉取偏移量与最大偏移量的距离（判断是否读老消息，产生读I/O），以及从服务器是否可读等因素建议下一次是从Master还是Slave拉取。&lt;/li>
+&lt;/ul>
+- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ - PinkHello, All Rights Reserved</description></item><item><title>算法 Bitmap</title><link>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</link><pubDate>Wed, 28 Apr 2021 11:59:58 +0800</pubDate><guid>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</guid><description>PinkHello https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/ -&lt;h1 id="bitmap-原理">bitmap 原理&lt;/h1>
 &lt;p>&lt;code>bitmap&lt;/code>字面为位图映射, 原理是使用一个 bit 标记某个元素对应的 value，而 key 即该元素。因为只有一个 bit 来存储一个数据, 因而可以大大的节省空间。&lt;/p>
 &lt;h2 id="数值映射">数值映射:&lt;/h2>
 &lt;p>&lt;img src="https://pinkhello.me/%E7%AE%97%E6%B3%95-Bitmap/bitmap-001.png" alt="数字bitmao">&lt;/p>
@@ -1397,89 +1481,4 @@ hugo --minify
 &lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>so 完美
 &lt;img src="https://pinkhello.me/hexo%E8%BF%81%E7%A7%BB%E8%87%B3hugo/github_action_in_process_0.jpg" alt="迁移Hexo">
 &lt;img src="https://pinkhello.me/hexo%E8%BF%81%E7%A7%BB%E8%87%B3hugo/github_action_in_process.jpg" alt="迁移Hexo">&lt;/p>
-- https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ - PinkHello, All Rights Reserved</description></item><item><title>15 记一次docker日志磁盘告警问题</title><link>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</link><pubDate>Wed, 10 Feb 2021 10:05:29 +0800</pubDate><guid>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</guid><description>PinkHello https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/ -&lt;h1 id="前景">前景&lt;/h1>
-&lt;p>今日，我正在开开心心的刷着JFX的Coding中，突然线上报警群中爆了个炸弹，EC2磁盘超过80%。&lt;/p>
-&lt;p>&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/%E8%B5%84%E6%BA%90%E4%B8%8D%E8%B6%B3%E6%8A%A5%E8%AD%A6.png" alt="资源不足预警">&lt;/p>
-&lt;h1 id="处理过程">处理过程&lt;/h1>
-&lt;p>解决问题姿势就位：&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;p>赶紧开机 ==》 ❤️中万匹🦙奔腾而过 ❤️中MMP&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>默默的通过跳板机进入目标机器&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>不管三七二十一,执行查看磁盘占用大小，我的乖乖，占用确实超过了87%了，一下子暴涨的&lt;/p>
-&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看磁盘占用大小&lt;/span>
-&amp;gt; sudo df -h
-&lt;span style="color:#228b22"># 查看当前目录总量&lt;/span>
-&amp;gt; sudo du -sh
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>开始定位具体哪个文件或者目录占用这么大,跑到根目录下。&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看当前目录下一级子文件和子目录占用的磁盘容量&lt;/span>
-&amp;gt; sudo du -lh --max-depth=&lt;span style="color:#b452cd">1&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>一开始猜想可能是docker容器的日志占用大，上面执行后，还真 TM 是&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">/var/lib/docker/containers 目录占用 42G
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>开始查看是哪个容器占用的这么大的空间&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看 containers 日志目录排序&lt;/span>
-&amp;gt; sudo du -d1 -h /var/lib/docker/containers | sort -h
-&lt;span style="color:#228b22"># 查看具体的哪个日志文件大&lt;/span>
-&amp;gt; sudo find /var/lib/docker/containers -name *.log
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>当然这个配图是我清理之后的
-&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/docker%E5%AE%B9%E5%99%A8%E6%96%87%E4%BB%B6%E6%8E%92%E5%BA%8F.png" alt="docker容器文件排序">
-&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/%E6%9F%A5%E6%89%BEdocker%E5%AE%B9%E5%99%A8%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6.png" alt="查找docker容器日志文件">&lt;/p>
-&lt;ul>
-&lt;li>定位到最大的文件，一顿操作&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &lt;span style="color:#228b22"># 清空比较大的日志文件&lt;/span>
-&amp;gt; sudo sh -c &lt;span style="color:#cd5555">&amp;#34;cat /dev/null &amp;gt; &lt;/span>&lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">log_file&lt;/span>&lt;span style="color:#cd5555">}&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/%E6%B8%85%E7%90%86docker%E5%AE%B9%E5%99%A8%E6%97%A5%E5%BF%97%E5%90%8E.png" alt="清理docker容器日志后">&lt;/p>
-&lt;h1 id="思考">思考&lt;/h1>
-&lt;ul>
-&lt;li>上面的方式是一种方式解决【临时】
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &lt;span style="color:#228b22"># 查看 docker 的 Logging Driver&lt;/span>
-&amp;gt; docker info | grep &lt;span style="color:#cd5555">&amp;#39;Logging Driver&amp;#39;&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>如何彻底解决这个问题：&lt;/p>
-&lt;ul>
-&lt;li>写个&lt;code>shell脚本&lt;/code> 使用 &lt;code>crontab&lt;/code> 定期执行清理
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &lt;span style="color:#228b22">#!/bin/sh&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;======== start clean docker containers logs ========&amp;#34;&lt;/span>
-&lt;span style="color:#00688b">logs&lt;/span>=&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>find /var/lib/docker/containers/ -name *-json.log&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> log in &lt;span style="color:#00688b">$logs&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">do&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;clean logs : &lt;/span>&lt;span style="color:#00688b">$log&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span>
-cat /dev/null &amp;gt; &lt;span style="color:#00688b">$log&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">done&lt;/span>
-&lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">&amp;#34;======== end clean docker containers logs ========&amp;#34;&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
-&lt;li>假如是&lt;code>docker run&lt;/code>创建容器的,指定 &lt;code>--log-opt max-size=${MAX_SIZE}m --log-opt max-file=${NUMBER}&lt;/code>&lt;/li>
-&lt;li>&lt;code>docker-compose&lt;/code> 方式更高&lt;code>docker-compose.yaml&lt;/code>文件
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">logging&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">driver&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;json-file&amp;#34;&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">options&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">max-size&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;${MAX_SIZE}m&amp;#34;&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">max-file&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>${NUMBER}&lt;span style="color:#bbb">
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
-&lt;li>&lt;code>docker&lt;/code> 全局修改 &lt;code>/etc/docker/daemon.json&lt;/code>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-json" data-lang="json"> {
-&lt;span style="color:#8b008b;font-weight:bold">&amp;#34;log-driver&amp;#34;&lt;/span>: &lt;span style="color:#cd5555">&amp;#34;json-file&amp;#34;&lt;/span>,
-&lt;span style="color:#8b008b;font-weight:bold">&amp;#34;log-opts&amp;#34;&lt;/span>: {
-&lt;span style="color:#8b008b;font-weight:bold">&amp;#34;max-size&amp;#34;&lt;/span>: &lt;span style="color:#cd5555">&amp;#34;${MAX_SIZE}m&amp;#34;&lt;/span>
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell"> &amp;gt; systemctl daemon-reload
-&amp;gt; systemctl restart docker
-&lt;/code>&lt;/pre>&lt;/div>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>为什么会瞬间💥式的增长 ???&lt;/li>
-&lt;/ul>
-- https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ - PinkHello, All Rights Reserved</description></item></channel></rss>

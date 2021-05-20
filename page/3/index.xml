@@ -1,4 +1,111 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 28 Apr 2021 11:59:58 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>PinkHello https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ -&lt;p>1、什么叫RPC?&lt;/p>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:02:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>05 OAuth2.0 那点事</title><link>https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</link><pubDate>Wed, 10 Feb 2021 08:32:02 +0800</pubDate><guid>https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</guid><description>PinkHello https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ -&lt;h2 id="oauth20-是什么">&lt;code>OAuth2.0&lt;/code> 是什么?&lt;/h2>
+&lt;p>&lt;code>OAuth2.0&lt;/code> Framework RFC 6749 [https://tools.ietf.org/html/rfc6749]&lt;/p>
+&lt;p>&lt;code>OAuth&lt;/code> 就是一种授权机制，它介于客户端与资源所有者的授权层，为了分离不同的角色。
+在资源所有者同意并向客户端颁发令牌后，客户端携带令牌可以访问部分或全部资源。&lt;/p>
+&lt;p>&lt;!-- raw HTML omitted -->OAuth2.0&lt;!-- raw HTML omitted --> 是&lt;!-- raw HTML omitted -->OAuth&lt;!-- raw HTML omitted --> 协议的一个版本，为&lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted -->版本。有意思的是 &lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted --> 与 &lt;!-- raw HTML omitted -->1.0&lt;!-- raw HTML omitted --> 并不兼容。&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h2 id="oauth20-授权方式">&lt;code>OAuth2.0&lt;/code> 授权方式&lt;/h2>
+&lt;p>获取授权的过程&lt;/p>
+&lt;ul>
+&lt;li>授权码(&lt;!-- raw HTML omitted -->authorization-code&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;li>隐藏式(&lt;!-- raw HTML omitted -->implicit&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;li>密码(&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;li>客户端凭证(&lt;!-- raw HTML omitted -->client credentials&lt;!-- raw HTML omitted -->)&lt;/li>
+&lt;/ul>
+&lt;p>不管哪种方式，都需要在第三方应用申请令牌之前，需要在系统中申请身份唯一标识: 客户端ID &lt;!-- raw HTML omitted -->Client ID&lt;!-- raw HTML omitted --> 和 客户端秘钥 &lt;!-- raw HTML omitted -->Client Secret&lt;!-- raw HTML omitted -->.
+这样能确保Token不被恶意使用。&lt;/p>
+&lt;p>授权重要的参数和指标:&lt;/p>
+&lt;ul>
+&lt;li>&lt;!-- raw HTML omitted -->response_type&lt;!-- raw HTML omitted --> 响应类型: &lt;!-- raw HTML omitted -->code&lt;!-- raw HTML omitted -->(要求返回授权码),&lt;!-- raw HTML omitted -->token&lt;!-- raw HTML omitted -->(要求返回授权Token)&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->client_id&lt;!-- raw HTML omitted --> 客户端身份标识&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->client_secret&lt;!-- raw HTML omitted --> 客户端秘钥&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->redirect_uri&lt;!-- raw HTML omitted --> 重定向地址&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->scope&lt;!-- raw HTML omitted --> 授权范围, &lt;!-- raw HTML omitted -->read&lt;!-- raw HTML omitted --> 只读权限, &lt;!-- raw HTML omitted -->all&lt;!-- raw HTML omitted --> 全部权限&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted --> 授权方式 &lt;!-- raw HTML omitted -->authorization_code&lt;!-- raw HTML omitted -->(授权码)、&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->(密码)、&lt;!-- raw HTML omitted -->client_credentials&lt;!-- raw HTML omitted -->
+(凭证)、&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->(更新令牌)&lt;/li>
+&lt;li>&lt;!-- raw HTML omitted -->state&lt;!-- raw HTML omitted --> 应用程序传递的一个随机数，防止 &lt;!-- raw HTML omitted -->CSRF&lt;!-- raw HTML omitted --> 攻击&lt;/li>
+&lt;/ul>
+&lt;h3 id="授权码httpswwwoauthcomoauth2-serversaccess-tokensauthorization-code-request-authorization-code-request">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/" title="authorization-code-request">授权码&lt;/a>&lt;/h3>
+&lt;p>在访问第三方应用先申请一个授权码，然后再用授权码获取令牌.这种方式也是最常用的流程，安全性也是最高的，适用于有后端的&lt;!-- raw HTML omitted -->Web&lt;!-- raw HTML omitted -->应用。授权码通过前端传送，令牌存储在后端。所有的和资源服务器的交互都在服务端完成，避免了令牌的泄露。
+授权码和令牌的在 浏览器和客户端&lt;!-- raw HTML omitted -->WEB&lt;!-- raw HTML omitted -->应用以及资源服务器的交互流程大致如下:
+&lt;img src="https://pinkhello.me/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/auth_code.png" alt="authorization-code">&lt;/p>
+&lt;ul>
+&lt;li>1.2.3.4 用户选择 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 登陆 &lt;!-- raw HTML omitted -->yelp.com&lt;!-- raw HTML omitted -->&lt;/li>
+&lt;li>3.4 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 请求用户授权 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 权限&lt;/li>
+&lt;li>5.6 用户同意后返回授权码
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;/li>
+&lt;li>7.8 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 通过授权码 会向 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted -->发起请求&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;/li>
+&lt;li>9 验证必要参数，返回 &lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->&lt;/li>
+&lt;li>10.11 操作请求&lt;/li>
+&lt;/ul>
+&lt;h3 id="隐藏式httpsauth0comblogoauth2-implicit-grant-and-spa-oauth2-implicit-grant-and-spa">&lt;a href="https://auth0.com/blog/oauth2-implicit-grant-and-spa/" title="oauth2-implicit-grant-and-spa">隐藏式&lt;/a>&lt;/h3>
+&lt;p>&lt;img src="https://pinkhello.me/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/implicit.png" alt="implicit">&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h3 id="密码式httpswwwoauthcomoauth2-serversaccess-tokenspassword-grant-password-grant">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/password-grant/" title="password-grant">密码式&lt;/a>&lt;/h3>
+&lt;p>顾名思议,在自己的系统输入第三方系统的账号密码,自己的系统拿账号密码去申请令牌，响应题里面返回token&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h3 id="凭证式httpswwwoauthcomoauth2-serversaccess-tokensclient-credentials-client-credentials">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/client-credentials/" title="client-credentials">凭证式&lt;/a>&lt;/h3>
+&lt;p>凭证式和密码很相似，主要给没有前端输入的项目或者命令行&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h2 id="令牌的使用和更新">令牌的使用和更新&lt;/h2>
+&lt;h3 id="令牌的使用">&lt;a href="">令牌的使用&lt;/a>&lt;/h3>
+&lt;p>令牌的拿到了，就可以调用Google的API进行请求数据了，
+一般讲 Token 放入请求头 Authorization.&lt;/p>
+&lt;h3 id="令牌的更新httpswwwoauthcomoauth2-serversaccess-tokensrefreshing-access-tokens-refreshing-access-tokens">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/refreshing-access-tokens/" title="refreshing-access-tokens">令牌的更新&lt;/a>&lt;/h3>
+&lt;p>&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted --> 是有时效性的，一旦过期就需要重新获取，但是重走一遍授权流程，不仅麻烦而且用户体验也不好，那如何让用户使用的优雅呢？&lt;/p>
+&lt;p>一般在颁发令牌的时候，颁发两个&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->, 一个授权&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->,一个&lt;!-- raw HTML omitted -->Refresh Token&lt;!-- raw HTML omitted -->,
+在更新&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->时候,将&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted -->指定为&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->,
+参数&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->是用于更新&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->的&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->&lt;/p>
+&lt;!-- raw HTML omitted -->
+&lt;!-- raw HTML omitted -->
+&lt;h1 id="总结">总结&lt;/h1>
+&lt;h1 id="安利">安利&lt;/h1>
+&lt;ul>
+&lt;li>Client
+&lt;ul>
+&lt;li>Go &lt;a href="https://godoc.org/golang.org/x/oauth2">https://godoc.org/golang.org/x/oauth2&lt;/a>&lt;/li>
+&lt;li>Java
+&lt;ul>
+&lt;li>&lt;a href="https://spring.io/projects/spring-social/">https://spring.io/projects/spring-social/&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://spring.io/projects/spring-security/">https://spring.io/projects/spring-security/&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Server
+&lt;ul>
+&lt;li>Go
+&lt;ul>
+&lt;li>&lt;a href="https://github.com/go-oauth2/oauth2">https://github.com/go-oauth2/oauth2&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://github.com/zalando/gin-oauth2">https://github.com/zalando/gin-oauth2&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Java &lt;a href="https://github.com/zalando/tokens">https://github.com/zalando/tokens&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;p>参考&lt;/p>
+&lt;ul>
+&lt;li>jsonwebtoken.io &lt;a href="https://www.jsonwebtoken.io/">https://www.jsonwebtoken.io/&lt;/a>&lt;/li>
+&lt;li>oauth.net &lt;a href="https://oauth.net/2/">https://oauth.net/2/&lt;/a>&lt;/li>
+&lt;li>aliyun.com
+&lt;ul>
+&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N">https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT">https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri">https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+- https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ - PinkHello, All Rights Reserved</description></item><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>PinkHello https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ -&lt;p>1、什么叫RPC?&lt;/p>
 &lt;!-- raw HTML omitted -->
 &lt;!-- raw HTML omitted -->
 &lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1%E8%BF%87%E7%A8%8B.jpg" alt="RPC调用服务过程">&lt;/p>
