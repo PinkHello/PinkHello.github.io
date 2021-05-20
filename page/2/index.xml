@@ -1,4 +1,99 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:02:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>15 记一次docker日志磁盘告警问题</title><link>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</link><pubDate>Wed, 10 Feb 2021 10:05:29 +0800</pubDate><guid>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</guid><description>PinkHello https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/ -&lt;h1 id="前景">前景&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:45 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>16 Hexo迁移Hugo</title><link>https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</link><pubDate>Wed, 10 Feb 2021 19:36:33 +0800</pubDate><guid>https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</guid><description>PinkHello https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ -&lt;h1 id="为什么迁移-hugo">为什么迁移 &lt;code>Hugo&lt;/code>&lt;/h1>
+&lt;ul>
+&lt;li>&lt;code>Hugo&lt;/code> 使用比 &lt;code>Hexo&lt;/code> 简单, 只有单独的一个二进制文件&lt;/li>
+&lt;li>苦于 &lt;code>Hexo&lt;/code> 的 &lt;code>NodeModule&lt;/code> 管理&lt;/li>
+&lt;li>迁移成本更低, 结合 &lt;code>Github Action&lt;/code> 实现 &lt;code>Markdown&lt;/code> 文章发布, 自动更新至静态站&lt;/li>
+&lt;li>规划：加入自定义域名以及做静态资源CDN做的加速&lt;/li>
+&lt;/ul>
+&lt;h1 id="前置工作">前置工作&lt;/h1>
+&lt;p>1、 之前基本所有的博客都托管与 &lt;code>github&lt;/code>,这次也不例外, 复用 &lt;code>https://pinkhello.github.io&lt;/code>,创建两个项目&lt;/p>
+&lt;ul>
+&lt;li>pinkhello.github.io template 仓库&lt;/li>
+&lt;li>pinkhello.github.io.source private 仓库&lt;/li>
+&lt;/ul>
+&lt;p>2、准备OpenSSH私钥和公钥&lt;/p>
+&lt;ul>
+&lt;li>pinkhello.github.io 仓库 添加 settings -&amp;gt; Deploy keys -&amp;gt; Add Deploy Key (将公钥添加进去、注意允许 Write)&lt;/li>
+&lt;li>pinkhello.github.io.source 仓库 添加 settings -&amp;gt; Actions secrets -&amp;gt; New Repository Secret ( NAME : ACTION_DEPLOY_KEY, Value: 私钥 )&lt;/li>
+&lt;/ul>
+&lt;p>3、git clone pinkhello.github.io.source 仓库&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">git clone git@github.com:PinkHello/pinkhello.github.io.source.git
+&lt;span style="color:#658b00">cd&lt;/span> pinkhello.github.io.source
+&lt;span style="color:#228b22"># 初始化站点【--force 强制初始化】&lt;/span>
+hugo new site . --force
+&lt;span style="color:#228b22"># content site &lt;/span>
+&lt;span style="color:#228b22"># data json数据 or 其他&lt;/span>
+&lt;span style="color:#228b22"># static 静态文件&lt;/span>
+&lt;span style="color:#228b22"># themes 主题&lt;/span>
+&lt;span style="color:#228b22"># 后面可以执行 hugo new posts/XXX.md 创建新的文章&lt;/span>
+hugo new posts/XXX.md
+&lt;span style="color:#228b22"># 具体参考 https://gohugo.io/getting-started/ 进行操作&lt;/span>
+......
+&lt;span style="color:#228b22"># 选择一个主题 https://themes.gohugo.io/ 可以选择&lt;/span>
+git submodule add https://github.com/budparr/gohugo-theme-ananke.git themes/ananke
+&lt;span style="color:#228b22"># 后面的参照各个主题设置咯&lt;/span>
+....
+&lt;span style="color:#228b22"># 本地测试&lt;/span>
+hugo serve
+&lt;span style="color:#228b22"># 生成最小的静态文件, 会生成 public 文件&lt;/span>
+hugo --minify
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="迁移-hexo-博客进入-hugo">迁移 &lt;code>hexo&lt;/code> 博客进入 &lt;code>hugo&lt;/code>&lt;/h1>
+&lt;p>&amp;hellip;&amp;hellip;(可以手动、可以工具进行)&lt;/p>
+&lt;h1 id="整合-github-action">整合 &lt;code>Github Action&lt;/code>&lt;/h1>
+&lt;p>新建 &lt;code>Github Action&lt;/code> 描述文件 &lt;code>.github/workflows/deploy.yml&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#228b22"># This is a basic workflow to help you get started with Actions&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Deploy on Main Branch&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Controls when the action will run. &lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">on&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Triggers the workflow on push or pull request events but only for the main branch&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">push&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">branches&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#bbb"> &lt;/span>main ]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">pull_request&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">branches&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#bbb"> &lt;/span>main ]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># schedule:&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># - cron: &amp;#39;0 21 * * *&amp;#39; # 定时任务&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Allows you to run this workflow manually from the Actions tab&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">workflow_dispatch&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># A workflow run is made up of one or more jobs that can run sequentially or in parallel&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">jobs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># This workflow contains a single job called &amp;#34;build&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">build&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># The type of runner that the job will run on&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">runs-on&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ubuntu-latest&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Steps represent a sequence of tasks that will be executed as part of the job&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">steps&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">uses&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>actions/checkout@v2&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Setup Hugo&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">uses&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>peaceiris/actions-hugo@v2&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># https://github.com/peaceiris/actions-hugo&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">with&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">hugo-version&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#39;latest&amp;#39;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">extended&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Build&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 注意强制更新 git submodule 下载，否则生成的主题没有 html 文件哦&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">run&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>|&lt;span style="color:#cd5555">
+&lt;/span>&lt;span style="color:#cd5555"> git submodule update --init --recursive
+&lt;/span>&lt;span style="color:#cd5555"> hugo --minify --debug&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Deploy&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">uses&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>peaceiris/actions-gh-pages@v3&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># https://github.com/peaceiris/actions-gh-pages&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">with&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">deploy_key&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>${{ secrets.ACTION_DEPLOY_KEY }}&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 这里的 ACTION_DEPLOY_KEY 则是上面设置 Private Key的变量名&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">external_repository&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>PinkHello/PinkHello.github.io&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Pages 远程仓库 &lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">publish_dir&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>./public&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">keep_files&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># remove existing files&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">publish_branch&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>master &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># deploying branch&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">commit_message&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>${{ github.event.head_commit.message }}&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>so 完美
+&lt;img src="https://pinkhello.me/hexo%E8%BF%81%E7%A7%BB%E8%87%B3hugo/github_action_in_process_0.jpg" alt="迁移Hexo">
+&lt;img src="https://pinkhello.me/hexo%E8%BF%81%E7%A7%BB%E8%87%B3hugo/github_action_in_process.jpg" alt="迁移Hexo">&lt;/p>
+- https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ - PinkHello, All Rights Reserved</description></item><item><title>15 记一次docker日志磁盘告警问题</title><link>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</link><pubDate>Wed, 10 Feb 2021 10:05:29 +0800</pubDate><guid>https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/</guid><description>PinkHello https://pinkhello.me/posts/15-%E8%AE%B0%E4%B8%80%E6%AC%A1docker%E6%97%A5%E5%BF%97%E7%A3%81%E7%9B%98%E5%91%8A%E8%AD%A6%E9%97%AE%E9%A2%98/ -&lt;h1 id="前景">前景&lt;/h1>
 &lt;p>今日，我正在开开心心的刷着JFX的Coding中，突然线上报警群中爆了个炸弹，EC2磁盘超过80%。&lt;/p>
 &lt;p>&lt;img src="https://pinkhello.me/%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D/%E8%B5%84%E6%BA%90%E4%B8%8D%E8%B6%B3%E6%8A%A5%E8%AD%A6.png" alt="资源不足预警">&lt;/p>
 &lt;h1 id="处理过程">处理过程&lt;/h1>
@@ -1822,233 +1917,4 @@ docker_login()
 docker_ps()
 put_docker_compose()
 restart_docker_compose()
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/07-fabric%E4%BD%BF%E7%94%A8/ - PinkHello, All Rights Reserved</description></item><item><title>06 高性能队列Disruptor</title><link>https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</link><pubDate>Wed, 10 Feb 2021 08:35:29 +0800</pubDate><guid>https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</guid><description>PinkHello https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ -&lt;h1 id="背景">背景&lt;/h1>
-&lt;p>&lt;code>Disruptor&lt;/code> 是 外汇交易公司&lt;code>LMAX&lt;/code>开发的高性能队列、研发是为了解决内存队列延迟问题。
-&lt;code>Disruptor&lt;/code> 一般用于线程间的消息传递。
-&lt;a href="http://lmax-exchange.github.io/disruptor/">Disruptor GitHub 地址&lt;/a>&lt;/p>
-&lt;h1 id="disruptor-介绍">&lt;code>Disruptor&lt;/code> 介绍&lt;/h1>
-&lt;p>理解 &lt;code>Disruptor&lt;/code> 最好的方式，选择一个最接近熟悉的样本进行比较。在这个前提下，可以选择 &lt;code>Java&lt;/code> 中的 &lt;code>BlockingQueue&lt;/code>.
-和队列相似，&lt;code>Disruptor&lt;/code> 也是在同一个进程中不同的线程之间进行传递数据的（例如消息或者事件），同时 &lt;code>Disruptor&lt;/code> 提供了一些将关键功能和队列分开的特性：&lt;/p>
-&lt;ul>
-&lt;li>向消费者发送多播事件&lt;/li>
-&lt;li>消息者依赖关系图&lt;/li>
-&lt;li>预先为事件分配内存&lt;/li>
-&lt;li>可选的（无锁）&lt;/li>
-&lt;/ul>
-&lt;h1 id="disruptor-核心概念">&lt;code>Disruptor&lt;/code> 核心概念&lt;/h1>
-&lt;p>在我们理解&lt;code>Disruptor&lt;/code>如何工作之前，了解下核心概念&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java">Ring Buffer&lt;/a>
-环形数组设计，为了避免垃圾回收，采用的数组结构，从3.0开始，环形缓冲区主要存储和更新在&lt;code>Disruptor&lt;/code>中移动的数据（事件）&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/Sequence.java">Sequence&lt;/a>
-&lt;code>Disruptor&lt;/code> 每个消费者(&lt;code>EventProcessor&lt;/code>)维护一个 &lt;code>Sequence&lt;/code>，并发的大多数代码都依赖 &lt;code>Sequence&lt;/code> 值的改动，所以 &lt;code>Sequence&lt;/code> 支持 &lt;code>AtomicLong&lt;/code> 的大部分也行, 唯一不同的是 &lt;code>Sequence&lt;/code> 包含额外的功能来阻止&lt;code>Sequence&lt;/code>和其他值之间的伪共享(&lt;code>false sharing&lt;/code>)&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/Sequencer.java">Sequencer&lt;/a>&lt;br>
-&lt;code>Disruptor&lt;/code> 核心逻辑, 两个实现: 单生产者和多生产者。他们实现了生产者与消费者之间的快速传递的并发算法。&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SequenceBarrier.java">Sequence Barrier&lt;/a>
-由 &lt;code>Sequencer&lt;/code> 生成，包含此 &lt;code>Sequencer&lt;/code> 发布的 &lt;code>Sequence&lt;/code> 指针以及依赖的其他消费者的 &lt;code>Sequence&lt;/code>。包含了消费者检查是否有可用的事件的代码。&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/WaitStrategy.java">Wait Strategy&lt;/a>
-消费者等待事件的策略，这个事件由生产者放入，决定了消费者怎么等待生产者将事件放入 &lt;code>Disruptor&lt;/code>&lt;/li>
-&lt;li>Event 生产者与消费者传递的事件，完全由用户定义&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/EventProcessor.java">EventProcessor&lt;/a>
-处理事件的主要循环（&lt;code>main event loop&lt;/code>），包含了一个 &lt;code>Sequeuece&lt;/code>. 有一个具体的实现类 &lt;code>BatchEventProcessor&lt;/code>&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/EventHandler.java">EventHandler&lt;/a>
-用户实现的接口，代表一个消费者。处理事件。&lt;/li>
-&lt;li>Producer 生产者、先获得占位，然后提交事件。&lt;/li>
-&lt;/ul>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/Disruptor%E8%AE%BE%E8%AE%A1%E7%BB%84%E4%BB%B6%E5%9B%BE.jpg" alt="Disruptor设计组件图">&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;p>事件广播(&lt;code>Multicast Events&lt;/code>)&lt;/p>
-&lt;p>事件广播是 &lt;code>Disruptor&lt;/code> 与 &lt;code>Queue&lt;/code> 最大的区别，当你有多个消费者监听一个 &lt;code>Disruptor&lt;/code>, 所有的事件将会发布到这个所有的消费者。
-&lt;code>Disruptor&lt;/code> 这一特性被用来需要对同一数据进行多个并行操作的情况。
-如在LMAX系统中有三个操作可以同时进行：日志（将数据持久到日志文件中），复制（将数据发送到其他的机器上，以确保存在数据远程副本），业务逻辑处理。
-也可以使用&lt;code>WokrerPool&lt;/code>来并行处理不同的事件。&lt;/p>
-&lt;p>如上图。可以看到有3个事件处理程序正在侦听&lt;code>Disrupto&lt;/code>r（&lt;code>JournalConsumer&lt;/code>，&lt;code>ReplicationConsumer&lt;/code> 和 &lt;code>ApplicationConsumer&lt;/code>），
-这些事件处理程序中的每个将接收&lt;code>Disruptor&lt;/code>中所有可用的消息（按相同顺序）。这允许这些消费者中的每一个并行工作。&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>消费者依赖关系图(&lt;code>Consumer Dependency Graph&lt;/code>)&lt;/p>
-&lt;p>为了支持实现业务并行处理流程，&lt;code>Disruptor&lt;/code> 提供了多个消费者之间的协作功能。回到上面的例子中，我们可以将 &lt;code>journalling&lt;/code> 和 &lt;code>replication&lt;/code> 消费完成他们的业务，后再继续执行业务逻辑流程。
-我们称呼这个功能为 &lt;code>gating&lt;/code> , &lt;code>gating&lt;/code> 发生在两种场景下:&lt;/p>
-&lt;ul>
-&lt;li>确保 &lt;code>Producer&lt;/code> 不能运行超过 &lt;code>Consumer&lt;/code> ，可以通多调用 &lt;code>RingBuffer.addGatingConsumers()&lt;/code> 来增加相关的消费者来完成&lt;/li>
-&lt;li>之前所说的场景，通过必须先完成的&lt;code>Consumer&lt;/code> 的 &lt;code>Sequence&lt;/code>的&lt;code>SequenceBarrier&lt;/code>来实现。&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>
-&lt;p>事件预分配(&lt;code>Event Preallocation&lt;/code>)&lt;/p>
-&lt;p>&lt;code>Disruptor&lt;/code> 的一个目标就是在低延时环境下，减少或异常内存的占用。（在JAVA环境下，需要较少GC停顿的次数）（C/C++环境下，大量的内存分配也是一个问题）&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>可选择的无锁(&lt;code>Optionally Lock-free&lt;/code>)&lt;/p>
-&lt;p>无锁的 &lt;code>Disruptor&lt;/code> 的低延迟的无锁的特性实现细节是都是基于 内存屏障 和 CAS 操作实现的，只有一个场景 &lt;code>BlockingWaitStrategy&lt;/code> 中使用的 &lt;code>Lock&lt;/code>
-是为了使用 &lt;code>Lock&lt;/code> 里面的 &lt;code>Condition&lt;/code>, 方便消费者线程被 &lt;code>Park&lt;/code> 时候等待新的事件来触发。许多低延迟系统使用自旋（&lt;code>busy-wait&lt;/code>）来避免使用 &lt;code>Condition&lt;/code>造成的抖动
-然而，太多的 &lt;code>busy-wait&lt;/code> 会导致性能下降，特别在CPU资源受限的情况下。&lt;/p>
-&lt;/li>
-&lt;/ul>
-&lt;h1 id="disruptor-几个核心的设计">&lt;code>Disruptor&lt;/code> 几个核心的设计&lt;/h1>
-&lt;h2 id="sequence-设计">&lt;code>Sequence&lt;/code> 设计&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/Sequence.jpg" alt="Sequence 设计">&lt;/p>
-&lt;p>Sequence 真正计数是 &lt;code>value&lt;/code> 采用缓冲行防止 &lt;code>false sharing&lt;/code>。在&lt;code>value&lt;/code>的前后有7个 &lt;code>long&lt;/code> 型的填充值，做&lt;code>CPU cache line&lt;/code>填充防止伪共享。&lt;/p>
-&lt;h2 id="ringbuffer-设计">&lt;code>RingBuffer&lt;/code> 设计&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/RingBuffer.jpg" alt="RingBuffer 设计">&lt;/p>
-&lt;p>&lt;code>RingBuffer&lt;/code> 是一个环（首尾相接），可以用作不同的上下文（线程）间传递数据的 &lt;code>Buffer&lt;/code>环形设计，每个元素都有个坐标，取得元素通过取mod操作。
-是数组设计、非链表。&lt;/p>
-&lt;p>一般是&lt;code>2^N&lt;/code>次方，这样 sequence &amp;amp; (array length - 1 ) = array index。哈希Map也是这种位运算做的。&lt;/p>
-&lt;p>&lt;code>RingBuffer&lt;/code> 特点&lt;/p>
-&lt;ul>
-&lt;li>数组实现、快速访问&lt;/li>
-&lt;li>元素是覆盖式的，不主动清除&lt;/li>
-&lt;li>神奇的缓存行（缓存是由缓存行组成的，通常64个字节、一个JAVA long 类型 8 字节）&lt;/li>
-&lt;/ul>
-&lt;h2 id="消费者依赖设计">消费者依赖设计&lt;/h2>
-&lt;h2 id="缓存内存加载过程">缓存内存加载过程&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-1.jpg" alt="缓存加载过程">
-&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-2.jpg" alt="缓存加载过程">
-&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-3.jpg" alt="缓存加载过程">&lt;/p>
-&lt;p>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java">神奇的解决方式&amp;mdash;&amp;ndash; 缓存行填充&lt;/a>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> p1, p2, p3, p4, p5, p6, p7; &lt;span style="color:#228b22">// cache line padding
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">volatile&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> cursor = INITIAL_CURSOR_VALUE;
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> p8, p9, p10, p11, p12, p13, p14; &lt;span style="color:#228b22">// cache line padding
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="disruptor-使用demo">&lt;code>Disruptor&lt;/code> 使用Demo&lt;/h1>
-&lt;p>&lt;code>TransactionOrder&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">TransactionOrder&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String id;
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">double&lt;/span> price;
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>TransactionHandler&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">TransactionHandler&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> EventHandler&amp;lt;TransactionOrder&amp;gt;, WorkHandler&amp;lt;TransactionOrder&amp;gt; {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">onEvent&lt;/span>(TransactionOrder transactionOrder, &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> sequence, &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> endOfBatch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">onEvent&lt;/span>(transactionOrder);
-}
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">onEvent&lt;/span>(TransactionOrder transactionOrder) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-&lt;span style="color:#228b22">//具体的消费逻辑
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> transactionOrder.&lt;span style="color:#658b00">setId&lt;/span>(UUID.&lt;span style="color:#658b00">randomUUID&lt;/span>().&lt;span style="color:#658b00">toString&lt;/span>());
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo1&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo1&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> ExecutionException, InterruptedException {
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
-&lt;span style="color:#228b22">//createSingleProducer 创建单生产者的 RingBuffer
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> RingBuffer&amp;lt;TransactionOrder&amp;gt; ringBuffer =
-RingBuffer.&lt;span style="color:#658b00">createSingleProducer&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
-}
-}, BUFFER_SIZE, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> YieldingWaitStrategy());
-&lt;span style="color:#228b22">//创建线程池
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
-&lt;span style="color:#228b22">//创建 SequenceBarrier
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> SequenceBarrier sequenceBarrier = ringBuffer.&lt;span style="color:#658b00">newBarrier&lt;/span>();
-&lt;span style="color:#228b22">//创建消息处理器
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> BatchEventProcessor&amp;lt;TransactionOrder&amp;gt; eventProcessor =
-&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> BatchEventProcessor&amp;lt;TransactionOrder&amp;gt;(ringBuffer, sequenceBarrier, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler());
-&lt;span style="color:#228b22">//这一部分是让 RingBuffer根据消费者状态进行gating, 只有一个消费者的话可以省略
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">addGatingSequences&lt;/span>(eventProcessor.&lt;span style="color:#658b00">getSequence&lt;/span>());
-&lt;span style="color:#228b22">//把消息处理器提交到线程池
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> service.&lt;span style="color:#658b00">submit&lt;/span>(eventProcessor);
-Future&amp;lt;?&amp;gt; future = service.&lt;span style="color:#658b00">submit&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Callable&amp;lt;Void&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Void &lt;span style="color:#008b45">call&lt;/span>() &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> seq;
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> i = 0; i&amp;lt;10000; i++) {
-seq = ringBuffer.&lt;span style="color:#658b00">next&lt;/span>(); &lt;span style="color:#228b22">//ringbuffer 的一个可用区块
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">get&lt;/span>(seq).&lt;span style="color:#658b00">setPrice&lt;/span>(Math.&lt;span style="color:#658b00">random&lt;/span>() *9999); &lt;span style="color:#228b22">// 给这个区块放入数据
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">publish&lt;/span>(seq); &lt;span style="color:#228b22">//发布数据使得 consumer 可以获取该数据
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> }
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
-}
-});
-future.&lt;span style="color:#658b00">get&lt;/span>(); &lt;span style="color:#228b22">//等待生产者结束
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-eventProcessor.&lt;span style="color:#658b00">halt&lt;/span>(); &lt;span style="color:#228b22">//通知事件
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-service.&lt;span style="color:#658b00">shutdown&lt;/span>(); &lt;span style="color:#228b22">//终止线程
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo2&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo2&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) {
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
-EventFactory&amp;lt;TransactionOrder&amp;gt; eventFactory = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
-}
-};
-RingBuffer&amp;lt;TransactionOrder&amp;gt; ringBuffer = RingBuffer.&lt;span style="color:#658b00">createSingleProducer&lt;/span>(eventFactory, BUFFER_SIZE);
-SequenceBarrier sequenceBarrier = ringBuffer.&lt;span style="color:#658b00">newBarrier&lt;/span>();
-ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
-WorkHandler&amp;lt;TransactionOrder&amp;gt; workHandler = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler();
-WorkerPool&amp;lt;TransactionOrder&amp;gt; workerPool =
-&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> WorkerPool&amp;lt;TransactionOrder&amp;gt;(ringBuffer, sequenceBarrier, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> IgnoreExceptionHandler(),
-workHandler);
-&lt;span style="color:#228b22">//序列协调者
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">addGatingSequences&lt;/span>(workerPool.&lt;span style="color:#658b00">getWorkerSequences&lt;/span>());
-workerPool.&lt;span style="color:#658b00">start&lt;/span>(service);
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> i=0; i&amp;lt;8; i++) {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> seq = ringBuffer.&lt;span style="color:#658b00">next&lt;/span>();
-ringBuffer.&lt;span style="color:#658b00">get&lt;/span>(seq).&lt;span style="color:#658b00">setPrice&lt;/span>(Math.&lt;span style="color:#658b00">random&lt;/span>() * 9999);
-ringBuffer.&lt;span style="color:#658b00">publish&lt;/span>(seq);
-}
-workerPool.&lt;span style="color:#658b00">halt&lt;/span>();
-service.&lt;span style="color:#658b00">shutdown&lt;/span>();
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo3&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo3&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> InterruptedException {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> start = System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>();
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
-ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
-Disruptor&amp;lt;TransactionOrder&amp;gt; disruptor = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Disruptor&amp;lt;TransactionOrder&amp;gt;(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
-}
-}, BUFFER_SIZE, service, ProducerType.&lt;span style="color:#658b00">SINGLE&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> BusySpinWaitStrategy());
-&lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * 菱形操作
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#228b22">//使用 disruptor 创建消费组 C1 与 C2
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> EventHandlerGroup&amp;lt;TransactionOrder&amp;gt; eventHandlerGroup =
-disruptor.&lt;span style="color:#658b00">handleEventsWith&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler(), &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionVasConsumer());
-&lt;span style="color:#228b22">//C3
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> TransactionJmsNotifyHandler jmsNotifyHandler = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionJmsNotifyHandler();
-&lt;span style="color:#228b22">//声明在 C1 和 C2 完事后 执行 JMS消息发送操作（C3）
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> eventHandlerGroup.&lt;span style="color:#658b00">then&lt;/span>(jmsNotifyHandler);
-&lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * 顺序执行
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#228b22">// disruptor.handleEventsWith(new TransactionHandler())
-&lt;/span>&lt;span style="color:#228b22">// .then(new TransactionVasConsumer())
-&lt;/span>&lt;span style="color:#228b22">// .then(new TransactionJmsNotifyHandler());
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * 六边形操作
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#228b22">// TransactionHandler h1 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h2 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h3 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h4 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h5 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h6 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// disruptor.handleEventsWith(h1, h2);
-&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h1).handleEventsWith(h4);
-&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h2).handleEventsWith(h5);
-&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h4, h5).handleEventsWith(h3);
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-&lt;span style="color:#228b22">//启动
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> disruptor.&lt;span style="color:#658b00">start&lt;/span>();
-CountDownLatch latch = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> CountDownLatch(1);
-&lt;span style="color:#228b22">//生产者准备
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> service.&lt;span style="color:#658b00">submit&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionPubllisher(disruptor, latch));
-latch.&lt;span style="color:#658b00">await&lt;/span>(); &lt;span style="color:#228b22">//等待生产者完事
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-disruptor.&lt;span style="color:#658b00">shutdown&lt;/span>();
-service.&lt;span style="color:#658b00">shutdown&lt;/span>();
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;总耗时:&amp;#34;&lt;/span>+ (System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>() - start));
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/07-fabric%E4%BD%BF%E7%94%A8/ - PinkHello, All Rights Reserved</description></item></channel></rss>

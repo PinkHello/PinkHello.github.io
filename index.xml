@@ -1,4 +1,198 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:02:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 开篇</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</link><pubDate>Wed, 19 May 2021 15:02:20 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ -&lt;h1 id="rocketmq-是什么">RocketMQ 是什么?&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:45 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 通信组件</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</link><pubDate>Wed, 19 May 2021 15:09:45 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ -&lt;h1 id="rocketmq-核心基石">RocketMQ 核心基石&lt;/h1>
+&lt;p>前面已经介绍了 RocketMQ 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, RocketMQ 消息系各个组件 Producer、Consumer、Broker、NameSrv 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
+而 RocketMQ 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 client、broker、namesrv 应用。&lt;/p>
+&lt;p>直接先说 remoting 的实现是基于 netty 做了封装、启动了服务端和客户端，支持三种消息的发送方式:&lt;/p>
+&lt;ul>
+&lt;li>同步发送&lt;/li>
+&lt;li>异步发送&lt;/li>
+&lt;li>单向发送&lt;/li>
+&lt;/ul>
+&lt;h1 id="remoting-包下的核心接口体系">remoting 包下的核心接口体系&lt;/h1>
+&lt;p>&lt;img src="https://pinkhello.me/rocketmq/package-remoting-uml.png" alt="remoting uml">&lt;/p>
+&lt;h2 id="接口-remotingservice">接口 RemotingService&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">interface&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RemotingService&lt;/span> {
+&lt;span style="color:#228b22">// 开启
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">start&lt;/span>();
+&lt;span style="color:#228b22">// 关闭
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">shutdown&lt;/span>();
+&lt;span style="color:#228b22">// 注册 RPCHook
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">registerRPCHook&lt;/span>(RPCHook rpcHook);
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="接口-remotingserver">接口 RemotingServer&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">interface&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RemotingServer&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> RemotingService {
+&lt;span style="color:#228b22">// 注册请求类型的处理器 【common 模块的 org.apache.rocketmq.common.protocol.RequestCode]
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">registerProcessor&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> requestCode, &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> NettyRequestProcessor processor,
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ExecutorService executor);
+&lt;span style="color:#228b22">// 注册默认的处理器
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">registerDefaultProcessor&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> NettyRequestProcessor processor, &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ExecutorService executor);
+&lt;span style="color:#228b22">// 本地的端口
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> &lt;span style="color:#008b45">localListenPort&lt;/span>();
+&lt;span style="color:#228b22">// 根据 requestCode 获取处理器和业务线程池
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Pair&amp;lt;NettyRequestProcessor, ExecutorService&amp;gt; &lt;span style="color:#008b45">getProcessorPair&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> requestCode);
+&lt;span style="color:#228b22">// 同步发送
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> RemotingCommand &lt;span style="color:#008b45">invokeSync&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> Channel channel, &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> RemotingCommand request,
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> timeoutMillis) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> InterruptedException, RemotingSendRequestException,
+RemotingTimeoutException;
+&lt;span style="color:#228b22">// 异步发送
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">invokeAsync&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> Channel channel, &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> RemotingCommand request, &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> timeoutMillis,
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> InvokeCallback invokeCallback) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> InterruptedException,
+RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException;
+&lt;span style="color:#228b22">// 单向发送
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">invokeOneway&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> Channel channel, &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> RemotingCommand request, &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> timeoutMillis)
+&lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> InterruptedException, RemotingTooMuchRequestException, RemotingTimeoutException,
+RemotingSendRequestException;
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="实现-nettyremotingserver">实现 NettyRemotingServer&lt;/h2>
+&lt;p>这边选择性的进行摘取记录描述啊&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NettyRemotingServer&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> NettyRemotingAbstract &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> RemotingServer {
+&lt;span style="color:#228b22">// todo 此处代码省略号...
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// 构造
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#008b45">NettyRemotingServer&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> NettyServerConfig nettyServerConfig,
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ChannelEventListener channelEventListener) {
+&lt;span style="color:#228b22">//调用 NettyRemotingAbstract 的构造初始化相关配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">super&lt;/span>(nettyServerConfig.&lt;span style="color:#658b00">getServerOnewaySemaphoreValue&lt;/span>(), nettyServerConfig.&lt;span style="color:#658b00">getServerAsyncSemaphoreValue&lt;/span>());
+&lt;span style="color:#228b22">//开启一个ServerBootstrap
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">serverBootstrap&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ServerBootstrap();
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">nettyServerConfig&lt;/span> = nettyServerConfig;
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">channelEventListener&lt;/span> = channelEventListener;
+&lt;span style="color:#228b22">//默认的 React
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> publicThreadNums = nettyServerConfig.&lt;span style="color:#658b00">getServerCallbackExecutorThreads&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (publicThreadNums &amp;lt;= 0) {
+publicThreadNums = 4;
+}
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">publicExecutor&lt;/span> = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(publicThreadNums, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ThreadFactory() {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> AtomicInteger threadIndex = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> AtomicInteger(0);
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Thread &lt;span style="color:#008b45">newThread&lt;/span>(Runnable r) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Thread(r, &lt;span style="color:#cd5555">&amp;#34;NettyServerPublicExecutor_&amp;#34;&lt;/span> + &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">threadIndex&lt;/span>.&lt;span style="color:#658b00">incrementAndGet&lt;/span>());
+}
+});
+&lt;span style="color:#228b22">//根据系统环境或指的配置选择使用 Epoll 还是 Nio 模式
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (useEpoll()) {
+&lt;span style="color:#228b22">//构建 EventLoopGroup 只有1个线程
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">eventLoopGroupBoss&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EpollEventLoopGroup(1, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ThreadFactory() {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> AtomicInteger threadIndex = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> AtomicInteger(0);
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Thread &lt;span style="color:#008b45">newThread&lt;/span>(Runnable r) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Thread(r, String.&lt;span style="color:#658b00">format&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NettyEPOLLBoss_%d&amp;#34;&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">threadIndex&lt;/span>.&lt;span style="color:#658b00">incrementAndGet&lt;/span>()));
+}
+});
+&lt;span style="color:#228b22">//构建 eventLoopGroupSelector
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">eventLoopGroupSelector&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EpollEventLoopGroup(nettyServerConfig.&lt;span style="color:#658b00">getServerSelectorThreads&lt;/span>(), &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ThreadFactory() {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> AtomicInteger threadIndex = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> AtomicInteger(0);
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> threadTotal = nettyServerConfig.&lt;span style="color:#658b00">getServerSelectorThreads&lt;/span>();
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Thread &lt;span style="color:#008b45">newThread&lt;/span>(Runnable r) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Thread(r, String.&lt;span style="color:#658b00">format&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;NettyServerEPOLLSelector_%d_%d&amp;#34;&lt;/span>, threadTotal, &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">threadIndex&lt;/span>.&lt;span style="color:#658b00">incrementAndGet&lt;/span>()));
+}
+});
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#228b22">// todo 此处代码省略号...
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> }
+&lt;span style="color:#228b22">//夹在SSL上下文
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> loadSslContext();
+}
+&lt;span style="color:#228b22">//todo 此处代码省略号...
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">// 核心的 启动方法
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">start&lt;/span>() {
+&lt;span style="color:#228b22">//构建 Worker线程，根据配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">defaultEventExecutorGroup&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultEventExecutorGroup(
+nettyServerConfig.&lt;span style="color:#658b00">getServerWorkerThreads&lt;/span>(),
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ThreadFactory() {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> AtomicInteger threadIndex = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> AtomicInteger(0);
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Thread &lt;span style="color:#008b45">newThread&lt;/span>(Runnable r) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Thread(r, &lt;span style="color:#cd5555">&amp;#34;NettyServerCodecThread_&amp;#34;&lt;/span> + &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">threadIndex&lt;/span>.&lt;span style="color:#658b00">incrementAndGet&lt;/span>());
+}
+});
+&lt;span style="color:#228b22">// 准备共享式的Hanlders 包含了SSL 、编解码、连接管理、业务handler
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> prepareSharableHandlers();
+&lt;span style="color:#228b22">//开启一个 Netty Server
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ServerBootstrap childHandler =
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">serverBootstrap&lt;/span>.&lt;span style="color:#658b00">group&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">eventLoopGroupBoss&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">eventLoopGroupSelector&lt;/span>)
+.&lt;span style="color:#658b00">channel&lt;/span>(useEpoll() ? EpollServerSocketChannel.&lt;span style="color:#658b00">class&lt;/span> : NioServerSocketChannel.&lt;span style="color:#658b00">class&lt;/span>)
+.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_BACKLOG&lt;/span>, 1024)
+.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_REUSEADDR&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>)
+.&lt;span style="color:#658b00">option&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_KEEPALIVE&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>)
+.&lt;span style="color:#658b00">childOption&lt;/span>(ChannelOption.&lt;span style="color:#658b00">TCP_NODELAY&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>)
+.&lt;span style="color:#658b00">childOption&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_SNDBUF&lt;/span>, nettyServerConfig.&lt;span style="color:#658b00">getServerSocketSndBufSize&lt;/span>())
+.&lt;span style="color:#658b00">childOption&lt;/span>(ChannelOption.&lt;span style="color:#658b00">SO_RCVBUF&lt;/span>, nettyServerConfig.&lt;span style="color:#658b00">getServerSocketRcvBufSize&lt;/span>())
+.&lt;span style="color:#658b00">localAddress&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> InetSocketAddress(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">nettyServerConfig&lt;/span>.&lt;span style="color:#658b00">getListenPort&lt;/span>()))
+.&lt;span style="color:#658b00">childHandler&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ChannelInitializer&amp;lt;SocketChannel&amp;gt;() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">initChannel&lt;/span>(SocketChannel ch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+ch.&lt;span style="color:#658b00">pipeline&lt;/span>()
+.&lt;span style="color:#658b00">addLast&lt;/span>(defaultEventExecutorGroup, HANDSHAKE_HANDLER_NAME, handshakeHandler)
+.&lt;span style="color:#658b00">addLast&lt;/span>(defaultEventExecutorGroup,
+encoder,
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NettyDecoder(),
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> IdleStateHandler(0, 0, nettyServerConfig.&lt;span style="color:#658b00">getServerChannelMaxIdleTimeSeconds&lt;/span>()),
+connectionManageHandler,
+serverHandler
+);
+}
+});
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (nettyServerConfig.&lt;span style="color:#658b00">isServerPooledByteBufAllocatorEnable&lt;/span>()) {
+childHandler.&lt;span style="color:#658b00">childOption&lt;/span>(ChannelOption.&lt;span style="color:#658b00">ALLOCATOR&lt;/span>, PooledByteBufAllocator.&lt;span style="color:#658b00">DEFAULT&lt;/span>);
+}
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+&lt;span style="color:#228b22">// 开启一个 Netty Server
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> ChannelFuture sync = &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">serverBootstrap&lt;/span>.&lt;span style="color:#658b00">bind&lt;/span>().&lt;span style="color:#658b00">sync&lt;/span>();
+InetSocketAddress addr = (InetSocketAddress) sync.&lt;span style="color:#658b00">channel&lt;/span>().&lt;span style="color:#658b00">localAddress&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">port&lt;/span> = addr.&lt;span style="color:#658b00">getPort&lt;/span>();
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (InterruptedException e1) {
+&lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RuntimeException(&lt;span style="color:#cd5555">&amp;#34;this.serverBootstrap.bind().sync() InterruptedException&amp;#34;&lt;/span>, e1);
+}
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">channelEventListener&lt;/span> != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">nettyEventExecutor&lt;/span>.&lt;span style="color:#658b00">start&lt;/span>();
+}
+&lt;span style="color:#228b22">// 开启扫描 ResponseTable 的检查线程
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">timer&lt;/span>.&lt;span style="color:#658b00">scheduleAtFixedRate&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TimerTask() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">run&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+NettyRemotingServer.&lt;span style="color:#658b00">this&lt;/span>.&lt;span style="color:#658b00">scanResponseTable&lt;/span>();
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (Throwable e) {
+log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;scanResponseTable exception&amp;#34;&lt;/span>, e);
+}
+}
+}, 1000 * 3, 1000);
+}
+&lt;span style="color:#228b22">//todo 此处代码省略号...
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">// 这个是核心代码
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#707a7c">@ChannelHandler.Sharable&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NettyServerHandler&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> SimpleChannelInboundHandler&amp;lt;RemotingCommand&amp;gt; {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">protected&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">channelRead0&lt;/span>(ChannelHandlerContext ctx, RemotingCommand msg) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+&lt;span style="color:#228b22">// 调用消息处理的方法 这个方法 在 NettyRemotingAbstract 类内
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> processMessageReceived(ctx, msg);
+}
+}
+&lt;span style="color:#228b22">//todo 此处代码省略号...
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>}
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">abstract&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NettyRemotingAbstract&lt;/span> {
+&lt;span style="color:#228b22">// 根据消息的类型进行处理，是请求还是响应的CMD
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">processMessageReceived&lt;/span>(ChannelHandlerContext ctx, RemotingCommand msg) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> RemotingCommand cmd = msg;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (cmd != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+&lt;span style="color:#8b008b;font-weight:bold">switch&lt;/span> (cmd.&lt;span style="color:#658b00">getType&lt;/span>()) {
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> REQUEST_COMMAND:
+processRequestCommand(ctx, cmd);
+&lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RESPONSE_COMMAND:
+processResponseCommand(ctx, cmd);
+&lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">default&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
+}
+}
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 开篇</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</link><pubDate>Wed, 19 May 2021 15:02:20 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ -&lt;h1 id="rocketmq-是什么">RocketMQ 是什么?&lt;/h1>
 &lt;p>&lt;a href="http://rocketmq.apache.org/">RocketMQ&lt;/a> 是 &lt;code>Alibaba&lt;/code> 捐赠给 &lt;code>Apache&lt;/code> 的一款分布式、队列模型的开源消息中间件。&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>Github&lt;/code> &lt;a href="https://github.com/apache/rocketmq">https://github.com/apache/rocketmq&lt;/a>&lt;/li>
@@ -1388,99 +1582,4 @@ docker run -H &lt;span style="color:#cd5555">&amp;#34;Swarm集群API&amp;#34;&lt
 &lt;li>&amp;hellip;&lt;/li>
 &lt;/ul>
 &lt;p>经过一些列骚操作后，K8S 大行其道，编排之争落下帷幕，容器社区的后续繁荣完全以 &lt;code>Kubernetes&lt;/code> 项目为核心的百家争鸣, 从 &lt;code>Rancher&lt;/code>项目 的历史迭代过程中也能看出这个精彩纷呈的展现。&lt;/p>
-- https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ - PinkHello, All Rights Reserved</description></item><item><title>16 Hexo迁移Hugo</title><link>https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</link><pubDate>Wed, 10 Feb 2021 19:36:33 +0800</pubDate><guid>https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/</guid><description>PinkHello https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ -&lt;h1 id="为什么迁移-hugo">为什么迁移 &lt;code>Hugo&lt;/code>&lt;/h1>
-&lt;ul>
-&lt;li>&lt;code>Hugo&lt;/code> 使用比 &lt;code>Hexo&lt;/code> 简单, 只有单独的一个二进制文件&lt;/li>
-&lt;li>苦于 &lt;code>Hexo&lt;/code> 的 &lt;code>NodeModule&lt;/code> 管理&lt;/li>
-&lt;li>迁移成本更低, 结合 &lt;code>Github Action&lt;/code> 实现 &lt;code>Markdown&lt;/code> 文章发布, 自动更新至静态站&lt;/li>
-&lt;li>规划：加入自定义域名以及做静态资源CDN做的加速&lt;/li>
-&lt;/ul>
-&lt;h1 id="前置工作">前置工作&lt;/h1>
-&lt;p>1、 之前基本所有的博客都托管与 &lt;code>github&lt;/code>,这次也不例外, 复用 &lt;code>https://pinkhello.github.io&lt;/code>,创建两个项目&lt;/p>
-&lt;ul>
-&lt;li>pinkhello.github.io template 仓库&lt;/li>
-&lt;li>pinkhello.github.io.source private 仓库&lt;/li>
-&lt;/ul>
-&lt;p>2、准备OpenSSH私钥和公钥&lt;/p>
-&lt;ul>
-&lt;li>pinkhello.github.io 仓库 添加 settings -&amp;gt; Deploy keys -&amp;gt; Add Deploy Key (将公钥添加进去、注意允许 Write)&lt;/li>
-&lt;li>pinkhello.github.io.source 仓库 添加 settings -&amp;gt; Actions secrets -&amp;gt; New Repository Secret ( NAME : ACTION_DEPLOY_KEY, Value: 私钥 )&lt;/li>
-&lt;/ul>
-&lt;p>3、git clone pinkhello.github.io.source 仓库&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">git clone git@github.com:PinkHello/pinkhello.github.io.source.git
-&lt;span style="color:#658b00">cd&lt;/span> pinkhello.github.io.source
-&lt;span style="color:#228b22"># 初始化站点【--force 强制初始化】&lt;/span>
-hugo new site . --force
-&lt;span style="color:#228b22"># content site &lt;/span>
-&lt;span style="color:#228b22"># data json数据 or 其他&lt;/span>
-&lt;span style="color:#228b22"># static 静态文件&lt;/span>
-&lt;span style="color:#228b22"># themes 主题&lt;/span>
-&lt;span style="color:#228b22"># 后面可以执行 hugo new posts/XXX.md 创建新的文章&lt;/span>
-hugo new posts/XXX.md
-&lt;span style="color:#228b22"># 具体参考 https://gohugo.io/getting-started/ 进行操作&lt;/span>
-......
-&lt;span style="color:#228b22"># 选择一个主题 https://themes.gohugo.io/ 可以选择&lt;/span>
-git submodule add https://github.com/budparr/gohugo-theme-ananke.git themes/ananke
-&lt;span style="color:#228b22"># 后面的参照各个主题设置咯&lt;/span>
-....
-&lt;span style="color:#228b22"># 本地测试&lt;/span>
-hugo serve
-&lt;span style="color:#228b22"># 生成最小的静态文件, 会生成 public 文件&lt;/span>
-hugo --minify
-&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="迁移-hexo-博客进入-hugo">迁移 &lt;code>hexo&lt;/code> 博客进入 &lt;code>hugo&lt;/code>&lt;/h1>
-&lt;p>&amp;hellip;&amp;hellip;(可以手动、可以工具进行)&lt;/p>
-&lt;h1 id="整合-github-action">整合 &lt;code>Github Action&lt;/code>&lt;/h1>
-&lt;p>新建 &lt;code>Github Action&lt;/code> 描述文件 &lt;code>.github/workflows/deploy.yml&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#228b22"># This is a basic workflow to help you get started with Actions&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Deploy on Main Branch&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># Controls when the action will run. &lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">on&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Triggers the workflow on push or pull request events but only for the main branch&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">push&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">branches&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#bbb"> &lt;/span>main ]&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">pull_request&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">branches&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#bbb"> &lt;/span>main ]&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># schedule:&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># - cron: &amp;#39;0 21 * * *&amp;#39; # 定时任务&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Allows you to run this workflow manually from the Actions tab&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">workflow_dispatch&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># A workflow run is made up of one or more jobs that can run sequentially or in parallel&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">jobs&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># This workflow contains a single job called &amp;#34;build&amp;#34;&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">build&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># The type of runner that the job will run on&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">runs-on&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ubuntu-latest&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Steps represent a sequence of tasks that will be executed as part of the job&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">steps&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">uses&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>actions/checkout@v2&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Setup Hugo&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">uses&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>peaceiris/actions-hugo@v2&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># https://github.com/peaceiris/actions-hugo&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">with&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">hugo-version&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#39;latest&amp;#39;&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">extended&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Build&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 注意强制更新 git submodule 下载，否则生成的主题没有 html 文件哦&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">run&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>|&lt;span style="color:#cd5555">
-&lt;/span>&lt;span style="color:#cd5555"> git submodule update --init --recursive
-&lt;/span>&lt;span style="color:#cd5555"> hugo --minify --debug&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Deploy&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">uses&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>peaceiris/actions-gh-pages@v3&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># https://github.com/peaceiris/actions-gh-pages&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">with&lt;/span>:&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">deploy_key&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>${{ secrets.ACTION_DEPLOY_KEY }}&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 这里的 ACTION_DEPLOY_KEY 则是上面设置 Private Key的变量名&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">external_repository&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>PinkHello/PinkHello.github.io&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Pages 远程仓库 &lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">publish_dir&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>./public&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">keep_files&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># remove existing files&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">publish_branch&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>master &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># deploying branch&lt;/span>&lt;span style="color:#bbb">
-&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">commit_message&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>${{ github.event.head_commit.message }}&lt;span style="color:#bbb">
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>so 完美
-&lt;img src="https://pinkhello.me/hexo%E8%BF%81%E7%A7%BB%E8%87%B3hugo/github_action_in_process_0.jpg" alt="迁移Hexo">
-&lt;img src="https://pinkhello.me/hexo%E8%BF%81%E7%A7%BB%E8%87%B3hugo/github_action_in_process.jpg" alt="迁移Hexo">&lt;/p>
-- https://pinkhello.me/posts/16-hexo%E8%BF%81%E7%A7%BBhugo/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ - PinkHello, All Rights Reserved</description></item></channel></rss>
