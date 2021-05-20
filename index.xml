@@ -82,6 +82,8 @@ NameServer通常也是集群的方式部署，各实例间相互不进行信息�
 &lt;li>Producer与NameServer集群中的其中一个节点（随机选择）建立长连接，定期从NameServer获取Topic路由信息，并向提供Topic 服务的Master建立长连接，且定时向Master发送心跳。Producer完全无状态，可集群部署。&lt;/li>
 &lt;li>Consumer与NameServer集群中的其中一个节点（随机选择）建立长连接，定期从NameServer获取Topic路由信息，并向提供Topic服务的Master、Slave建立长连接，且定时向Master、Slave发送心跳。Consumer既可以从Master订阅消息，也可以从Slave订阅消息，消费者在向Master拉取消息时，Master服务器会根据拉取偏移量与最大偏移量的距离（判断是否读老消息，产生读I/O），以及从服务器是否可读等因素建议下一次是从Master还是Slave拉取。&lt;/li>
 &lt;/ul>
+&lt;h1 id="rocketmq--事务消息-">RocketMQ * 事务消息 *&lt;/h1>
+&lt;p>后面专门一章讲述这个事务消息&lt;/p>
 - https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ - PinkHello, All Rights Reserved</description></item><item><title>算法 Bitmap</title><link>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</link><pubDate>Wed, 28 Apr 2021 11:59:58 +0800</pubDate><guid>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</guid><description>PinkHello https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/ -&lt;h1 id="bitmap-原理">bitmap 原理&lt;/h1>
 &lt;p>&lt;code>bitmap&lt;/code>字面为位图映射, 原理是使用一个 bit 标记某个元素对应的 value，而 key 即该元素。因为只有一个 bit 来存储一个数据, 因而可以大大的节省空间。&lt;/p>
 &lt;h2 id="数值映射">数值映射:&lt;/h2>
