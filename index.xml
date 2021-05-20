@@ -1,88 +1,88 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:02:20 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 开篇</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</link><pubDate>Wed, 19 May 2021 15:02:20 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ -&lt;h1 id="rocketmq-是什么">RocketMQ 是什么?&lt;/h1>
-&lt;p>&lt;a href="http://rocketmq.apache.org/">RocketMQ&lt;/a> 是 Alibaba 捐赠给 Apache 的一款分布式、队列模型的开源消息中间件。&lt;/p>
+&lt;p>&lt;a href="http://rocketmq.apache.org/">RocketMQ&lt;/a> 是 &lt;code>Alibaba&lt;/code> 捐赠给 &lt;code>Apache&lt;/code> 的一款分布式、队列模型的开源消息中间件。&lt;/p>
 &lt;ul>
-&lt;li>Github &lt;a href="https://github.com/apache/rocketmq">https://github.com/apache/rocketmq&lt;/a>&lt;/li>
+&lt;li>&lt;code>Github&lt;/code> &lt;a href="https://github.com/apache/rocketmq">https://github.com/apache/rocketmq&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>从官网也能看出它的一些特性:&lt;/p>
 &lt;ul>
-&lt;li>低延迟 ()&lt;/li>
+&lt;li>低延迟&lt;/li>
 &lt;li>高可用&lt;/li>
 &lt;li>万亿级的消息支持&lt;/li>
 &lt;li>&amp;hellip;&lt;/li>
 &lt;/ul>
-&lt;h1 id="rocketmq-基本概念">RocketMQ 基本概念&lt;/h1>
-&lt;p>RocketMQ 是由 Producer、Broker、Consumer 三部分组成, Producer 负责生产 Message, Consumer 负责消费 Message, Broker 负责存储 Message。
-每个 Broker 可以存储多个 Topic 的消息, 每个 Topic 的消息也可以分片存储在不同的 Broker上。 Message Queue 用于存储消息的物理地址，每个 Topic 的消息地址存储于对歌 Message Queue 中。
-Consumer Group 由多个 Consumer 实例组成。&lt;/p>
+&lt;h1 id="rocketmq-基本概念">&lt;code>RocketMQ&lt;/code> 基本概念&lt;/h1>
+&lt;p>&lt;code>RocketMQ&lt;/code> 是由 &lt;code>Producer&lt;/code>、&lt;code>Broker&lt;/code>、&lt;code>Consumer&lt;/code> 三部分组成, &lt;code>Producer&lt;/code> 负责生产 &lt;code>Message&lt;/code>, &lt;code>Consumer&lt;/code> 负责消费 &lt;code>Message&lt;/code>, &lt;code>Broker&lt;/code> 负责存储 &lt;code>Message&lt;/code>。
+每个 &lt;code>Broker&lt;/code> 可以存储多个 &lt;code>Topic&lt;/code> 的消息, 每个 &lt;code>Topic&lt;/code> 的消息也可以分片存储在不同的 &lt;code>Broker&lt;/code> 上。 &lt;code>Message Queue&lt;/code> 用于存储消息的物理地址，每个 &lt;code>Topic&lt;/code> 的消息地址存储于对歌 &lt;code>Message Queue&lt;/code> 中。
+&lt;code>Consumer Group&lt;/code> 由多个 &lt;code>Consumer&lt;/code> 实例组成。&lt;/p>
 &lt;ul>
 &lt;li>
-&lt;p>Producer 负责生产消息，同步发送、异步发送、顺序发送、单向发送。同步和异步需要Broker确认信息，单向发送不需要。&lt;/p>
+&lt;p>&lt;code>Producer&lt;/code> 负责生产消息，同步发送、异步发送、顺序发送、单向发送。同步和异步需要 &lt;code>Broker&lt;/code> 确认信息，单向发送不需要。&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Consumer 负责消费消息，一般异步消费。一个消费者会从 Broker 拉取消息。（拉取式消费、推动式消费）&lt;/p>
+&lt;p>&lt;code>Consumer&lt;/code> 负责消费消息，一般异步消费。一个消费者会从 &lt;code>Broker&lt;/code> 拉取消息。（拉取式消费、推动式消费）&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Broker Server 负责存储、转发消息。 接收 Producer 发送来的消息并存储、同时为 Consumer 拉取请求做准备。当然也存储这消息相关的元数据（消费组、消费进度偏移、主题、队列消息等）&lt;/p>
+&lt;p>&lt;code>Broker Server&lt;/code> 负责存储、转发消息。 接收 &lt;code>Producer&lt;/code> 发送来的消息并存储、同时为 &lt;code>Consumer&lt;/code> 拉取请求做准备。当然也存储这消息相关的元数据（消费组、消费进度偏移、主题、队列消息等）&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Name Server 为消息路由的提供者。Producer 和 Consumer 能够通过 它查找各个 Topic 相应的 Broker IP 列表，多个 Name Server 组成集群，相互独立、没有信息交换。&lt;/p>
+&lt;p>&lt;code>Name Server&lt;/code> 为消息路由的提供者。&lt;code>Producer&lt;/code> 和 &lt;code>Consumer&lt;/code> 能够通过 它查找各个 &lt;code>Topic&lt;/code> 相应的 &lt;code>Broker IP 列表&lt;/code>，多个 &lt;code>Name Server&lt;/code> 组成集群，相互独立、没有信息交换。&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Message 消息系统所传输信息的物理载体，生产和消费数据的最小单元，每条消息必须属于一个 Topic, RocketMQ 中每个消息拥有一个唯一的 MessageID，且可以携带业务标识的Key。系统提供通过 MessageId 和 Key 查询消息的功能&lt;/p>
+&lt;p>&lt;code>Message&lt;/code> 消息系统所传输信息的物理载体，生产和消费数据的最小单元，每条消息必须属于一个 &lt;code>Topic&lt;/code>, &lt;code>RocketMQ&lt;/code> 中每个消息拥有一个唯一的 &lt;code>MessageID&lt;/code>，且可以携带业务标识的&lt;code>Key&lt;/code>。系统提供通过 &lt;code>MessageId&lt;/code> 和 &lt;code>Key&lt;/code> 查询消息的功能&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Topic 表示一类消息的集合，每个主题包含若干条消息，每条消息智只能属于一个 topic，是 RocketMQ 进行 消息定义的基本单位。&lt;/p>
+&lt;p>&lt;code>Topic&lt;/code> 表示一类消息的集合，每个 &lt;code>Topic&lt;/code> 包含若干条消息，每条消息智只能属于一个 &lt;code>topic&lt;/code>，是 &lt;code>RocketMQ&lt;/code> 进行 消息定义的基本单位。&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Tag 为消息设置的标志，用于同一个 Topic 下区分不同类型的消息。来自同一个业务单元的消息，可以根据不同的业务在同一个主题下设置不同的标签。Tag 能够有效的保持代码清晰度和连贯性，并优化 RocketMQ 的查询系统。 Consumer 可以根据 Tag 实现不同的子主题的不同消费逻辑。&lt;/p>
+&lt;p>&lt;code>Tag&lt;/code> 为消息设置的标志，用于同一个 &lt;code>Topic&lt;/code> 下区分不同类型的消息。来自同一个业务单元的消息，可以根据不同的业务在同一个主题下设置不同的标签。Tag 能够有效的保持代码清晰度和连贯性，并优化 &lt;code>RocketMQ&lt;/code> 的查询系统。 &lt;code>Consumer&lt;/code> 可以根据 &lt;code>Tag&lt;/code> 实现不同的子主题的不同消费逻辑。&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Pull Consumer&lt;/p>
+&lt;p>&lt;code>Pull Consumer&lt;/code>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Push Consumer&lt;/p>
+&lt;p>&lt;code>Push Consumer&lt;/code>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Producer Group&lt;/p>
+&lt;p>&lt;code>Producer Group&lt;/code>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Consumer Group&lt;/p>
+&lt;p>&lt;code>Consumer Group&lt;/code>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Clustering&lt;/p>
+&lt;p>&lt;code>Clustering&lt;/code>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Broadcasting&lt;/p>
+&lt;p>&lt;code>Broadcasting&lt;/code>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Normal Ordered Message&lt;/p>
+&lt;p>&lt;code>Normal Ordered Message&lt;/code>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Strictly Ordered Message&lt;/p>
+&lt;p>&lt;code>Strictly Ordered Message&lt;/code>&lt;/p>
 &lt;/li>
 &lt;/ul>
-&lt;h1 id="rocketmq-部署架构">RocketMQ 部署架构&lt;/h1>
+&lt;h1 id="rocketmq-部署架构">&lt;code>RocketMQ&lt;/code> 部署架构&lt;/h1>
 &lt;p>&lt;img src="https://pinkhello.me/rocketmq/rocketmq_architecture_3.png" alt="RocketMQ部署架构">&lt;/p>
 &lt;ul>
-&lt;li>Producer: 消息发布决赛、支持分布式集群部署，Producer 通过MQ的负载均衡莫款选择相应的Broker进行消息投递。&lt;/li>
-&lt;li>Consumer: 消息消费角色、支持分布式集群部署，支持Push方式、Pull方式对消息进行消费，同时也指出集群方式和广播方式进行消费。&lt;/li>
-&lt;li>Name Server: NameServer是一个非常简单的Topic路由注册中心，其角色类似Dubbo中的zookeeper，支持Broker的动态注册与发现。&lt;/li>
+&lt;li>&lt;code>Producer&lt;/code>: 消息发布决赛、支持分布式集群部署，&lt;code>Producer&lt;/code> 通过MQ的负载均衡莫款选择相应的 &lt;code>Broker&lt;/code> 进行消息投递。&lt;/li>
+&lt;li>&lt;code>Consumer&lt;/code>: 消息消费角色、支持分布式集群部署，支持&lt;code>Push方式&lt;/code>、&lt;code>Pull方式&lt;/code>对消息进行消费，同时也指出&lt;code>集群方式&lt;/code>和&lt;code>广播方式&lt;/code>进行消费。&lt;/li>
+&lt;li>&lt;code>Name Server&lt;/code>: &lt;code>NameServer&lt;/code> 是一个非常简单的&lt;code>Topic路由注册中心&lt;/code>，其角色类似Dubbo中的zookeeper，支持Broker的动态注册与发现。&lt;/li>
 &lt;/ul>
 &lt;blockquote>
 &lt;ul>
-&lt;li>Broker 管理，NameServer接受Broker集群的注册信息并且保存下来作为路由信息的基本数据。然后提供心跳检测机制，检查Broker是否还存活；&lt;/li>
-&lt;li>路由信息管理, 每个NameServer将保存关于Broker集群的整个路由信息和用于客户端查询的队列信息。然后Producer和Consumer通过NameServer就可以知道整个Broker集群的路由信息，从而进行消息的投递和消费。
-NameServer通常也是集群的方式部署，各实例间相互不进行信息通讯。Broker是向每一台NameServer注册自己的路由信息，所以每一个NameServer实例上面都保存一份完整的路由信息。当某个NameServer因某种原因下线了，Broker仍然可以向其它NameServer同步其路由信息，Producer,Consumer仍然可以动态感知Broker的路由的信息&lt;/li>
+&lt;li>&lt;code>Broker管理&lt;/code>，&lt;code>NameServer&lt;/code> 接受 &lt;code>Broker集群&lt;/code> 的注册信息并且保存下来作为路由信息的基本数据。然后提供心跳检测机制，检查&lt;code>Broker&lt;/code>是否还存活；&lt;/li>
+&lt;li>&lt;code>路由信息管理&lt;/code>, 每个 &lt;code>NameServer&lt;/code> 将保存关于 &lt;code>Broker&lt;/code> 集群的整个路由信息和用于客户端查询的队列信息。然后&lt;code>Producer&lt;/code>和&lt;code>Consumer&lt;/code> 通过 &lt;code>NameServer&lt;/code>就可以知道整个&lt;code>Broker集群的路由信息&lt;/code>，从而进行消息的投递和消费。
+&lt;code>NameServer&lt;/code>通常也是集群的方式部署，各实例间相互不进行信息通讯。&lt;code>Broker&lt;/code>是向每一台&lt;code>NameServer&lt;/code>注册自己的路由信息，所以每一个&lt;code>NameServer&lt;/code>实例上面都保存一份完整的路由信息。当某个&lt;code>NameServer&lt;/code>因某种原因下线了，&lt;code>Broker&lt;/code>仍然可以向其它&lt;code>NameServer&lt;/code>同步其路由信息，&lt;code>Producer&lt;/code>,&lt;code>Consumer&lt;/code>仍然可以动态感知&lt;code>Broker&lt;/code>的路由的信息&lt;/li>
 &lt;/ul>
 &lt;/blockquote>
-&lt;p>RocketMQ 网路部署特点:&lt;/p>
+&lt;p>&lt;code>RocketMQ&lt;/code> 网路部署特点:&lt;/p>
 &lt;ul>
-&lt;li>NameSever 是无状态节点，可集群部署，节点之间无任何信息同步。Broker是向每一台NameServer注册自己的路由信息，所以每一个NameServer实例上面都保存一份完整的路由信息。当某个NameServer因某种原因下线了，Broker仍然可以向其它NameServer同步其路由信息，Producer,Consumer仍然可以动态感知Broker的路由的信息。&lt;/li>
-&lt;li>Broker部署相对复杂，Broker分为Master与Slave，一个Master可以对应多个Slave，但是一个Slave只能对应一个Master，Master与Slave 的对应关系通过指定相同的BrokerName，不同的BrokerId 来定义，BrokerId为0表示Master，非0表示Slave。Master也可以部署多个。每个Broker与NameServer集群中的所有节点建立长连接，定时注册Topic信息到所有NameServer。 注意：当前RocketMQ版本在部署架构上支持一Master多Slave，但只有BrokerId=1的从服务器才会参与消息的读负载。&lt;/li>
-&lt;li>Producer与NameServer集群中的其中一个节点（随机选择）建立长连接，定期从NameServer获取Topic路由信息，并向提供Topic 服务的Master建立长连接，且定时向Master发送心跳。Producer完全无状态，可集群部署。&lt;/li>
-&lt;li>Consumer与NameServer集群中的其中一个节点（随机选择）建立长连接，定期从NameServer获取Topic路由信息，并向提供Topic服务的Master、Slave建立长连接，且定时向Master、Slave发送心跳。Consumer既可以从Master订阅消息，也可以从Slave订阅消息，消费者在向Master拉取消息时，Master服务器会根据拉取偏移量与最大偏移量的距离（判断是否读老消息，产生读I/O），以及从服务器是否可读等因素建议下一次是从Master还是Slave拉取。&lt;/li>
+&lt;li>&lt;code>NameSever&lt;/code> 是无状态节点，可集群部署，节点之间无任何信息同步。&lt;code>Broker&lt;/code> 是向每一台&lt;code>NameServer&lt;/code>注册自己的路由信息，所以每一个&lt;code>NameServer&lt;/code>实例上面都保存一份完整的路由信息。当某个&lt;code>NameServer&lt;/code>因某种原因下线了，&lt;code>Broker&lt;/code>仍然可以向其它&lt;code>NameServer&lt;/code>同步其路由信息，&lt;code>Producer&lt;/code>,&lt;code>Consumer&lt;/code>仍然可以动态感知&lt;code>Broker&lt;/code>的路由的信息。&lt;/li>
+&lt;li>&lt;code>Broker&lt;/code> 部署相对复杂，&lt;code>Broker&lt;/code> 分为 &lt;code>Master&lt;/code> 与 &lt;code>Slave&lt;/code> ，一个&lt;code>Master&lt;/code>可以对应多个&lt;code>Slave&lt;/code>，但是一个&lt;code>Slave&lt;/code>只能对应一个&lt;code>Master&lt;/code>，&lt;code>Master&lt;/code>与&lt;code>Slave&lt;/code> 的对应关系通过指定相同的&lt;code>BrokerName&lt;/code>，不同的&lt;code>BrokerId&lt;/code> 来定义，&lt;code>BrokerId为0&lt;/code>表示&lt;code>Master&lt;/code>，&lt;code>非0&lt;/code>表示&lt;code>Slave&lt;/code>。&lt;code>Master&lt;/code>也可以部署多个。每个&lt;code>Broker&lt;/code>与&lt;code>NameServer&lt;/code>集群中的所有节点建立长连接，定时注册&lt;code>Topic&lt;/code>信息到所有&lt;code>NameServer&lt;/code>。 注意：当前&lt;code>RocketMQ&lt;/code>版本在部署架构上支持&lt;code>一Master多Slave&lt;/code>，但只有&lt;code>BrokerId=1&lt;/code>的从服务器才会参与消息的读负载。&lt;/li>
+&lt;li>&lt;code>Producer&lt;/code> 与 &lt;code>NameServer&lt;/code> 集群中的其中一个节点（随机选择）建立长连接，定期从&lt;code>NameServer&lt;/code>获取&lt;code>Topic路由信息&lt;/code>，并向提供&lt;code>Topic&lt;/code>服务的&lt;code>Master&lt;/code>建立长连接，且定时向&lt;code>Master&lt;/code>发送心跳。&lt;code>Producer&lt;/code>完全无状态，可集群部署。&lt;/li>
+&lt;li>&lt;code>Consumer&lt;/code> 与 &lt;code>NameServer&lt;/code> 集群中的其中一个节点（随机选择）建立长连接，定期从&lt;code>NameServe&lt;/code>r获取&lt;code>Topic路由信息&lt;/code>，并向提供&lt;code>Topic&lt;/code>服务的&lt;code>Master&lt;/code>、&lt;code>Slave&lt;/code>建立长连接，且定时向&lt;code>Master&lt;/code>、&lt;code>Slave&lt;/code>发送心跳。&lt;code>Consumer&lt;/code>既可以从&lt;code>Master&lt;/code>订阅消息，也可以从&lt;code>Slave&lt;/code>订阅消息，消费者在向&lt;code>Master&lt;/code>拉取消息时，&lt;code>Master&lt;/code>服务器会根据拉取偏移量与最大偏移量的距离（判断是否读老消息，产生读&lt;code>I/O&lt;/code>），以及从服务器是否可读等因素建议下一次是从&lt;code>Master&lt;/code>还是&lt;code>Slave&lt;/code>拉取。&lt;/li>
 &lt;/ul>
-&lt;h1 id="rocketmq--事务消息-">RocketMQ * 事务消息 *&lt;/h1>
+&lt;h1 id="rocketmq--事务消息-">&lt;code>RocketMQ&lt;/code> * 事务消息 *&lt;/h1>
 &lt;p>后面专门一章讲述这个事务消息&lt;/p>
 - https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ - PinkHello, All Rights Reserved</description></item><item><title>算法 Bitmap</title><link>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</link><pubDate>Wed, 28 Apr 2021 11:59:58 +0800</pubDate><guid>https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/</guid><description>PinkHello https://pinkhello.me/posts/%E7%AE%97%E6%B3%95-bitmap/ -&lt;h1 id="bitmap-原理">bitmap 原理&lt;/h1>
 &lt;p>&lt;code>bitmap&lt;/code>字面为位图映射, 原理是使用一个 bit 标记某个元素对应的 value，而 key 即该元素。因为只有一个 bit 来存储一个数据, 因而可以大大的节省空间。&lt;/p>
