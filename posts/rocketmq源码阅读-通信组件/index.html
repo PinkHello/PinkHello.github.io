@@ -24,8 +24,8 @@ PinkHello, All Rights Reserved</div></div><div ref=extraContainer class=extra-co
 &nbsp;
 <i class=material-icons>schedule</i>
 16 min
-50 s.</div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h1 id=rocketmq-核心基石>RocketMQ 核心基石</h1><p>前面已经介绍了 RocketMQ 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, RocketMQ 消息系各个组件 Producer、Consumer、Broker、NameSrv 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
-而 RocketMQ 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 client、broker、namesrv 应用。</p><p>直接先说 remoting 的实现是基于 netty 做了封装、启动了服务端和客户端，支持三种消息的发送方式:</p><ul><li>同步发送</li><li>单向发送 (不需要关注响应)</li><li>异步发送</li></ul><p>下图为异步通信流程
+50 s.</div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h1 id=rocketmq-核心基石>RocketMQ 核心基石</h1><p>前面已经介绍了 <code>RocketMQ</code> 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, <code>RocketMQ</code> 消息系各个组件 <code>Producer</code>、<code>Consumer</code>、<code>Broker</code>、<code>NameSrv</code> 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
+而 <code>RocketMQ</code> 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 <code>client</code>、<code>broker</code>、<code>namesrv</code> 应用。</p><p>直接先说 <code>remoting</code> 的实现是基于 <code>netty</code> 做了封装、启动了服务端和客户端，支持三种消息的发送方式:</p><ul><li>同步发送</li><li>单向发送 (不需要关注响应)</li><li>异步发送</li></ul><p>下图为异步通信流程
 <img src=/rocketmq/rocketmq_remoting.png alt=rocketmq_remoting></p><h1 id=remoting-包下的核心接口体系>remoting 包下的核心接口体系</h1><p><img src=/rocketmq/package-remoting-uml.png alt="remoting uml"></p><h2 id=接口-remotingservice>接口 RemotingService</h2><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>interface</span> <span style=color:#008b45;font-weight:700>RemotingService</span> {
     <span style=color:#228b22>// 开启
 </span><span style=color:#228b22></span>    <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>start</span>();

@@ -1,7 +1,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:45 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 通信组件</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</link><pubDate>Wed, 19 May 2021 15:09:45 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ -&lt;h1 id="rocketmq-核心基石">RocketMQ 核心基石&lt;/h1>
-&lt;p>前面已经介绍了 RocketMQ 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, RocketMQ 消息系各个组件 Producer、Consumer、Broker、NameSrv 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
-而 RocketMQ 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 client、broker、namesrv 应用。&lt;/p>
-&lt;p>直接先说 remoting 的实现是基于 netty 做了封装、启动了服务端和客户端，支持三种消息的发送方式:&lt;/p>
+&lt;p>前面已经介绍了 &lt;code>RocketMQ&lt;/code> 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, &lt;code>RocketMQ&lt;/code> 消息系各个组件 &lt;code>Producer&lt;/code>、&lt;code>Consumer&lt;/code>、&lt;code>Broker&lt;/code>、&lt;code>NameSrv&lt;/code> 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
+而 &lt;code>RocketMQ&lt;/code> 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 &lt;code>client&lt;/code>、&lt;code>broker&lt;/code>、&lt;code>namesrv&lt;/code> 应用。&lt;/p>
+&lt;p>直接先说 &lt;code>remoting&lt;/code> 的实现是基于 &lt;code>netty&lt;/code> 做了封装、启动了服务端和客户端，支持三种消息的发送方式:&lt;/p>
 &lt;ul>
 &lt;li>同步发送&lt;/li>
 &lt;li>单向发送 (不需要关注响应)&lt;/li>
