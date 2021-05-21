@@ -758,7 +758,8 @@ extFields.&lt;span style="color:#658b00">put&lt;/span>(key, value);
 &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">serializeTypeCurrentRPC&lt;/span> = serializeTypeCurrentRPC;
 }
 }
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 开篇</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</link><pubDate>Wed, 19 May 2021 15:02:20 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ -&lt;h1 id="rocketmq-是什么">RocketMQ 是什么?&lt;/h1>
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="感谢-">感谢 !&lt;/h1>
+- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 开篇</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</link><pubDate>Wed, 19 May 2021 15:02:20 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ -&lt;h1 id="rocketmq-是什么">RocketMQ 是什么?&lt;/h1>
 &lt;p>&lt;a href="http://rocketmq.apache.org/">RocketMQ&lt;/a> 是 &lt;code>Alibaba&lt;/code> 捐赠给 &lt;code>Apache&lt;/code> 的一款分布式、队列模型的开源消息中间件。&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>Github&lt;/code> &lt;a href="https://github.com/apache/rocketmq">https://github.com/apache/rocketmq&lt;/a>&lt;/li>
