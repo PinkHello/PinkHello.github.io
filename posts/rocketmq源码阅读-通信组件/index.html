@@ -4,14 +4,14 @@
 <a class="a-block nav-link-item false" href=/tags>标签</a>
 <a class="a-block nav-link-item false" href=/links>链接</a>
 <a class="a-block nav-link-item false" href=/index.xml>RSS Feed</a></div><div class=nav-footer>Hugo Theme <a href=https://github.com/amazingrise/hugo-theme-diary>Diary</a> by <a href=https://amazingrise.net>Rise</a><br>移植自 <a href=https://mak1t0.cc/ target=_blank rel="noreferrer noopener">Makito</a>'s <a href=https://github.com/SumiMakito/hexo-theme-journal/ target=_blank rel="noreferrer noopener">Journal.</a><br><br>&copy;
-PinkHello, All Rights Reserved</div></div><div ref=extraContainer class=extra-container><div class="toc animated-visibility" :class="{ invisible: scrollY <= 140 }"><div class=toc-content><center>- 目录 -</center><ul><li><a href=#rocketmq-%e6%a0%b8%e5%bf%83%e5%9f%ba%e7%9f%b3 onclick="onNavClick(`#rocketmq-核心基石-nav`)" id=rocketmq-核心基石-nav>RocketMQ 核心基石</a></li><li><a href=#remoting-%e5%8c%85%e4%b8%8b%e7%9a%84%e6%a0%b8%e5%bf%83%e6%8e%a5%e5%8f%a3%e4%bd%93%e7%b3%bb onclick="onNavClick(`#remoting-包下的核心接口体系-nav`)" id=remoting-包下的核心接口体系-nav>remoting 包下的核心接口体系</a></li><ul class=collapse data-toggle=collapse><li><a href=#%e6%8e%a5%e5%8f%a3-remotingservice onclick="onNavClick(`#接口-remotingservice-nav`)" id=接口-remotingservice-nav>接口 RemotingService</a></li><li><a href=#%e6%8e%a5%e5%8f%a3-remotingserver onclick="onNavClick(`#接口-remotingserver-nav`)" id=接口-remotingserver-nav>接口 RemotingServer</a></li><li><a href=#%e5%ae%9e%e7%8e%b0-nettyremotingserver onclick="onNavClick(`#实现-nettyremotingserver-nav`)" id=实现-nettyremotingserver-nav>实现 NettyRemotingServer</a></li></ul></div></div><div class=pagination><a id=globalBackToTop class="pagination-action animated-visibility" href=#top :class="{ invisible: scrollY == 0 }"><i class="material-icons pagination-action-icon">keyboard_arrow_up</i></a>
+PinkHello, All Rights Reserved</div></div><div ref=extraContainer class=extra-container><div class="toc animated-visibility" :class="{ invisible: scrollY <= 140 }"><div class=toc-content><center>- 目录 -</center><ul><li><a href=#rocketmq-%e6%a0%b8%e5%bf%83%e5%9f%ba%e7%9f%b3 onclick="onNavClick(`#rocketmq-核心基石-nav`)" id=rocketmq-核心基石-nav>RocketMQ 核心基石</a></li><li><a href=#remoting-%e5%8c%85%e4%b8%8b%e7%9a%84%e6%a0%b8%e5%bf%83%e6%8e%a5%e5%8f%a3%e4%bd%93%e7%b3%bb onclick="onNavClick(`#remoting-包下的核心接口体系-nav`)" id=remoting-包下的核心接口体系-nav>remoting 包下的核心接口体系</a></li><ul class=collapse data-toggle=collapse><li><a href=#%e6%8e%a5%e5%8f%a3-remotingservice onclick="onNavClick(`#接口-remotingservice-nav`)" id=接口-remotingservice-nav>接口 RemotingService</a></li><li><a href=#%e6%8e%a5%e5%8f%a3-remotingserver onclick="onNavClick(`#接口-remotingserver-nav`)" id=接口-remotingserver-nav>接口 RemotingServer</a></li><li><a href=#%e5%ae%9e%e7%8e%b0-nettyremotingserver onclick="onNavClick(`#实现-nettyremotingserver-nav`)" id=实现-nettyremotingserver-nav>实现 NettyRemotingServer</a></li></ul><li><a href=#remotingcommand onclick="onNavClick(`#remotingcommand-nav`)" id=remotingcommand-nav>RemotingCommand</a></li></ul></div></div><div class=pagination><a id=globalBackToTop class="pagination-action animated-visibility" href=#top :class="{ invisible: scrollY == 0 }"><i class="material-icons pagination-action-icon">keyboard_arrow_up</i></a>
 <a class=pagination-action v-on:click=toggleDarkMode><i class="material-icons pagination-action-icon" v-if=isDarkMode>brightness_4</i>
 <i class="material-icons pagination-action-icon" v-else=isDarkMode>brightness_7</i></a></div></div><div class=single-column-drawer-container ref=drawer v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }"><div class=drawer-content><div class=drawer-menu><a class="a-block drawer-menu-item false" href=/about>关于我</a>
 <a class="a-block drawer-menu-item active" href=/posts>文章</a>
 <a class="a-block drawer-menu-item false" href=/categories>类目</a>
 <a class="a-block drawer-menu-item false" href=/tags>标签</a>
 <a class="a-block drawer-menu-item false" href=/links>链接</a>
-<a class="a-block drawer-menu-item false" href=/index.xml>RSS Feed</a><div class=toc><div class=toc-content><center>- 目录 -</center><ul><li><a href=#rocketmq-%e6%a0%b8%e5%bf%83%e5%9f%ba%e7%9f%b3 onclick="onNavClick(`#rocketmq-核心基石-nav`)" id=rocketmq-核心基石-nav>RocketMQ 核心基石</a></li><li><a href=#remoting-%e5%8c%85%e4%b8%8b%e7%9a%84%e6%a0%b8%e5%bf%83%e6%8e%a5%e5%8f%a3%e4%bd%93%e7%b3%bb onclick="onNavClick(`#remoting-包下的核心接口体系-nav`)" id=remoting-包下的核心接口体系-nav>remoting 包下的核心接口体系</a></li><ul class=collapse data-toggle=collapse><li><a href=#%e6%8e%a5%e5%8f%a3-remotingservice onclick="onNavClick(`#接口-remotingservice-nav`)" id=接口-remotingservice-nav>接口 RemotingService</a></li><li><a href=#%e6%8e%a5%e5%8f%a3-remotingserver onclick="onNavClick(`#接口-remotingserver-nav`)" id=接口-remotingserver-nav>接口 RemotingServer</a></li><li><a href=#%e5%ae%9e%e7%8e%b0-nettyremotingserver onclick="onNavClick(`#实现-nettyremotingserver-nav`)" id=实现-nettyremotingserver-nav>实现 NettyRemotingServer</a></li></ul></div></div></div></div></div><transition name=fade><div v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if=isDrawerOpen v-on:click=toggleDrawer></div></transition><nav ref=navBar class="navbar sticky-top navbar-light single-column-nav-container"><div ref=navBackground class=nav-background></div><div class="container container-narrow nav-content"><button id=nav_dropdown_btn class=nav-dropdown-toggle type=button v-on:click=toggleDrawer>
+<a class="a-block drawer-menu-item false" href=/index.xml>RSS Feed</a><div class=toc><div class=toc-content><center>- 目录 -</center><ul><li><a href=#rocketmq-%e6%a0%b8%e5%bf%83%e5%9f%ba%e7%9f%b3 onclick="onNavClick(`#rocketmq-核心基石-nav`)" id=rocketmq-核心基石-nav>RocketMQ 核心基石</a></li><li><a href=#remoting-%e5%8c%85%e4%b8%8b%e7%9a%84%e6%a0%b8%e5%bf%83%e6%8e%a5%e5%8f%a3%e4%bd%93%e7%b3%bb onclick="onNavClick(`#remoting-包下的核心接口体系-nav`)" id=remoting-包下的核心接口体系-nav>remoting 包下的核心接口体系</a></li><ul class=collapse data-toggle=collapse><li><a href=#%e6%8e%a5%e5%8f%a3-remotingservice onclick="onNavClick(`#接口-remotingservice-nav`)" id=接口-remotingservice-nav>接口 RemotingService</a></li><li><a href=#%e6%8e%a5%e5%8f%a3-remotingserver onclick="onNavClick(`#接口-remotingserver-nav`)" id=接口-remotingserver-nav>接口 RemotingServer</a></li><li><a href=#%e5%ae%9e%e7%8e%b0-nettyremotingserver onclick="onNavClick(`#实现-nettyremotingserver-nav`)" id=实现-nettyremotingserver-nav>实现 NettyRemotingServer</a></li></ul><li><a href=#remotingcommand onclick="onNavClick(`#remotingcommand-nav`)" id=remotingcommand-nav>RemotingCommand</a></li></ul></div></div></div></div></div><transition name=fade><div v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if=isDrawerOpen v-on:click=toggleDrawer></div></transition><nav ref=navBar class="navbar sticky-top navbar-light single-column-nav-container"><div ref=navBackground class=nav-background></div><div class="container container-narrow nav-content"><button id=nav_dropdown_btn class=nav-dropdown-toggle type=button v-on:click=toggleDrawer>
 <i class=material-icons>menu</i></button>
 <a ref=navTitle class=navbar-brand href=https://pinkhello.me/>PinkHello</a>
 <button type=button class=nav-darkmode-toggle v-on:click=toggleDarkMode>
@@ -23,9 +23,10 @@ PinkHello, All Rights Reserved</div></div><div ref=extraContainer class=extra-co
 <a href=/tags/%E6%B6%88%E6%81%AF%E4%B8%AD%E9%97%B4%E4%BB%B6>消息中间件</a>
 &nbsp;
 <i class=material-icons>schedule</i>
-4 min
+16 min
 50 s.</div></div></div><div class=post-body-wrapper><div class=post-body v-pre><h1 id=rocketmq-核心基石>RocketMQ 核心基石</h1><p>前面已经介绍了 RocketMQ 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, RocketMQ 消息系各个组件 Producer、Consumer、Broker、NameSrv 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
-而 RocketMQ 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 client、broker、namesrv 应用。</p><p>直接先说 remoting 的实现是基于 netty 做了封装、启动了服务端和客户端，支持三种消息的发送方式:</p><ul><li>同步发送</li><li>异步发送</li><li>单向发送</li></ul><h1 id=remoting-包下的核心接口体系>remoting 包下的核心接口体系</h1><p><img src=/rocketmq/package-remoting-uml.png alt="remoting uml"></p><h2 id=接口-remotingservice>接口 RemotingService</h2><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>interface</span> <span style=color:#008b45;font-weight:700>RemotingService</span> {
+而 RocketMQ 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 client、broker、namesrv 应用。</p><p>直接先说 remoting 的实现是基于 netty 做了封装、启动了服务端和客户端，支持三种消息的发送方式:</p><ul><li>同步发送</li><li>单向发送 (不需要关注响应)</li><li>异步发送</li></ul><p>下图为异步通信流程
+<img src=/rocketmq/rocketmq_remoting.png alt=rocketmq_remoting></p><h1 id=remoting-包下的核心接口体系>remoting 包下的核心接口体系</h1><p><img src=/rocketmq/package-remoting-uml.png alt="remoting uml"></p><h2 id=接口-remotingservice>接口 RemotingService</h2><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>interface</span> <span style=color:#008b45;font-weight:700>RemotingService</span> {
     <span style=color:#228b22>// 开启
 </span><span style=color:#228b22></span>    <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>start</span>();
     <span style=color:#228b22>// 关闭
@@ -201,7 +202,7 @@ PinkHello, All Rights Reserved</div></div><div ref=extraContainer class=extra-co
 
         <span style=color:#707a7c>@Override</span>
         <span style=color:#8b008b;font-weight:700>protected</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>channelRead0</span>(ChannelHandlerContext ctx, RemotingCommand msg) <span style=color:#8b008b;font-weight:700>throws</span> Exception {
-            <span style=color:#228b22>// 调用消息处理的方法  这个方法 在 NettyRemotingAbstract 类内 
+            <span style=color:#228b22>// 调用消息处理的方法  这个方法 在 NettyRemotingAbstract 类内上
 </span><span style=color:#228b22></span>            processMessageReceived(ctx, msg);
         }
     }
@@ -216,16 +217,565 @@ PinkHello, All Rights Reserved</div></div><div ref=extraContainer class=extra-co
         <span style=color:#8b008b;font-weight:700>if</span> (cmd != <span style=color:#8b008b;font-weight:700>null</span>) {
             <span style=color:#8b008b;font-weight:700>switch</span> (cmd.<span style=color:#658b00>getType</span>()) {
                 <span style=color:#8b008b;font-weight:700>case</span> REQUEST_COMMAND:
-                    processRequestCommand(ctx, cmd);
+                    <span style=color:#228b22>//处理请求指令
+</span><span style=color:#228b22></span>                    processRequestCommand(ctx, cmd);
                     <span style=color:#8b008b;font-weight:700>break</span>;
                 <span style=color:#8b008b;font-weight:700>case</span> RESPONSE_COMMAND:
-                    processResponseCommand(ctx, cmd);
+                    <span style=color:#228b22>//处理响应指令
+</span><span style=color:#228b22></span>                    processResponseCommand(ctx, cmd);
                     <span style=color:#8b008b;font-weight:700>break</span>;
                 <span style=color:#8b008b;font-weight:700>default</span>:
                     <span style=color:#8b008b;font-weight:700>break</span>;
             }
         }
     }
+}
+</code></pre></div><p>好了，到现在我们大体的 remoting server 端的大体的入口和核心处理方法差不多了，后面补充一下 RocketMQ Netty Reactor 多线程的设计</p><p><img src=/rocketmq/rocketmq_reactor_thread.png alt=rocketmq_reactor_thread></p><p>简单概括： <code>1-N-M1-M2</code> 模型</p><table><thead><tr><th style=text-align:left>线程数</th><th style=text-align:left>线程名</th><th style=text-align:left>线程具体说明</th><th style=text-align:left>代码默认值</th></tr></thead><tbody><tr><td style=text-align:left>1</td><td style=text-align:left>NettyBoss_%d</td><td style=text-align:left>Reactor主线程</td><td style=text-align:left>1</td></tr><tr><td style=text-align:left>N</td><td style=text-align:left>NettyServerEPOLLSelector_%d_%d</td><td style=text-align:left>Reactor线程池</td><td style=text-align:left>3</td></tr><tr><td style=text-align:left>M1</td><td style=text-align:left>NettyServerCodecThread_%d</td><td style=text-align:left>Worker线程池</td><td style=text-align:left>8</td></tr><tr><td style=text-align:left>M2</td><td style=text-align:left>RemotingExecutorThread_%d</td><td style=text-align:left>业务<code>processor</code>处理线程池</td><td style=text-align:left>8</td></tr></tbody></table><ul><li>[Reactor主线程] <code>1</code>, 一个 <code>Reactor主线程</code>(<code>eventLoopGroupBoss</code>) 负责监听 <code>TCP</code>网络链接请求，建立好链接，创建<code>SocketChannel</code>、并注册到<code>selector</code>上。</li><li>[Reactor线程池] <code>N=3</code>, <code>RocketMQ</code> 根据<code>OS或者配置</code>选择<code>NIO</code>还是<code>Epoll</code>，然后监听真正的网络数据。后面拿到数据后，丢给 <code>Reactor线程池</code> (<code>eventLoopGroupSelector</code>),</li><li>[Worker线程池] <code>M1=8</code>, 在执行业务逻辑之前的 <code>SSL验证</code>、<code>编解码</code>、<code>空闲检查</code>、<code>网络连接管理</code>等等，这些工作交给了 <code>defaultEventExecutorGroup</code></li><li>[业务<code>processor</code>处理线程池] <code>M2=8</code>, 处理业务操作的放在了业务线程池来执行，根据 <code>RemotingCommand</code> 的<code>业务码 code</code> 在 <code>processorTable</code> 缓存中获取到对应的 <code>processor</code>, 然后封装成<code>Task任务</code>，提交给<code>业务processor</code>处理线程池来执行 (eg: <code>sendMessageExecutor</code>,消息发送为例)</li></ul><p>备注: 特别要说明 业务<code>processor</code>处理线程池 不一定是<code>8</code>,具体看代码:</p><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>class</span> <span style=color:#008b45;font-weight:700>NettyRemotingServer</span> <span style=color:#8b008b;font-weight:700>extends</span> NettyRemotingAbstract <span style=color:#8b008b;font-weight:700>implements</span> RemotingServer{
+    <span style=color:#228b22>//todo .....
+</span><span style=color:#228b22></span>    <span style=color:#228b22>//注册Processor，一般 executor ！= null
+</span><span style=color:#228b22></span>    <span style=color:#707a7c>@Override</span>
+    <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>registerProcessor</span>(<span style=color:#00688b;font-weight:700>int</span> requestCode, NettyRequestProcessor processor, ExecutorService executor) {
+      ExecutorService executorThis = executor;
+      <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>null</span> == executor) {
+        executorThis = <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>publicExecutor</span>;
+      }
+
+      Pair&lt;NettyRequestProcessor, ExecutorService&gt; pair = <span style=color:#8b008b;font-weight:700>new</span> Pair&lt;NettyRequestProcessor, ExecutorService&gt;(processor, executorThis);
+      <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>processorTable</span>.<span style=color:#658b00>put</span>(requestCode, pair);
+    }
+    
+    <span style=color:#228b22>//注册默认的Processor，一般 executor ！= null
+</span><span style=color:#228b22></span>    <span style=color:#707a7c>@Override</span>
+    <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>registerDefaultProcessor</span>(NettyRequestProcessor processor, ExecutorService executor) {
+      <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>defaultRequestProcessor</span> = <span style=color:#8b008b;font-weight:700>new</span> Pair&lt;NettyRequestProcessor, ExecutorService&gt;(processor, executor);
+    }
+    <span style=color:#228b22>//todo .....
+</span><span style=color:#228b22></span>}
+</code></pre></div><p>这边结合理解差不多了。</p><h1 id=remotingcommand>RemotingCommand</h1><p>上面看见了在处理消息的时候一个很核心的类 下面来看一下这个类 org.apache.rocketmq.remoting.protocol.RemotingCommand</p><p>它其实是 rocketmq的指令协议</p><table><thead><tr><th>Header字段</th><th>类型</th><th>Request说明</th><th>Response说明</th></tr></thead><tbody><tr><td>code</td><td>int</td><td>请求操作码，应答方根据不同的请求码进行不同的业务处理</td><td>应答响应码。0表示成功，非0则表示各种错误</td></tr><tr><td>language</td><td>LanguageCode</td><td>请求方实现的语言</td><td>应答方实现的语言</td></tr><tr><td>version</td><td>int</td><td>请求方程序的版本</td><td>应答方程序的版本</td></tr><tr><td>opaque</td><td>int</td><td>相当于requestId，在同一个连接上的不同请求标识码，与响应消息中的相对应</td><td>应答不做修改直接返回</td></tr><tr><td>flag</td><td>int</td><td>区分是普通RPC还是onewayRPC得标志</td><td>区分是普通RPC还是onewayRPC得标志</td></tr><tr><td>remark</td><td>String</td><td>传输自定义文本信息</td><td>传输自定义文本信息</td></tr><tr><td>extFields</td><td>HashMap&lt;String, String></td><td>请求自定义扩展信息</td><td>响应自定义扩展信息</td></tr></tbody></table><p>协议编码后的样子
+<img src=/rocketmq/rocketmq_protocol_length.png alt=rocketmq_protocol_length></p><p>4个部分:</p><ul><li>消息长度: 总长度, 4 个字节存储, int 类型</li><li>序列话类型&消息头长度: int 类型, 第一个字节表示序列化类型, 后面三个字节表示消息头长度</li><li>消息头数据: 经过序列化后的消息头</li><li>消息主体数据: 消息主体的二进制字节数据</li></ul><div class=highlight><pre style=background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>class</span> <span style=color:#008b45;font-weight:700>RemotingCommand</span> {
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String SERIALIZE_TYPE_PROPERTY = <span style=color:#cd5555>&#34;rocketmq.serialize.type&#34;</span>;
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String SERIALIZE_TYPE_ENV = <span style=color:#cd5555>&#34;ROCKETMQ_SERIALIZE_TYPE&#34;</span>;
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String REMOTING_VERSION_KEY = <span style=color:#cd5555>&#34;rocketmq.remoting.version&#34;</span>;
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> InternalLogger log = InternalLoggerFactory.<span style=color:#658b00>getLogger</span>(RemotingHelper.<span style=color:#658b00>ROCKETMQ_REMOTING</span>);
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> <span style=color:#00688b;font-weight:700>int</span> RPC_TYPE = 0; <span style=color:#228b22>// 0, REQUEST_COMMAND
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> <span style=color:#00688b;font-weight:700>int</span> RPC_ONEWAY = 1; <span style=color:#228b22>// 0, RPC
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> Map&lt;Class&lt;? <span style=color:#8b008b;font-weight:700>extends</span> CommandCustomHeader&gt;, Field[]&gt; CLASS_HASH_MAP =
+          <span style=color:#8b008b;font-weight:700>new</span> HashMap&lt;Class&lt;? <span style=color:#8b008b;font-weight:700>extends</span> CommandCustomHeader&gt;, Field[]&gt;();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> Map&lt;Class, String&gt; CANONICAL_NAME_CACHE = <span style=color:#8b008b;font-weight:700>new</span> HashMap&lt;Class, String&gt;();
+  <span style=color:#228b22>// 1, Oneway
+</span><span style=color:#228b22></span>  <span style=color:#228b22>// 1, RESPONSE_COMMAND
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> Map&lt;Field, Boolean&gt; NULLABLE_FIELD_CACHE = <span style=color:#8b008b;font-weight:700>new</span> HashMap&lt;Field, Boolean&gt;();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String STRING_CANONICAL_NAME = String.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String DOUBLE_CANONICAL_NAME_1 = Double.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String DOUBLE_CANONICAL_NAME_2 = <span style=color:#00688b;font-weight:700>double</span>.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String INTEGER_CANONICAL_NAME_1 = Integer.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String INTEGER_CANONICAL_NAME_2 = <span style=color:#00688b;font-weight:700>int</span>.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String LONG_CANONICAL_NAME_1 = Long.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String LONG_CANONICAL_NAME_2 = <span style=color:#00688b;font-weight:700>long</span>.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String BOOLEAN_CANONICAL_NAME_1 = Boolean.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>final</span> String BOOLEAN_CANONICAL_NAME_2 = <span style=color:#00688b;font-weight:700>boolean</span>.<span style=color:#658b00>class</span>.<span style=color:#658b00>getCanonicalName</span>();
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#8b008b;font-weight:700>volatile</span> <span style=color:#00688b;font-weight:700>int</span> configVersion = -1;
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> AtomicInteger requestId = <span style=color:#8b008b;font-weight:700>new</span> AtomicInteger(0);
+
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> SerializeType serializeTypeConfigInThisServer = SerializeType.<span style=color:#658b00>JSON</span>;
+
+  <span style=color:#8b008b;font-weight:700>static</span> {
+    <span style=color:#8b008b;font-weight:700>final</span> String protocol = System.<span style=color:#658b00>getProperty</span>(SERIALIZE_TYPE_PROPERTY, System.<span style=color:#658b00>getenv</span>(SERIALIZE_TYPE_ENV));
+    <span style=color:#8b008b;font-weight:700>if</span> (!isBlank(protocol)) {
+      <span style=color:#8b008b;font-weight:700>try</span> {
+        serializeTypeConfigInThisServer = SerializeType.<span style=color:#658b00>valueOf</span>(protocol);
+      } <span style=color:#8b008b;font-weight:700>catch</span> (IllegalArgumentException e) {
+        <span style=color:#8b008b;font-weight:700>throw</span> <span style=color:#8b008b;font-weight:700>new</span> RuntimeException(<span style=color:#cd5555>&#34;parser specified protocol error. protocol=&#34;</span> + protocol, e);
+      }
+    }
+  }
+
+  <span style=color:#228b22>// 请求码操作
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#00688b;font-weight:700>int</span> code;
+  <span style=color:#228b22>// 语言类型
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> LanguageCode language = LanguageCode.<span style=color:#658b00>JAVA</span>;
+  <span style=color:#228b22>// 版本
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#00688b;font-weight:700>int</span> version = 0;
+  <span style=color:#228b22>// requestId，标记请求响应是一个映射的
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#00688b;font-weight:700>int</span> opaque = requestId.<span style=color:#658b00>getAndIncrement</span>();
+  <span style=color:#228b22>// 区分是普通RPC还是onewayRPC得标志
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#00688b;font-weight:700>int</span> flag = 0;
+  <span style=color:#228b22>// 传输自定义文本信息
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> String remark;
+  <span style=color:#228b22>// 请求自定义扩展信息
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> HashMap&lt;String, String&gt; extFields;
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>transient</span> CommandCustomHeader customHeader;
+
+  <span style=color:#8b008b;font-weight:700>private</span> SerializeType serializeTypeCurrentRPC = serializeTypeConfigInThisServer;
+
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>transient</span> <span style=color:#00688b;font-weight:700>byte</span>[] body;
+
+  <span style=color:#8b008b;font-weight:700>protected</span> <span style=color:#008b45>RemotingCommand</span>() {
+  }
+
+  <span style=color:#228b22>//创建 requestCommand
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> RemotingCommand <span style=color:#008b45>createRequestCommand</span>(<span style=color:#00688b;font-weight:700>int</span> code, CommandCustomHeader customHeader) {
+    RemotingCommand cmd = <span style=color:#8b008b;font-weight:700>new</span> RemotingCommand();
+    cmd.<span style=color:#658b00>setCode</span>(code);
+    cmd.<span style=color:#658b00>customHeader</span> = customHeader;
+    setCmdVersion(cmd);
+    <span style=color:#8b008b;font-weight:700>return</span> cmd;
+  }
+
+  <span style=color:#228b22>//设置程序版本
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setCmdVersion</span>(RemotingCommand cmd) {
+    <span style=color:#8b008b;font-weight:700>if</span> (configVersion &gt;= 0) {
+      cmd.<span style=color:#658b00>setVersion</span>(configVersion);
+    } <span style=color:#8b008b;font-weight:700>else</span> {
+      String v = System.<span style=color:#658b00>getProperty</span>(REMOTING_VERSION_KEY);
+      <span style=color:#8b008b;font-weight:700>if</span> (v != <span style=color:#8b008b;font-weight:700>null</span>) {
+        <span style=color:#00688b;font-weight:700>int</span> value = Integer.<span style=color:#658b00>parseInt</span>(v);
+        cmd.<span style=color:#658b00>setVersion</span>(value);
+        configVersion = value;
+      }
+    }
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> RemotingCommand <span style=color:#008b45>createResponseCommand</span>(Class&lt;? <span style=color:#8b008b;font-weight:700>extends</span> CommandCustomHeader&gt; classHeader) {
+    <span style=color:#8b008b;font-weight:700>return</span> createResponseCommand(RemotingSysResponseCode.<span style=color:#658b00>SYSTEM_ERROR</span>, <span style=color:#cd5555>&#34;not set any response code&#34;</span>, classHeader);
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> RemotingCommand <span style=color:#008b45>createResponseCommand</span>(<span style=color:#00688b;font-weight:700>int</span> code, String remark,
+                                                      Class&lt;? <span style=color:#8b008b;font-weight:700>extends</span> CommandCustomHeader&gt; classHeader) {
+    RemotingCommand cmd = <span style=color:#8b008b;font-weight:700>new</span> RemotingCommand();
+    cmd.<span style=color:#658b00>markResponseType</span>();
+    cmd.<span style=color:#658b00>setCode</span>(code);
+    cmd.<span style=color:#658b00>setRemark</span>(remark);
+    setCmdVersion(cmd);
+
+    <span style=color:#8b008b;font-weight:700>if</span> (classHeader != <span style=color:#8b008b;font-weight:700>null</span>) {
+      <span style=color:#8b008b;font-weight:700>try</span> {
+        CommandCustomHeader objectHeader = classHeader.<span style=color:#658b00>newInstance</span>();
+        cmd.<span style=color:#658b00>customHeader</span> = objectHeader;
+      } <span style=color:#8b008b;font-weight:700>catch</span> (InstantiationException e) {
+        <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>null</span>;
+      } <span style=color:#8b008b;font-weight:700>catch</span> (IllegalAccessException e) {
+        <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>null</span>;
+      }
+    }
+
+    <span style=color:#8b008b;font-weight:700>return</span> cmd;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> RemotingCommand <span style=color:#008b45>createResponseCommand</span>(<span style=color:#00688b;font-weight:700>int</span> code, String remark) {
+    <span style=color:#8b008b;font-weight:700>return</span> createResponseCommand(code, remark, <span style=color:#8b008b;font-weight:700>null</span>);
+  }
+
+  <span style=color:#228b22>//解码
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> RemotingCommand <span style=color:#008b45>decode</span>(<span style=color:#8b008b;font-weight:700>final</span> <span style=color:#00688b;font-weight:700>byte</span>[] array) {
+    ByteBuffer byteBuffer = ByteBuffer.<span style=color:#658b00>wrap</span>(array);
+    <span style=color:#8b008b;font-weight:700>return</span> decode(byteBuffer);
+  }
+
+  <span style=color:#228b22>//解码
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> RemotingCommand <span style=color:#008b45>decode</span>(<span style=color:#8b008b;font-weight:700>final</span> ByteBuffer byteBuffer) {
+    <span style=color:#00688b;font-weight:700>int</span> length = byteBuffer.<span style=color:#658b00>limit</span>();
+    <span style=color:#00688b;font-weight:700>int</span> oriHeaderLen = byteBuffer.<span style=color:#658b00>getInt</span>();
+    <span style=color:#00688b;font-weight:700>int</span> headerLength = getHeaderLength(oriHeaderLen);
+
+    <span style=color:#00688b;font-weight:700>byte</span>[] headerData = <span style=color:#8b008b;font-weight:700>new</span> <span style=color:#00688b;font-weight:700>byte</span>[headerLength];
+    byteBuffer.<span style=color:#658b00>get</span>(headerData);
+
+    RemotingCommand cmd = headerDecode(headerData, getProtocolType(oriHeaderLen));
+
+    <span style=color:#00688b;font-weight:700>int</span> bodyLength = length - 4 - headerLength;
+    <span style=color:#00688b;font-weight:700>byte</span>[] bodyData = <span style=color:#8b008b;font-weight:700>null</span>;
+    <span style=color:#8b008b;font-weight:700>if</span> (bodyLength &gt; 0) {
+      bodyData = <span style=color:#8b008b;font-weight:700>new</span> <span style=color:#00688b;font-weight:700>byte</span>[bodyLength];
+      byteBuffer.<span style=color:#658b00>get</span>(bodyData);
+    }
+    cmd.<span style=color:#658b00>body</span> = bodyData;
+
+    <span style=color:#8b008b;font-weight:700>return</span> cmd;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#00688b;font-weight:700>int</span> <span style=color:#008b45>getHeaderLength</span>(<span style=color:#00688b;font-weight:700>int</span> length) {
+    <span style=color:#8b008b;font-weight:700>return</span> length &amp; 0xFFFFFF;
+  }
+
+  <span style=color:#228b22>//消息头解码
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> RemotingCommand <span style=color:#008b45>headerDecode</span>(<span style=color:#00688b;font-weight:700>byte</span>[] headerData, SerializeType type) {
+    <span style=color:#8b008b;font-weight:700>switch</span> (type) {
+      <span style=color:#8b008b;font-weight:700>case</span> JSON:
+        RemotingCommand resultJson = RemotingSerializable.<span style=color:#658b00>decode</span>(headerData, RemotingCommand.<span style=color:#658b00>class</span>);
+        resultJson.<span style=color:#658b00>setSerializeTypeCurrentRPC</span>(type);
+        <span style=color:#8b008b;font-weight:700>return</span> resultJson;
+      <span style=color:#8b008b;font-weight:700>case</span> ROCKETMQ:
+        RemotingCommand resultRMQ = RocketMQSerializable.<span style=color:#658b00>rocketMQProtocolDecode</span>(headerData);
+        resultRMQ.<span style=color:#658b00>setSerializeTypeCurrentRPC</span>(type);
+        <span style=color:#8b008b;font-weight:700>return</span> resultRMQ;
+      <span style=color:#8b008b;font-weight:700>default</span>:
+        <span style=color:#8b008b;font-weight:700>break</span>;
+    }
+
+    <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>null</span>;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> SerializeType <span style=color:#008b45>getProtocolType</span>(<span style=color:#00688b;font-weight:700>int</span> source) {
+    <span style=color:#8b008b;font-weight:700>return</span> SerializeType.<span style=color:#658b00>valueOf</span>((<span style=color:#00688b;font-weight:700>byte</span>) ((source &gt;&gt; 24) &amp; 0xFF));
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#00688b;font-weight:700>int</span> <span style=color:#008b45>createNewRequestId</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> requestId.<span style=color:#658b00>getAndIncrement</span>();
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> SerializeType <span style=color:#008b45>getSerializeTypeConfigInThisServer</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> serializeTypeConfigInThisServer;
+  }
+
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#00688b;font-weight:700>boolean</span> <span style=color:#008b45>isBlank</span>(String str) {
+    <span style=color:#00688b;font-weight:700>int</span> strLen;
+    <span style=color:#8b008b;font-weight:700>if</span> (str == <span style=color:#8b008b;font-weight:700>null</span> || (strLen = str.<span style=color:#658b00>length</span>()) == 0) {
+      <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>true</span>;
+    }
+    <span style=color:#8b008b;font-weight:700>for</span> (<span style=color:#00688b;font-weight:700>int</span> i = 0; i &lt; strLen; i++) {
+      <span style=color:#8b008b;font-weight:700>if</span> (!Character.<span style=color:#658b00>isWhitespace</span>(str.<span style=color:#658b00>charAt</span>(i))) {
+        <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>false</span>;
+      }
+    }
+    <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>true</span>;
+  }
+
+  <span style=color:#228b22>//设置协议类型
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#8b008b;font-weight:700>static</span> <span style=color:#00688b;font-weight:700>byte</span>[] <span style=color:#008b45>markProtocolType</span>(<span style=color:#00688b;font-weight:700>int</span> source, SerializeType type) {
+    <span style=color:#00688b;font-weight:700>byte</span>[] result = <span style=color:#8b008b;font-weight:700>new</span> <span style=color:#00688b;font-weight:700>byte</span>[4];
+
+    result[0] = type.<span style=color:#658b00>getCode</span>();
+    result[1] = (<span style=color:#00688b;font-weight:700>byte</span>) ((source &gt;&gt; 16) &amp; 0xFF);
+    result[2] = (<span style=color:#00688b;font-weight:700>byte</span>) ((source &gt;&gt; 8) &amp; 0xFF);
+    result[3] = (<span style=color:#00688b;font-weight:700>byte</span>) (source &amp; 0xFF);
+    <span style=color:#8b008b;font-weight:700>return</span> result;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>markResponseType</span>() {
+    <span style=color:#00688b;font-weight:700>int</span> bits = 1 &lt;&lt; RPC_TYPE;
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>flag</span> |= bits;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> CommandCustomHeader <span style=color:#008b45>readCustomHeader</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> customHeader;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>writeCustomHeader</span>(CommandCustomHeader customHeader) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>customHeader</span> = customHeader;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> CommandCustomHeader <span style=color:#008b45>decodeCommandCustomHeader</span>(
+          Class&lt;? <span style=color:#8b008b;font-weight:700>extends</span> CommandCustomHeader&gt; classHeader) <span style=color:#8b008b;font-weight:700>throws</span> RemotingCommandException {
+    CommandCustomHeader objectHeader;
+    <span style=color:#8b008b;font-weight:700>try</span> {
+      objectHeader = classHeader.<span style=color:#658b00>newInstance</span>();
+    } <span style=color:#8b008b;font-weight:700>catch</span> (InstantiationException e) {
+      <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>null</span>;
+    } <span style=color:#8b008b;font-weight:700>catch</span> (IllegalAccessException e) {
+      <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#8b008b;font-weight:700>null</span>;
+    }
+
+    <span style=color:#228b22>//解码定制的扩展信息字段
+</span><span style=color:#228b22></span>    <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>extFields</span> != <span style=color:#8b008b;font-weight:700>null</span>) {
+
+      Field[] fields = getClazzFields(classHeader);
+      <span style=color:#8b008b;font-weight:700>for</span> (Field field : fields) {
+        <span style=color:#8b008b;font-weight:700>if</span> (!Modifier.<span style=color:#658b00>isStatic</span>(field.<span style=color:#658b00>getModifiers</span>())) {
+          String fieldName = field.<span style=color:#658b00>getName</span>();
+          <span style=color:#8b008b;font-weight:700>if</span> (!fieldName.<span style=color:#658b00>startsWith</span>(<span style=color:#cd5555>&#34;this&#34;</span>)) {
+            <span style=color:#8b008b;font-weight:700>try</span> {
+              String value = <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>extFields</span>.<span style=color:#658b00>get</span>(fieldName);
+              <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>null</span> == value) {
+                <span style=color:#8b008b;font-weight:700>if</span> (!isFieldNullable(field)) {
+                  <span style=color:#8b008b;font-weight:700>throw</span> <span style=color:#8b008b;font-weight:700>new</span> RemotingCommandException(<span style=color:#cd5555>&#34;the custom field &lt;&#34;</span> + fieldName + <span style=color:#cd5555>&#34;&gt; is null&#34;</span>);
+                }
+                <span style=color:#8b008b;font-weight:700>continue</span>;
+              }
+
+              field.<span style=color:#658b00>setAccessible</span>(<span style=color:#8b008b;font-weight:700>true</span>);
+              String type = getCanonicalName(field.<span style=color:#658b00>getType</span>());
+              Object valueParsed;
+
+              <span style=color:#8b008b;font-weight:700>if</span> (type.<span style=color:#658b00>equals</span>(STRING_CANONICAL_NAME)) {
+                valueParsed = value;
+              } <span style=color:#8b008b;font-weight:700>else</span> <span style=color:#8b008b;font-weight:700>if</span> (type.<span style=color:#658b00>equals</span>(INTEGER_CANONICAL_NAME_1) || type.<span style=color:#658b00>equals</span>(INTEGER_CANONICAL_NAME_2)) {
+                valueParsed = Integer.<span style=color:#658b00>parseInt</span>(value);
+              } <span style=color:#8b008b;font-weight:700>else</span> <span style=color:#8b008b;font-weight:700>if</span> (type.<span style=color:#658b00>equals</span>(LONG_CANONICAL_NAME_1) || type.<span style=color:#658b00>equals</span>(LONG_CANONICAL_NAME_2)) {
+                valueParsed = Long.<span style=color:#658b00>parseLong</span>(value);
+              } <span style=color:#8b008b;font-weight:700>else</span> <span style=color:#8b008b;font-weight:700>if</span> (type.<span style=color:#658b00>equals</span>(BOOLEAN_CANONICAL_NAME_1) || type.<span style=color:#658b00>equals</span>(BOOLEAN_CANONICAL_NAME_2)) {
+                valueParsed = Boolean.<span style=color:#658b00>parseBoolean</span>(value);
+              } <span style=color:#8b008b;font-weight:700>else</span> <span style=color:#8b008b;font-weight:700>if</span> (type.<span style=color:#658b00>equals</span>(DOUBLE_CANONICAL_NAME_1) || type.<span style=color:#658b00>equals</span>(DOUBLE_CANONICAL_NAME_2)) {
+                valueParsed = Double.<span style=color:#658b00>parseDouble</span>(value);
+              } <span style=color:#8b008b;font-weight:700>else</span> {
+                <span style=color:#8b008b;font-weight:700>throw</span> <span style=color:#8b008b;font-weight:700>new</span> RemotingCommandException(<span style=color:#cd5555>&#34;the custom field &lt;&#34;</span> + fieldName + <span style=color:#cd5555>&#34;&gt; type is not supported&#34;</span>);
+              }
+
+              field.<span style=color:#658b00>set</span>(objectHeader, valueParsed);
+
+            } <span style=color:#8b008b;font-weight:700>catch</span> (Throwable e) {
+              log.<span style=color:#658b00>error</span>(<span style=color:#cd5555>&#34;Failed field [{}] decoding&#34;</span>, fieldName, e);
+            }
+          }
+        }
+      }
+
+      objectHeader.<span style=color:#658b00>checkFields</span>();
+    }
+
+    <span style=color:#8b008b;font-weight:700>return</span> objectHeader;
+  }
+
+  <span style=color:#8b008b;font-weight:700>private</span> Field[] <span style=color:#008b45>getClazzFields</span>(Class&lt;? <span style=color:#8b008b;font-weight:700>extends</span> CommandCustomHeader&gt; classHeader) {
+    Field[] field = CLASS_HASH_MAP.<span style=color:#658b00>get</span>(classHeader);
+
+    <span style=color:#8b008b;font-weight:700>if</span> (field == <span style=color:#8b008b;font-weight:700>null</span>) {
+      field = classHeader.<span style=color:#658b00>getDeclaredFields</span>();
+      <span style=color:#8b008b;font-weight:700>synchronized</span> (CLASS_HASH_MAP) {
+        CLASS_HASH_MAP.<span style=color:#658b00>put</span>(classHeader, field);
+      }
+    }
+    <span style=color:#8b008b;font-weight:700>return</span> field;
+  }
+
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#00688b;font-weight:700>boolean</span> <span style=color:#008b45>isFieldNullable</span>(Field field) {
+    <span style=color:#8b008b;font-weight:700>if</span> (!NULLABLE_FIELD_CACHE.<span style=color:#658b00>containsKey</span>(field)) {
+      Annotation annotation = field.<span style=color:#658b00>getAnnotation</span>(CFNotNull.<span style=color:#658b00>class</span>);
+      <span style=color:#8b008b;font-weight:700>synchronized</span> (NULLABLE_FIELD_CACHE) {
+        NULLABLE_FIELD_CACHE.<span style=color:#658b00>put</span>(field, annotation == <span style=color:#8b008b;font-weight:700>null</span>);
+      }
+    }
+    <span style=color:#8b008b;font-weight:700>return</span> NULLABLE_FIELD_CACHE.<span style=color:#658b00>get</span>(field);
+  }
+
+  <span style=color:#8b008b;font-weight:700>private</span> String <span style=color:#008b45>getCanonicalName</span>(Class clazz) {
+    String name = CANONICAL_NAME_CACHE.<span style=color:#658b00>get</span>(clazz);
+
+    <span style=color:#8b008b;font-weight:700>if</span> (name == <span style=color:#8b008b;font-weight:700>null</span>) {
+      name = clazz.<span style=color:#658b00>getCanonicalName</span>();
+      <span style=color:#8b008b;font-weight:700>synchronized</span> (CANONICAL_NAME_CACHE) {
+        CANONICAL_NAME_CACHE.<span style=color:#658b00>put</span>(clazz, name);
+      }
+    }
+    <span style=color:#8b008b;font-weight:700>return</span> name;
+  }
+
+  <span style=color:#228b22>// 编码
+</span><span style=color:#228b22></span>  <span style=color:#8b008b;font-weight:700>public</span> ByteBuffer <span style=color:#008b45>encode</span>() {
+    <span style=color:#228b22>// 1&gt; header length size
+</span><span style=color:#228b22></span>    <span style=color:#00688b;font-weight:700>int</span> length = 4;
+
+    <span style=color:#228b22>// 2&gt; header data length
+</span><span style=color:#228b22></span>    <span style=color:#00688b;font-weight:700>byte</span>[] headerData = <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>headerEncode</span>();
+    length += headerData.<span style=color:#658b00>length</span>;
+
+    <span style=color:#228b22>// 3&gt; body data length
+</span><span style=color:#228b22></span>    <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>body</span> != <span style=color:#8b008b;font-weight:700>null</span>) {
+      length += body.<span style=color:#658b00>length</span>;
+    }
+
+    ByteBuffer result = ByteBuffer.<span style=color:#658b00>allocate</span>(4 + length);
+
+    <span style=color:#228b22>// length
+</span><span style=color:#228b22></span>    result.<span style=color:#658b00>putInt</span>(length);
+
+    <span style=color:#228b22>// header length
+</span><span style=color:#228b22></span>    result.<span style=color:#658b00>put</span>(markProtocolType(headerData.<span style=color:#658b00>length</span>, serializeTypeCurrentRPC));
+
+    <span style=color:#228b22>// header data
+</span><span style=color:#228b22></span>    result.<span style=color:#658b00>put</span>(headerData);
+
+    <span style=color:#228b22>// body data;
+</span><span style=color:#228b22></span>    <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>body</span> != <span style=color:#8b008b;font-weight:700>null</span>) {
+      result.<span style=color:#658b00>put</span>(<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>body</span>);
+    }
+
+    result.<span style=color:#658b00>flip</span>();
+
+    <span style=color:#8b008b;font-weight:700>return</span> result;
+  }
+
+  <span style=color:#8b008b;font-weight:700>private</span> <span style=color:#00688b;font-weight:700>byte</span>[] <span style=color:#008b45>headerEncode</span>() {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>makeCustomHeaderToNet</span>();
+    <span style=color:#8b008b;font-weight:700>if</span> (SerializeType.<span style=color:#658b00>ROCKETMQ</span> == serializeTypeCurrentRPC) {
+      <span style=color:#8b008b;font-weight:700>return</span> RocketMQSerializable.<span style=color:#658b00>rocketMQProtocolEncode</span>(<span style=color:#8b008b;font-weight:700>this</span>);
+    } <span style=color:#8b008b;font-weight:700>else</span> {
+      <span style=color:#8b008b;font-weight:700>return</span> RemotingSerializable.<span style=color:#658b00>encode</span>(<span style=color:#8b008b;font-weight:700>this</span>);
+    }
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>makeCustomHeaderToNet</span>() {
+    <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>customHeader</span> != <span style=color:#8b008b;font-weight:700>null</span>) {
+      Field[] fields = getClazzFields(customHeader.<span style=color:#658b00>getClass</span>());
+      <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>null</span> == <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>extFields</span>) {
+        <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>extFields</span> = <span style=color:#8b008b;font-weight:700>new</span> HashMap&lt;String, String&gt;();
+      }
+
+      <span style=color:#8b008b;font-weight:700>for</span> (Field field : fields) {
+        <span style=color:#8b008b;font-weight:700>if</span> (!Modifier.<span style=color:#658b00>isStatic</span>(field.<span style=color:#658b00>getModifiers</span>())) {
+          String name = field.<span style=color:#658b00>getName</span>();
+          <span style=color:#8b008b;font-weight:700>if</span> (!name.<span style=color:#658b00>startsWith</span>(<span style=color:#cd5555>&#34;this&#34;</span>)) {
+            Object value = <span style=color:#8b008b;font-weight:700>null</span>;
+            <span style=color:#8b008b;font-weight:700>try</span> {
+              field.<span style=color:#658b00>setAccessible</span>(<span style=color:#8b008b;font-weight:700>true</span>);
+              value = field.<span style=color:#658b00>get</span>(<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>customHeader</span>);
+            } <span style=color:#8b008b;font-weight:700>catch</span> (Exception e) {
+              log.<span style=color:#658b00>error</span>(<span style=color:#cd5555>&#34;Failed to access field [{}]&#34;</span>, name, e);
+            }
+
+            <span style=color:#8b008b;font-weight:700>if</span> (value != <span style=color:#8b008b;font-weight:700>null</span>) {
+              <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>extFields</span>.<span style=color:#658b00>put</span>(name, value.<span style=color:#658b00>toString</span>());
+            }
+          }
+        }
+      }
+    }
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> ByteBuffer <span style=color:#008b45>encodeHeader</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> encodeHeader(<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>body</span> != <span style=color:#8b008b;font-weight:700>null</span> ? <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>body</span>.<span style=color:#658b00>length</span> : 0);
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> ByteBuffer <span style=color:#008b45>encodeHeader</span>(<span style=color:#8b008b;font-weight:700>final</span> <span style=color:#00688b;font-weight:700>int</span> bodyLength) {
+    <span style=color:#228b22>// 1&gt; header length size
+</span><span style=color:#228b22></span>    <span style=color:#00688b;font-weight:700>int</span> length = 4;
+
+    <span style=color:#228b22>// 2&gt; header data length
+</span><span style=color:#228b22></span>    <span style=color:#00688b;font-weight:700>byte</span>[] headerData;
+    headerData = <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>headerEncode</span>();
+
+    length += headerData.<span style=color:#658b00>length</span>;
+
+    <span style=color:#228b22>// 3&gt; body data length
+</span><span style=color:#228b22></span>    length += bodyLength;
+
+    ByteBuffer result = ByteBuffer.<span style=color:#658b00>allocate</span>(4 + length - bodyLength);
+
+    <span style=color:#228b22>// length
+</span><span style=color:#228b22></span>    result.<span style=color:#658b00>putInt</span>(length);
+
+    <span style=color:#228b22>// header length
+</span><span style=color:#228b22></span>    result.<span style=color:#658b00>put</span>(markProtocolType(headerData.<span style=color:#658b00>length</span>, serializeTypeCurrentRPC));
+
+    <span style=color:#228b22>// header data
+</span><span style=color:#228b22></span>    result.<span style=color:#658b00>put</span>(headerData);
+
+    result.<span style=color:#658b00>flip</span>();
+
+    <span style=color:#8b008b;font-weight:700>return</span> result;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>markOnewayRPC</span>() {
+    <span style=color:#00688b;font-weight:700>int</span> bits = 1 &lt;&lt; RPC_ONEWAY;
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>flag</span> |= bits;
+  }
+
+  <span style=color:#707a7c>@JSONField</span>(serialize = <span style=color:#8b008b;font-weight:700>false</span>)
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>boolean</span> <span style=color:#008b45>isOnewayRPC</span>() {
+    <span style=color:#00688b;font-weight:700>int</span> bits = 1 &lt;&lt; RPC_ONEWAY;
+    <span style=color:#8b008b;font-weight:700>return</span> (<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>flag</span> &amp; bits) == bits;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>int</span> <span style=color:#008b45>getCode</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> code;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setCode</span>(<span style=color:#00688b;font-weight:700>int</span> code) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>code</span> = code;
+  }
+
+  <span style=color:#707a7c>@JSONField</span>(serialize = <span style=color:#8b008b;font-weight:700>false</span>)
+  <span style=color:#8b008b;font-weight:700>public</span> RemotingCommandType <span style=color:#008b45>getType</span>() {
+    <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>isResponseType</span>()) {
+      <span style=color:#8b008b;font-weight:700>return</span> RemotingCommandType.<span style=color:#658b00>RESPONSE_COMMAND</span>;
+    }
+
+    <span style=color:#8b008b;font-weight:700>return</span> RemotingCommandType.<span style=color:#658b00>REQUEST_COMMAND</span>;
+  }
+
+  <span style=color:#707a7c>@JSONField</span>(serialize = <span style=color:#8b008b;font-weight:700>false</span>)
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>boolean</span> <span style=color:#008b45>isResponseType</span>() {
+    <span style=color:#00688b;font-weight:700>int</span> bits = 1 &lt;&lt; RPC_TYPE;
+    <span style=color:#8b008b;font-weight:700>return</span> (<span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>flag</span> &amp; bits) == bits;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> LanguageCode <span style=color:#008b45>getLanguage</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> language;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setLanguage</span>(LanguageCode language) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>language</span> = language;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>int</span> <span style=color:#008b45>getVersion</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> version;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setVersion</span>(<span style=color:#00688b;font-weight:700>int</span> version) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>version</span> = version;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>int</span> <span style=color:#008b45>getOpaque</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> opaque;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setOpaque</span>(<span style=color:#00688b;font-weight:700>int</span> opaque) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>opaque</span> = opaque;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>int</span> <span style=color:#008b45>getFlag</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> flag;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setFlag</span>(<span style=color:#00688b;font-weight:700>int</span> flag) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>flag</span> = flag;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> String <span style=color:#008b45>getRemark</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> remark;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setRemark</span>(String remark) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>remark</span> = remark;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>byte</span>[] <span style=color:#008b45>getBody</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> body;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setBody</span>(<span style=color:#00688b;font-weight:700>byte</span>[] body) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>body</span> = body;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> HashMap&lt;String, String&gt; <span style=color:#008b45>getExtFields</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> extFields;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setExtFields</span>(HashMap&lt;String, String&gt; extFields) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>extFields</span> = extFields;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>addExtField</span>(String key, String value) {
+    <span style=color:#8b008b;font-weight:700>if</span> (<span style=color:#8b008b;font-weight:700>null</span> == extFields) {
+      extFields = <span style=color:#8b008b;font-weight:700>new</span> HashMap&lt;String, String&gt;();
+    }
+    extFields.<span style=color:#658b00>put</span>(key, value);
+  }
+
+  <span style=color:#707a7c>@Override</span>
+  <span style=color:#8b008b;font-weight:700>public</span> String <span style=color:#008b45>toString</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> <span style=color:#cd5555>&#34;RemotingCommand [code=&#34;</span> + code + <span style=color:#cd5555>&#34;, language=&#34;</span> + language + <span style=color:#cd5555>&#34;, version=&#34;</span> + version + <span style=color:#cd5555>&#34;, opaque=&#34;</span> + opaque + <span style=color:#cd5555>&#34;, flag(B)=&#34;</span>
+            + Integer.<span style=color:#658b00>toBinaryString</span>(flag) + <span style=color:#cd5555>&#34;, remark=&#34;</span> + remark + <span style=color:#cd5555>&#34;, extFields=&#34;</span> + extFields + <span style=color:#cd5555>&#34;, serializeTypeCurrentRPC=&#34;</span>
+            + serializeTypeCurrentRPC + <span style=color:#cd5555>&#34;]&#34;</span>;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> SerializeType <span style=color:#008b45>getSerializeTypeCurrentRPC</span>() {
+    <span style=color:#8b008b;font-weight:700>return</span> serializeTypeCurrentRPC;
+  }
+
+  <span style=color:#8b008b;font-weight:700>public</span> <span style=color:#00688b;font-weight:700>void</span> <span style=color:#008b45>setSerializeTypeCurrentRPC</span>(SerializeType serializeTypeCurrentRPC) {
+    <span style=color:#8b008b;font-weight:700>this</span>.<span style=color:#658b00>serializeTypeCurrentRPC</span> = serializeTypeCurrentRPC;
+  }
 }
 </code></pre></div><hr width=100% id=EOF><p style=color:#777>最后修改于 2021-05-19</p></div></div><nav class=post-pagination><a class=newer-posts>下回<br>已经到头啦。</a>
 <a class=older-posts href=https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/>上回<br>RocketMQ源码阅读 开篇</a></nav><div class=post-comment-wrapper><div id=gitalk-container></div></div></div></div></div></div><div id=single-column-footer>Hugo Theme <a href=https://github.com/amazingrise/hugo-theme-diary>Diary</a> by <a href=https://amazingrise.net>Rise</a><br>移植自 <a href=https://mak1t0.cc/ target=_blank rel="noreferrer noopener">Makito</a>'s <a href=https://github.com/SumiMakito/hexo-theme-journal/ target=_blank rel="noreferrer noopener">Journal.</a><br><br>&copy;

@@ -4,9 +4,11 @@
 &lt;p>直接先说 remoting 的实现是基于 netty 做了封装、启动了服务端和客户端，支持三种消息的发送方式:&lt;/p>
 &lt;ul>
 &lt;li>同步发送&lt;/li>
+&lt;li>单向发送 (不需要关注响应)&lt;/li>
 &lt;li>异步发送&lt;/li>
-&lt;li>单向发送&lt;/li>
 &lt;/ul>
+&lt;p>下图为异步通信流程
+&lt;img src="https://pinkhello.me/rocketmq/rocketmq_remoting.png" alt="rocketmq_remoting">&lt;/p>
 &lt;h1 id="remoting-包下的核心接口体系">remoting 包下的核心接口体系&lt;/h1>
 &lt;p>&lt;img src="https://pinkhello.me/rocketmq/package-remoting-uml.png" alt="remoting uml">&lt;/p>
 &lt;h2 id="接口-remotingservice">接口 RemotingService&lt;/h2>
@@ -167,7 +169,7 @@ log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555
 &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NettyServerHandler&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> SimpleChannelInboundHandler&amp;lt;RemotingCommand&amp;gt; {
 &lt;span style="color:#707a7c">@Override&lt;/span>
 &lt;span style="color:#8b008b;font-weight:bold">protected&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">channelRead0&lt;/span>(ChannelHandlerContext ctx, RemotingCommand msg) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-&lt;span style="color:#228b22">// 调用消息处理的方法 这个方法 在 NettyRemotingAbstract 类内
+&lt;span style="color:#228b22">// 调用消息处理的方法 这个方法 在 NettyRemotingAbstract 类内上
 &lt;/span>&lt;span style="color:#228b22">&lt;/span> processMessageReceived(ctx, msg);
 }
 }
@@ -181,15 +183,579 @@ log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555
 &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (cmd != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
 &lt;span style="color:#8b008b;font-weight:bold">switch&lt;/span> (cmd.&lt;span style="color:#658b00">getType&lt;/span>()) {
 &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> REQUEST_COMMAND:
-processRequestCommand(ctx, cmd);
+&lt;span style="color:#228b22">//处理请求指令
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> processRequestCommand(ctx, cmd);
 &lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
 &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RESPONSE_COMMAND:
-processResponseCommand(ctx, cmd);
+&lt;span style="color:#228b22">//处理响应指令
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> processResponseCommand(ctx, cmd);
 &lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
 &lt;span style="color:#8b008b;font-weight:bold">default&lt;/span>:
 &lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
 }
 }
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>好了，到现在我们大体的 remoting server 端的大体的入口和核心处理方法差不多了，后面补充一下 RocketMQ Netty Reactor 多线程的设计&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/rocketmq/rocketmq_reactor_thread.png" alt="rocketmq_reactor_thread">&lt;/p>
+&lt;p>简单概括： &lt;code>1-N-M1-M2&lt;/code> 模型&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">线程数&lt;/th>
+&lt;th style="text-align:left">线程名&lt;/th>
+&lt;th style="text-align:left">线程具体说明&lt;/th>
+&lt;th style="text-align:left">代码默认值&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">1&lt;/td>
+&lt;td style="text-align:left">NettyBoss_%d&lt;/td>
+&lt;td style="text-align:left">Reactor主线程&lt;/td>
+&lt;td style="text-align:left">1&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">N&lt;/td>
+&lt;td style="text-align:left">NettyServerEPOLLSelector_%d_%d&lt;/td>
+&lt;td style="text-align:left">Reactor线程池&lt;/td>
+&lt;td style="text-align:left">3&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">M1&lt;/td>
+&lt;td style="text-align:left">NettyServerCodecThread_%d&lt;/td>
+&lt;td style="text-align:left">Worker线程池&lt;/td>
+&lt;td style="text-align:left">8&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">M2&lt;/td>
+&lt;td style="text-align:left">RemotingExecutorThread_%d&lt;/td>
+&lt;td style="text-align:left">业务&lt;code>processor&lt;/code>处理线程池&lt;/td>
+&lt;td style="text-align:left">8&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>[Reactor主线程] &lt;code>1&lt;/code>, 一个 &lt;code>Reactor主线程&lt;/code>(&lt;code>eventLoopGroupBoss&lt;/code>) 负责监听 &lt;code>TCP&lt;/code>网络链接请求，建立好链接，创建&lt;code>SocketChannel&lt;/code>、并注册到&lt;code>selector&lt;/code>上。&lt;/li>
+&lt;li>[Reactor线程池] &lt;code>N=3&lt;/code>, &lt;code>RocketMQ&lt;/code> 根据&lt;code>OS或者配置&lt;/code>选择&lt;code>NIO&lt;/code>还是&lt;code>Epoll&lt;/code>，然后监听真正的网络数据。后面拿到数据后，丢给 &lt;code>Reactor线程池&lt;/code> (&lt;code>eventLoopGroupSelector&lt;/code>),&lt;/li>
+&lt;li>[Worker线程池] &lt;code>M1=8&lt;/code>, 在执行业务逻辑之前的 &lt;code>SSL验证&lt;/code>、&lt;code>编解码&lt;/code>、&lt;code>空闲检查&lt;/code>、&lt;code>网络连接管理&lt;/code>等等，这些工作交给了 &lt;code>defaultEventExecutorGroup&lt;/code>&lt;/li>
+&lt;li>[业务&lt;code>processor&lt;/code>处理线程池] &lt;code>M2=8&lt;/code>, 处理业务操作的放在了业务线程池来执行，根据 &lt;code>RemotingCommand&lt;/code> 的&lt;code>业务码 code&lt;/code> 在 &lt;code>processorTable&lt;/code> 缓存中获取到对应的 &lt;code>processor&lt;/code>, 然后封装成&lt;code>Task任务&lt;/code>，提交给&lt;code>业务processor&lt;/code>处理线程池来执行 (eg: &lt;code>sendMessageExecutor&lt;/code>,消息发送为例)&lt;/li>
+&lt;/ul>
+&lt;p>备注: 特别要说明 业务&lt;code>processor&lt;/code>处理线程池 不一定是&lt;code>8&lt;/code>,具体看代码:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NettyRemotingServer&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> NettyRemotingAbstract &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> RemotingServer{
+&lt;span style="color:#228b22">//todo .....
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">//注册Processor，一般 executor ！= null
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">registerProcessor&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> requestCode, NettyRequestProcessor processor, ExecutorService executor) {
+ExecutorService executorThis = executor;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> == executor) {
+executorThis = &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">publicExecutor&lt;/span>;
+}
+Pair&amp;lt;NettyRequestProcessor, ExecutorService&amp;gt; pair = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Pair&amp;lt;NettyRequestProcessor, ExecutorService&amp;gt;(processor, executorThis);
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">processorTable&lt;/span>.&lt;span style="color:#658b00">put&lt;/span>(requestCode, pair);
+}
+&lt;span style="color:#228b22">//注册默认的Processor，一般 executor ！= null
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">registerDefaultProcessor&lt;/span>(NettyRequestProcessor processor, ExecutorService executor) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">defaultRequestProcessor&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Pair&amp;lt;NettyRequestProcessor, ExecutorService&amp;gt;(processor, executor);
+}
+&lt;span style="color:#228b22">//todo .....
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这边结合理解差不多了。&lt;/p>
+&lt;h1 id="remotingcommand">RemotingCommand&lt;/h1>
+&lt;p>上面看见了在处理消息的时候一个很核心的类 下面来看一下这个类 org.apache.rocketmq.remoting.protocol.RemotingCommand&lt;/p>
+&lt;p>它其实是 rocketmq的指令协议&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Header字段&lt;/th>
+&lt;th>类型&lt;/th>
+&lt;th>Request说明&lt;/th>
+&lt;th>Response说明&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>code&lt;/td>
+&lt;td>int&lt;/td>
+&lt;td>请求操作码，应答方根据不同的请求码进行不同的业务处理&lt;/td>
+&lt;td>应答响应码。0表示成功，非0则表示各种错误&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>language&lt;/td>
+&lt;td>LanguageCode&lt;/td>
+&lt;td>请求方实现的语言&lt;/td>
+&lt;td>应答方实现的语言&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>version&lt;/td>
+&lt;td>int&lt;/td>
+&lt;td>请求方程序的版本&lt;/td>
+&lt;td>应答方程序的版本&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>opaque&lt;/td>
+&lt;td>int&lt;/td>
+&lt;td>相当于requestId，在同一个连接上的不同请求标识码，与响应消息中的相对应&lt;/td>
+&lt;td>应答不做修改直接返回&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>flag&lt;/td>
+&lt;td>int&lt;/td>
+&lt;td>区分是普通RPC还是onewayRPC得标志&lt;/td>
+&lt;td>区分是普通RPC还是onewayRPC得标志&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>remark&lt;/td>
+&lt;td>String&lt;/td>
+&lt;td>传输自定义文本信息&lt;/td>
+&lt;td>传输自定义文本信息&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>extFields&lt;/td>
+&lt;td>HashMap&amp;lt;String, String&amp;gt;&lt;/td>
+&lt;td>请求自定义扩展信息&lt;/td>
+&lt;td>响应自定义扩展信息&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>协议编码后的样子
+&lt;img src="https://pinkhello.me/rocketmq/rocketmq_protocol_length.png" alt="rocketmq_protocol_length">&lt;/p>
+&lt;p>4个部分:&lt;/p>
+&lt;ul>
+&lt;li>消息长度: 总长度, 4 个字节存储, int 类型&lt;/li>
+&lt;li>序列话类型&amp;amp;消息头长度: int 类型, 第一个字节表示序列化类型, 后面三个字节表示消息头长度&lt;/li>
+&lt;li>消息头数据: 经过序列化后的消息头&lt;/li>
+&lt;li>消息主体数据: 消息主体的二进制字节数据&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RemotingCommand&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String SERIALIZE_TYPE_PROPERTY = &lt;span style="color:#cd5555">&amp;#34;rocketmq.serialize.type&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String SERIALIZE_TYPE_ENV = &lt;span style="color:#cd5555">&amp;#34;ROCKETMQ_SERIALIZE_TYPE&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String REMOTING_VERSION_KEY = &lt;span style="color:#cd5555">&amp;#34;rocketmq.remoting.version&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> InternalLogger log = InternalLoggerFactory.&lt;span style="color:#658b00">getLogger&lt;/span>(RemotingHelper.&lt;span style="color:#658b00">ROCKETMQ_REMOTING&lt;/span>);
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> RPC_TYPE = 0; &lt;span style="color:#228b22">// 0, REQUEST_COMMAND
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> RPC_ONEWAY = 1; &lt;span style="color:#228b22">// 0, RPC
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> Map&amp;lt;Class&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> CommandCustomHeader&amp;gt;, Field[]&amp;gt; CLASS_HASH_MAP =
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> HashMap&amp;lt;Class&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> CommandCustomHeader&amp;gt;, Field[]&amp;gt;();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> Map&amp;lt;Class, String&amp;gt; CANONICAL_NAME_CACHE = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> HashMap&amp;lt;Class, String&amp;gt;();
+&lt;span style="color:#228b22">// 1, Oneway
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// 1, RESPONSE_COMMAND
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> Map&amp;lt;Field, Boolean&amp;gt; NULLABLE_FIELD_CACHE = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> HashMap&amp;lt;Field, Boolean&amp;gt;();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String STRING_CANONICAL_NAME = String.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String DOUBLE_CANONICAL_NAME_1 = Double.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String DOUBLE_CANONICAL_NAME_2 = &lt;span style="color:#00688b;font-weight:bold">double&lt;/span>.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String INTEGER_CANONICAL_NAME_1 = Integer.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String INTEGER_CANONICAL_NAME_2 = &lt;span style="color:#00688b;font-weight:bold">int&lt;/span>.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String LONG_CANONICAL_NAME_1 = Long.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String LONG_CANONICAL_NAME_2 = &lt;span style="color:#00688b;font-weight:bold">long&lt;/span>.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String BOOLEAN_CANONICAL_NAME_1 = Boolean.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String BOOLEAN_CANONICAL_NAME_2 = &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span>.&lt;span style="color:#658b00">class&lt;/span>.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">volatile&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> configVersion = -1;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> AtomicInteger requestId = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> AtomicInteger(0);
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> SerializeType serializeTypeConfigInThisServer = SerializeType.&lt;span style="color:#658b00">JSON&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String protocol = System.&lt;span style="color:#658b00">getProperty&lt;/span>(SERIALIZE_TYPE_PROPERTY, System.&lt;span style="color:#658b00">getenv&lt;/span>(SERIALIZE_TYPE_ENV));
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!isBlank(protocol)) {
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+serializeTypeConfigInThisServer = SerializeType.&lt;span style="color:#658b00">valueOf&lt;/span>(protocol);
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (IllegalArgumentException e) {
+&lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RuntimeException(&lt;span style="color:#cd5555">&amp;#34;parser specified protocol error. protocol=&amp;#34;&lt;/span> + protocol, e);
+}
+}
+}
+&lt;span style="color:#228b22">// 请求码操作
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> code;
+&lt;span style="color:#228b22">// 语言类型
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> LanguageCode language = LanguageCode.&lt;span style="color:#658b00">JAVA&lt;/span>;
+&lt;span style="color:#228b22">// 版本
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> version = 0;
+&lt;span style="color:#228b22">// requestId，标记请求响应是一个映射的
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> opaque = requestId.&lt;span style="color:#658b00">getAndIncrement&lt;/span>();
+&lt;span style="color:#228b22">// 区分是普通RPC还是onewayRPC得标志
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> flag = 0;
+&lt;span style="color:#228b22">// 传输自定义文本信息
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String remark;
+&lt;span style="color:#228b22">// 请求自定义扩展信息
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> HashMap&amp;lt;String, String&amp;gt; extFields;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">transient&lt;/span> CommandCustomHeader customHeader;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> SerializeType serializeTypeCurrentRPC = serializeTypeConfigInThisServer;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">transient&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] body;
+&lt;span style="color:#8b008b;font-weight:bold">protected&lt;/span> &lt;span style="color:#008b45">RemotingCommand&lt;/span>() {
+}
+&lt;span style="color:#228b22">//创建 requestCommand
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> RemotingCommand &lt;span style="color:#008b45">createRequestCommand&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> code, CommandCustomHeader customHeader) {
+RemotingCommand cmd = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RemotingCommand();
+cmd.&lt;span style="color:#658b00">setCode&lt;/span>(code);
+cmd.&lt;span style="color:#658b00">customHeader&lt;/span> = customHeader;
+setCmdVersion(cmd);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> cmd;
+}
+&lt;span style="color:#228b22">//设置程序版本
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setCmdVersion&lt;/span>(RemotingCommand cmd) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (configVersion &amp;gt;= 0) {
+cmd.&lt;span style="color:#658b00">setVersion&lt;/span>(configVersion);
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+String v = System.&lt;span style="color:#658b00">getProperty&lt;/span>(REMOTING_VERSION_KEY);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (v != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> value = Integer.&lt;span style="color:#658b00">parseInt&lt;/span>(v);
+cmd.&lt;span style="color:#658b00">setVersion&lt;/span>(value);
+configVersion = value;
+}
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> RemotingCommand &lt;span style="color:#008b45">createResponseCommand&lt;/span>(Class&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> CommandCustomHeader&amp;gt; classHeader) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> createResponseCommand(RemotingSysResponseCode.&lt;span style="color:#658b00">SYSTEM_ERROR&lt;/span>, &lt;span style="color:#cd5555">&amp;#34;not set any response code&amp;#34;&lt;/span>, classHeader);
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> RemotingCommand &lt;span style="color:#008b45">createResponseCommand&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> code, String remark,
+Class&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> CommandCustomHeader&amp;gt; classHeader) {
+RemotingCommand cmd = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RemotingCommand();
+cmd.&lt;span style="color:#658b00">markResponseType&lt;/span>();
+cmd.&lt;span style="color:#658b00">setCode&lt;/span>(code);
+cmd.&lt;span style="color:#658b00">setRemark&lt;/span>(remark);
+setCmdVersion(cmd);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (classHeader != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+CommandCustomHeader objectHeader = classHeader.&lt;span style="color:#658b00">newInstance&lt;/span>();
+cmd.&lt;span style="color:#658b00">customHeader&lt;/span> = objectHeader;
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (InstantiationException e) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (IllegalAccessException e) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> cmd;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> RemotingCommand &lt;span style="color:#008b45">createResponseCommand&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> code, String remark) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> createResponseCommand(code, remark, &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>);
+}
+&lt;span style="color:#228b22">//解码
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> RemotingCommand &lt;span style="color:#008b45">decode&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] array) {
+ByteBuffer byteBuffer = ByteBuffer.&lt;span style="color:#658b00">wrap&lt;/span>(array);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> decode(byteBuffer);
+}
+&lt;span style="color:#228b22">//解码
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> RemotingCommand &lt;span style="color:#008b45">decode&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ByteBuffer byteBuffer) {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> length = byteBuffer.&lt;span style="color:#658b00">limit&lt;/span>();
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> oriHeaderLen = byteBuffer.&lt;span style="color:#658b00">getInt&lt;/span>();
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> headerLength = getHeaderLength(oriHeaderLen);
+&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] headerData = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[headerLength];
+byteBuffer.&lt;span style="color:#658b00">get&lt;/span>(headerData);
+RemotingCommand cmd = headerDecode(headerData, getProtocolType(oriHeaderLen));
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> bodyLength = length - 4 - headerLength;
+&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] bodyData = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (bodyLength &amp;gt; 0) {
+bodyData = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[bodyLength];
+byteBuffer.&lt;span style="color:#658b00">get&lt;/span>(bodyData);
+}
+cmd.&lt;span style="color:#658b00">body&lt;/span> = bodyData;
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> cmd;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> &lt;span style="color:#008b45">getHeaderLength&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> length) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> length &amp;amp; 0xFFFFFF;
+}
+&lt;span style="color:#228b22">//消息头解码
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> RemotingCommand &lt;span style="color:#008b45">headerDecode&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] headerData, SerializeType type) {
+&lt;span style="color:#8b008b;font-weight:bold">switch&lt;/span> (type) {
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> JSON:
+RemotingCommand resultJson = RemotingSerializable.&lt;span style="color:#658b00">decode&lt;/span>(headerData, RemotingCommand.&lt;span style="color:#658b00">class&lt;/span>);
+resultJson.&lt;span style="color:#658b00">setSerializeTypeCurrentRPC&lt;/span>(type);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> resultJson;
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> ROCKETMQ:
+RemotingCommand resultRMQ = RocketMQSerializable.&lt;span style="color:#658b00">rocketMQProtocolDecode&lt;/span>(headerData);
+resultRMQ.&lt;span style="color:#658b00">setSerializeTypeCurrentRPC&lt;/span>(type);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> resultRMQ;
+&lt;span style="color:#8b008b;font-weight:bold">default&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> SerializeType &lt;span style="color:#008b45">getProtocolType&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> source) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> SerializeType.&lt;span style="color:#658b00">valueOf&lt;/span>((&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>) ((source &amp;gt;&amp;gt; 24) &amp;amp; 0xFF));
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> &lt;span style="color:#008b45">createNewRequestId&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> requestId.&lt;span style="color:#658b00">getAndIncrement&lt;/span>();
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> SerializeType &lt;span style="color:#008b45">getSerializeTypeConfigInThisServer&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> serializeTypeConfigInThisServer;
+}
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">isBlank&lt;/span>(String str) {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> strLen;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (str == &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> || (strLen = str.&lt;span style="color:#658b00">length&lt;/span>()) == 0) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>;
+}
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> i = 0; i &amp;lt; strLen; i++) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!Character.&lt;span style="color:#658b00">isWhitespace&lt;/span>(str.&lt;span style="color:#658b00">charAt&lt;/span>(i))) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>;
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>;
+}
+&lt;span style="color:#228b22">//设置协议类型
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] &lt;span style="color:#008b45">markProtocolType&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> source, SerializeType type) {
+&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] result = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[4];
+result[0] = type.&lt;span style="color:#658b00">getCode&lt;/span>();
+result[1] = (&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>) ((source &amp;gt;&amp;gt; 16) &amp;amp; 0xFF);
+result[2] = (&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>) ((source &amp;gt;&amp;gt; 8) &amp;amp; 0xFF);
+result[3] = (&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>) (source &amp;amp; 0xFF);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> result;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">markResponseType&lt;/span>() {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> bits = 1 &amp;lt;&amp;lt; RPC_TYPE;
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">flag&lt;/span> |= bits;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> CommandCustomHeader &lt;span style="color:#008b45">readCustomHeader&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> customHeader;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">writeCustomHeader&lt;/span>(CommandCustomHeader customHeader) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">customHeader&lt;/span> = customHeader;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> CommandCustomHeader &lt;span style="color:#008b45">decodeCommandCustomHeader&lt;/span>(
+Class&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> CommandCustomHeader&amp;gt; classHeader) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> RemotingCommandException {
+CommandCustomHeader objectHeader;
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+objectHeader = classHeader.&lt;span style="color:#658b00">newInstance&lt;/span>();
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (InstantiationException e) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (IllegalAccessException e) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+&lt;span style="color:#228b22">//解码定制的扩展信息字段
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">extFields&lt;/span> != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+Field[] fields = getClazzFields(classHeader);
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (Field field : fields) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!Modifier.&lt;span style="color:#658b00">isStatic&lt;/span>(field.&lt;span style="color:#658b00">getModifiers&lt;/span>())) {
+String fieldName = field.&lt;span style="color:#658b00">getName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!fieldName.&lt;span style="color:#658b00">startsWith&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;this&amp;#34;&lt;/span>)) {
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+String value = &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">extFields&lt;/span>.&lt;span style="color:#658b00">get&lt;/span>(fieldName);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> == value) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!isFieldNullable(field)) {
+&lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RemotingCommandException(&lt;span style="color:#cd5555">&amp;#34;the custom field &amp;lt;&amp;#34;&lt;/span> + fieldName + &lt;span style="color:#cd5555">&amp;#34;&amp;gt; is null&amp;#34;&lt;/span>);
+}
+&lt;span style="color:#8b008b;font-weight:bold">continue&lt;/span>;
+}
+field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+String type = getCanonicalName(field.&lt;span style="color:#658b00">getType&lt;/span>());
+Object valueParsed;
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (type.&lt;span style="color:#658b00">equals&lt;/span>(STRING_CANONICAL_NAME)) {
+valueParsed = value;
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (type.&lt;span style="color:#658b00">equals&lt;/span>(INTEGER_CANONICAL_NAME_1) || type.&lt;span style="color:#658b00">equals&lt;/span>(INTEGER_CANONICAL_NAME_2)) {
+valueParsed = Integer.&lt;span style="color:#658b00">parseInt&lt;/span>(value);
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (type.&lt;span style="color:#658b00">equals&lt;/span>(LONG_CANONICAL_NAME_1) || type.&lt;span style="color:#658b00">equals&lt;/span>(LONG_CANONICAL_NAME_2)) {
+valueParsed = Long.&lt;span style="color:#658b00">parseLong&lt;/span>(value);
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (type.&lt;span style="color:#658b00">equals&lt;/span>(BOOLEAN_CANONICAL_NAME_1) || type.&lt;span style="color:#658b00">equals&lt;/span>(BOOLEAN_CANONICAL_NAME_2)) {
+valueParsed = Boolean.&lt;span style="color:#658b00">parseBoolean&lt;/span>(value);
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (type.&lt;span style="color:#658b00">equals&lt;/span>(DOUBLE_CANONICAL_NAME_1) || type.&lt;span style="color:#658b00">equals&lt;/span>(DOUBLE_CANONICAL_NAME_2)) {
+valueParsed = Double.&lt;span style="color:#658b00">parseDouble&lt;/span>(value);
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> RemotingCommandException(&lt;span style="color:#cd5555">&amp;#34;the custom field &amp;lt;&amp;#34;&lt;/span> + fieldName + &lt;span style="color:#cd5555">&amp;#34;&amp;gt; type is not supported&amp;#34;&lt;/span>);
+}
+field.&lt;span style="color:#658b00">set&lt;/span>(objectHeader, valueParsed);
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (Throwable e) {
+log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;Failed field [{}] decoding&amp;#34;&lt;/span>, fieldName, e);
+}
+}
+}
+}
+objectHeader.&lt;span style="color:#658b00">checkFields&lt;/span>();
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> objectHeader;
+}
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> Field[] &lt;span style="color:#008b45">getClazzFields&lt;/span>(Class&amp;lt;? &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> CommandCustomHeader&amp;gt; classHeader) {
+Field[] field = CLASS_HASH_MAP.&lt;span style="color:#658b00">get&lt;/span>(classHeader);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (field == &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+field = classHeader.&lt;span style="color:#658b00">getDeclaredFields&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">synchronized&lt;/span> (CLASS_HASH_MAP) {
+CLASS_HASH_MAP.&lt;span style="color:#658b00">put&lt;/span>(classHeader, field);
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> field;
+}
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">isFieldNullable&lt;/span>(Field field) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!NULLABLE_FIELD_CACHE.&lt;span style="color:#658b00">containsKey&lt;/span>(field)) {
+Annotation annotation = field.&lt;span style="color:#658b00">getAnnotation&lt;/span>(CFNotNull.&lt;span style="color:#658b00">class&lt;/span>);
+&lt;span style="color:#8b008b;font-weight:bold">synchronized&lt;/span> (NULLABLE_FIELD_CACHE) {
+NULLABLE_FIELD_CACHE.&lt;span style="color:#658b00">put&lt;/span>(field, annotation == &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>);
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> NULLABLE_FIELD_CACHE.&lt;span style="color:#658b00">get&lt;/span>(field);
+}
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String &lt;span style="color:#008b45">getCanonicalName&lt;/span>(Class clazz) {
+String name = CANONICAL_NAME_CACHE.&lt;span style="color:#658b00">get&lt;/span>(clazz);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (name == &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+name = clazz.&lt;span style="color:#658b00">getCanonicalName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">synchronized&lt;/span> (CANONICAL_NAME_CACHE) {
+CANONICAL_NAME_CACHE.&lt;span style="color:#658b00">put&lt;/span>(clazz, name);
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> name;
+}
+&lt;span style="color:#228b22">// 编码
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> ByteBuffer &lt;span style="color:#008b45">encode&lt;/span>() {
+&lt;span style="color:#228b22">// 1&amp;gt; header length size
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> length = 4;
+&lt;span style="color:#228b22">// 2&amp;gt; header data length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] headerData = &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">headerEncode&lt;/span>();
+length += headerData.&lt;span style="color:#658b00">length&lt;/span>;
+&lt;span style="color:#228b22">// 3&amp;gt; body data length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">body&lt;/span> != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+length += body.&lt;span style="color:#658b00">length&lt;/span>;
+}
+ByteBuffer result = ByteBuffer.&lt;span style="color:#658b00">allocate&lt;/span>(4 + length);
+&lt;span style="color:#228b22">// length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> result.&lt;span style="color:#658b00">putInt&lt;/span>(length);
+&lt;span style="color:#228b22">// header length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> result.&lt;span style="color:#658b00">put&lt;/span>(markProtocolType(headerData.&lt;span style="color:#658b00">length&lt;/span>, serializeTypeCurrentRPC));
+&lt;span style="color:#228b22">// header data
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> result.&lt;span style="color:#658b00">put&lt;/span>(headerData);
+&lt;span style="color:#228b22">// body data;
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">body&lt;/span> != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+result.&lt;span style="color:#658b00">put&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">body&lt;/span>);
+}
+result.&lt;span style="color:#658b00">flip&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> result;
+}
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] &lt;span style="color:#008b45">headerEncode&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">makeCustomHeaderToNet&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (SerializeType.&lt;span style="color:#658b00">ROCKETMQ&lt;/span> == serializeTypeCurrentRPC) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> RocketMQSerializable.&lt;span style="color:#658b00">rocketMQProtocolEncode&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>);
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> RemotingSerializable.&lt;span style="color:#658b00">encode&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>);
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">makeCustomHeaderToNet&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">customHeader&lt;/span> != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+Field[] fields = getClazzFields(customHeader.&lt;span style="color:#658b00">getClass&lt;/span>());
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> == &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">extFields&lt;/span>) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">extFields&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> HashMap&amp;lt;String, String&amp;gt;();
+}
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (Field field : fields) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!Modifier.&lt;span style="color:#658b00">isStatic&lt;/span>(field.&lt;span style="color:#658b00">getModifiers&lt;/span>())) {
+String name = field.&lt;span style="color:#658b00">getName&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!name.&lt;span style="color:#658b00">startsWith&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;this&amp;#34;&lt;/span>)) {
+Object value = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+field.&lt;span style="color:#658b00">setAccessible&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>);
+value = field.&lt;span style="color:#658b00">get&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">customHeader&lt;/span>);
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (Exception e) {
+log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;Failed to access field [{}]&amp;#34;&lt;/span>, name, e);
+}
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (value != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">extFields&lt;/span>.&lt;span style="color:#658b00">put&lt;/span>(name, value.&lt;span style="color:#658b00">toString&lt;/span>());
+}
+}
+}
+}
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> ByteBuffer &lt;span style="color:#008b45">encodeHeader&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> encodeHeader(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">body&lt;/span> != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> ? &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">body&lt;/span>.&lt;span style="color:#658b00">length&lt;/span> : 0);
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> ByteBuffer &lt;span style="color:#008b45">encodeHeader&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> bodyLength) {
+&lt;span style="color:#228b22">// 1&amp;gt; header length size
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> length = 4;
+&lt;span style="color:#228b22">// 2&amp;gt; header data length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] headerData;
+headerData = &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">headerEncode&lt;/span>();
+length += headerData.&lt;span style="color:#658b00">length&lt;/span>;
+&lt;span style="color:#228b22">// 3&amp;gt; body data length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> length += bodyLength;
+ByteBuffer result = ByteBuffer.&lt;span style="color:#658b00">allocate&lt;/span>(4 + length - bodyLength);
+&lt;span style="color:#228b22">// length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> result.&lt;span style="color:#658b00">putInt&lt;/span>(length);
+&lt;span style="color:#228b22">// header length
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> result.&lt;span style="color:#658b00">put&lt;/span>(markProtocolType(headerData.&lt;span style="color:#658b00">length&lt;/span>, serializeTypeCurrentRPC));
+&lt;span style="color:#228b22">// header data
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> result.&lt;span style="color:#658b00">put&lt;/span>(headerData);
+result.&lt;span style="color:#658b00">flip&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> result;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">markOnewayRPC&lt;/span>() {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> bits = 1 &amp;lt;&amp;lt; RPC_ONEWAY;
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">flag&lt;/span> |= bits;
+}
+&lt;span style="color:#707a7c">@JSONField&lt;/span>(serialize = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>)
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">isOnewayRPC&lt;/span>() {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> bits = 1 &amp;lt;&amp;lt; RPC_ONEWAY;
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">flag&lt;/span> &amp;amp; bits) == bits;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> &lt;span style="color:#008b45">getCode&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> code;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setCode&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> code) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">code&lt;/span> = code;
+}
+&lt;span style="color:#707a7c">@JSONField&lt;/span>(serialize = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>)
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> RemotingCommandType &lt;span style="color:#008b45">getType&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">isResponseType&lt;/span>()) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> RemotingCommandType.&lt;span style="color:#658b00">RESPONSE_COMMAND&lt;/span>;
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> RemotingCommandType.&lt;span style="color:#658b00">REQUEST_COMMAND&lt;/span>;
+}
+&lt;span style="color:#707a7c">@JSONField&lt;/span>(serialize = &lt;span style="color:#8b008b;font-weight:bold">false&lt;/span>)
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">isResponseType&lt;/span>() {
+&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> bits = 1 &amp;lt;&amp;lt; RPC_TYPE;
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">flag&lt;/span> &amp;amp; bits) == bits;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> LanguageCode &lt;span style="color:#008b45">getLanguage&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> language;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setLanguage&lt;/span>(LanguageCode language) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">language&lt;/span> = language;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> &lt;span style="color:#008b45">getVersion&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> version;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setVersion&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> version) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">version&lt;/span> = version;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> &lt;span style="color:#008b45">getOpaque&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> opaque;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setOpaque&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> opaque) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">opaque&lt;/span> = opaque;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> &lt;span style="color:#008b45">getFlag&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> flag;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setFlag&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> flag) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">flag&lt;/span> = flag;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> String &lt;span style="color:#008b45">getRemark&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> remark;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setRemark&lt;/span>(String remark) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">remark&lt;/span> = remark;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] &lt;span style="color:#008b45">getBody&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> body;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setBody&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">byte&lt;/span>[] body) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">body&lt;/span> = body;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> HashMap&amp;lt;String, String&amp;gt; &lt;span style="color:#008b45">getExtFields&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> extFields;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setExtFields&lt;/span>(HashMap&amp;lt;String, String&amp;gt; extFields) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">extFields&lt;/span> = extFields;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">addExtField&lt;/span>(String key, String value) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> == extFields) {
+extFields = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> HashMap&amp;lt;String, String&amp;gt;();
+}
+extFields.&lt;span style="color:#658b00">put&lt;/span>(key, value);
+}
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> String &lt;span style="color:#008b45">toString&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#cd5555">&amp;#34;RemotingCommand [code=&amp;#34;&lt;/span> + code + &lt;span style="color:#cd5555">&amp;#34;, language=&amp;#34;&lt;/span> + language + &lt;span style="color:#cd5555">&amp;#34;, version=&amp;#34;&lt;/span> + version + &lt;span style="color:#cd5555">&amp;#34;, opaque=&amp;#34;&lt;/span> + opaque + &lt;span style="color:#cd5555">&amp;#34;, flag(B)=&amp;#34;&lt;/span>
++ Integer.&lt;span style="color:#658b00">toBinaryString&lt;/span>(flag) + &lt;span style="color:#cd5555">&amp;#34;, remark=&amp;#34;&lt;/span> + remark + &lt;span style="color:#cd5555">&amp;#34;, extFields=&amp;#34;&lt;/span> + extFields + &lt;span style="color:#cd5555">&amp;#34;, serializeTypeCurrentRPC=&amp;#34;&lt;/span>
++ serializeTypeCurrentRPC + &lt;span style="color:#cd5555">&amp;#34;]&amp;#34;&lt;/span>;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> SerializeType &lt;span style="color:#008b45">getSerializeTypeCurrentRPC&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> serializeTypeCurrentRPC;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">setSerializeTypeCurrentRPC&lt;/span>(SerializeType serializeTypeCurrentRPC) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">serializeTypeCurrentRPC&lt;/span> = serializeTypeCurrentRPC;
 }
 }
 &lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 开篇</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</link><pubDate>Wed, 19 May 2021 15:02:20 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E5%BC%80%E7%AF%87/ -&lt;h1 id="rocketmq-是什么">RocketMQ 是什么?&lt;/h1>
