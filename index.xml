@@ -1,17 +1,252 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:57 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 NameServer</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</link><pubDate>Wed, 19 May 2021 15:09:57 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ -&lt;pre>&lt;code class="language-sequence" data-lang="sequence">title: 三个臭皮匠的故事
-participant 小王
-participant 小李
-participant 小异常
-note left of 小王: 我是小王
-note over 小李: 我是小李
-note right of 小异常: 大家好！\n我是小异常
-小王-&amp;gt;小王: 小王想：今天要去见两个好朋友咯~
-小王-&amp;gt;小李: 嘿，小李好久不见啊~
-小李--&amp;gt;&amp;gt;小王: 是啊
-小李-&amp;gt;小异常: 小异常，你好啊
-小异常--&amp;gt;小王: 哈，小王！\n最近身体怎么样了？
-小王-&amp;gt;&amp;gt;小异常: 还可以吧
-&lt;/code>&lt;/pre>- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 通信组件</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</link><pubDate>Wed, 19 May 2021 15:09:45 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ -&lt;h1 id="rocketmq-核心基石">RocketMQ 核心基石&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:57 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 NameServer</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</link><pubDate>Wed, 19 May 2021 15:09:57 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ -&lt;h1 id="nameserver-角色">NameServer 角色&lt;/h1>
+&lt;p>NameSever 在 RocketMQ 起到重要的角色，承担着路由管理、服务注册、服务发现等核心功能。&lt;/p>
+&lt;ul>
+&lt;li>接收 Broker 的请求注册 Broker 路由信息&lt;/li>
+&lt;li>接收 Client 请求根据某个 topic 获取所有到 broker 的路由信息&lt;/li>
+&lt;/ul>
+&lt;h1 id="namesrv-核心类">NameSrv 核心类&lt;/h1>
+&lt;ul>
+&lt;li>NamesrvStartup&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NamesrvStartup&lt;/span> {
+&lt;span style="color:#228b22">//...
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> NamesrvController &lt;span style="color:#008b45">main0&lt;/span>(String[] args) {
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+NamesrvController controller = createNamesrvController(args);
+&lt;span style="color:#228b22">//启动 NamesrvController
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> start(controller);
+String tip = &lt;span style="color:#cd5555">&amp;#34;The Name Server boot success. serializeType=&amp;#34;&lt;/span> + RemotingCommand.&lt;span style="color:#658b00">getSerializeTypeConfigInThisServer&lt;/span>();
+log.&lt;span style="color:#658b00">info&lt;/span>(tip);
+System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">printf&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;%s%n&amp;#34;&lt;/span>, tip);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> controller;
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (Throwable e) {
+e.&lt;span style="color:#658b00">printStackTrace&lt;/span>();
+System.&lt;span style="color:#658b00">exit&lt;/span>(-1);
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+&lt;span style="color:#228b22">//...
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * 启动 NamesrvController
+&lt;/span>&lt;span style="color:#228b22"> * @param controller
+&lt;/span>&lt;span style="color:#228b22"> * @return
+&lt;/span>&lt;span style="color:#228b22"> * @throws Exception
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> NamesrvController &lt;span style="color:#008b45">start&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> NamesrvController controller) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> == controller) {
+&lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> IllegalArgumentException(&lt;span style="color:#cd5555">&amp;#34;NamesrvController is null&amp;#34;&lt;/span>);
+}
+&lt;span style="color:#228b22">// NamesrvController 初始化
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> initResult = controller.&lt;span style="color:#658b00">initialize&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (!initResult) {
+controller.&lt;span style="color:#658b00">shutdown&lt;/span>();
+System.&lt;span style="color:#658b00">exit&lt;/span>(-3);
+}
+&lt;span style="color:#228b22">// 启动后的钩子
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> Runtime.&lt;span style="color:#658b00">getRuntime&lt;/span>().&lt;span style="color:#658b00">addShutdownHook&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ShutdownHookThread(log, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Callable&amp;lt;Void&amp;gt;() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Void &lt;span style="color:#008b45">call&lt;/span>() &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
+controller.&lt;span style="color:#658b00">shutdown&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+}));
+controller.&lt;span style="color:#658b00">start&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> controller;
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>NamesrvController&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NamesrvController&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">initialize&lt;/span>() {
+&lt;span style="color:#228b22">//从配置文件以及一系列的配置中，捞取配置放入到 Config Manager
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">kvConfigManager&lt;/span>.&lt;span style="color:#658b00">load&lt;/span>();
+&lt;span style="color:#228b22">//创建 Netty 通信 Server
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">remotingServer&lt;/span> = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> NettyRemotingServer(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">nettyServerConfig&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">brokerHousekeepingService&lt;/span>);
+&lt;span style="color:#228b22">//创建线程池
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">remotingExecutor&lt;/span> =
+Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(nettyServerConfig.&lt;span style="color:#658b00">getServerWorkerThreads&lt;/span>(), &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ThreadFactoryImpl(&lt;span style="color:#cd5555">&amp;#34;RemotingExecutorThread_&amp;#34;&lt;/span>));
+&lt;span style="color:#228b22">// 注册事件处理器
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">registerProcessor&lt;/span>();
+&lt;span style="color:#228b22">//扫描broker &amp;amp; 移除不存活的broker 间隔 10s 执行
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">scheduledExecutorService&lt;/span>.&lt;span style="color:#658b00">scheduleAtFixedRate&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Runnable() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">run&lt;/span>() {
+NamesrvController.&lt;span style="color:#658b00">this&lt;/span>.&lt;span style="color:#658b00">routeInfoManager&lt;/span>.&lt;span style="color:#658b00">scanNotActiveBroker&lt;/span>();
+}
+}, 5, 10, TimeUnit.&lt;span style="color:#658b00">SECONDS&lt;/span>);
+&lt;span style="color:#228b22">//间隔 10 min 中, 打印配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">scheduledExecutorService&lt;/span>.&lt;span style="color:#658b00">scheduleAtFixedRate&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Runnable() {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">run&lt;/span>() {
+NamesrvController.&lt;span style="color:#658b00">this&lt;/span>.&lt;span style="color:#658b00">kvConfigManager&lt;/span>.&lt;span style="color:#658b00">printAllPeriodically&lt;/span>();
+}
+}, 1, 10, TimeUnit.&lt;span style="color:#658b00">MINUTES&lt;/span>);
+&lt;span style="color:#228b22">//todo ....SSL 的代码，忽略
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>;
+}
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">registerProcessor&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (namesrvConfig.&lt;span style="color:#658b00">isClusterTest&lt;/span>()) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">remotingServer&lt;/span>.&lt;span style="color:#658b00">registerDefaultProcessor&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ClusterTestRequestProcessor(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>, namesrvConfig.&lt;span style="color:#658b00">getProductEnvName&lt;/span>()),
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">remotingExecutor&lt;/span>);
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">remotingServer&lt;/span>.&lt;span style="color:#658b00">registerDefaultProcessor&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRequestProcessor(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>), &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">remotingExecutor&lt;/span>);
+}
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>KvConfigManager&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">KVConfigManager&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ReadWriteLock lock = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ReentrantReadWriteLock();
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> HashMap&amp;lt;String&lt;span style="color:#228b22">/* Namespace */&lt;/span>, HashMap&amp;lt;String&lt;span style="color:#228b22">/* Key */&lt;/span>, String&lt;span style="color:#228b22">/* Value */&lt;/span>&amp;gt;&amp;gt; configTable =
+&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> HashMap&amp;lt;String, HashMap&amp;lt;String, String&amp;gt;&amp;gt;();
+&lt;span style="color:#228b22">//.....
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">load&lt;/span>() {
+String content = &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+content = MixAll.&lt;span style="color:#658b00">file2String&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">namesrvController&lt;/span>.&lt;span style="color:#658b00">getNamesrvConfig&lt;/span>().&lt;span style="color:#658b00">getKvConfigPath&lt;/span>());
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (IOException e) {
+log.&lt;span style="color:#658b00">warn&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;Load KV config table exception&amp;#34;&lt;/span>, e);
+}
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (content != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+KVConfigSerializeWrapper kvConfigSerializeWrapper =
+KVConfigSerializeWrapper.&lt;span style="color:#658b00">fromJson&lt;/span>(content, KVConfigSerializeWrapper.&lt;span style="color:#658b00">class&lt;/span>);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (&lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> != kvConfigSerializeWrapper) {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">configTable&lt;/span>.&lt;span style="color:#658b00">putAll&lt;/span>(kvConfigSerializeWrapper.&lt;span style="color:#658b00">getConfigTable&lt;/span>());
+log.&lt;span style="color:#658b00">info&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;load KV config table OK&amp;#34;&lt;/span>);
+}
+}
+}
+&lt;span style="color:#228b22">//..... 其他代码省略
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">// 周期打印配置的
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">printAllPeriodically&lt;/span>() {
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">lock&lt;/span>.&lt;span style="color:#658b00">readLock&lt;/span>().&lt;span style="color:#658b00">lockInterruptibly&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+log.&lt;span style="color:#658b00">info&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;--------------------------------------------------------&amp;#34;&lt;/span>);
+{
+log.&lt;span style="color:#658b00">info&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;configTable SIZE: {}&amp;#34;&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">configTable&lt;/span>.&lt;span style="color:#658b00">size&lt;/span>());
+Iterator&amp;lt;Entry&amp;lt;String, HashMap&amp;lt;String, String&amp;gt;&amp;gt;&amp;gt; it =
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">configTable&lt;/span>.&lt;span style="color:#658b00">entrySet&lt;/span>().&lt;span style="color:#658b00">iterator&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">while&lt;/span> (it.&lt;span style="color:#658b00">hasNext&lt;/span>()) {
+Entry&amp;lt;String, HashMap&amp;lt;String, String&amp;gt;&amp;gt; next = it.&lt;span style="color:#658b00">next&lt;/span>();
+Iterator&amp;lt;Entry&amp;lt;String, String&amp;gt;&amp;gt; itSub = next.&lt;span style="color:#658b00">getValue&lt;/span>().&lt;span style="color:#658b00">entrySet&lt;/span>().&lt;span style="color:#658b00">iterator&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">while&lt;/span> (itSub.&lt;span style="color:#658b00">hasNext&lt;/span>()) {
+Entry&amp;lt;String, String&amp;gt; nextSub = itSub.&lt;span style="color:#658b00">next&lt;/span>();
+log.&lt;span style="color:#658b00">info&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;configTable NS: {} Key: {} Value: {}&amp;#34;&lt;/span>, next.&lt;span style="color:#658b00">getKey&lt;/span>(), nextSub.&lt;span style="color:#658b00">getKey&lt;/span>(),
+nextSub.&lt;span style="color:#658b00">getValue&lt;/span>());
+}
+}
+}
+} &lt;span style="color:#8b008b;font-weight:bold">finally&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">lock&lt;/span>.&lt;span style="color:#658b00">readLock&lt;/span>().&lt;span style="color:#658b00">unlock&lt;/span>();
+}
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (InterruptedException e) {
+log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;printAllPeriodically InterruptedException&amp;#34;&lt;/span>, e);
+}
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>RouteInfoManager&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RouteInfoManager&lt;/span> {
+&lt;span style="color:#228b22">//读写锁
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ReadWriteLock lock = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ReentrantReadWriteLock();
+&lt;span style="color:#228b22">// Topic 和 队列信息
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> HashMap&amp;lt;String&lt;span style="color:#228b22">/* topic */&lt;/span>, List&amp;lt;QueueData&amp;gt;&amp;gt; topicQueueTable;
+&lt;span style="color:#228b22">// BrokerName 和 以 BrokerName 为单位的 Broker集合
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> HashMap&amp;lt;String&lt;span style="color:#228b22">/* brokerName */&lt;/span>, BrokerData&amp;gt; brokerAddrTable;
+&lt;span style="color:#228b22">// 集群 以及 属于该集群的 brokerName 列表
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> HashMap&amp;lt;String&lt;span style="color:#228b22">/* clusterName */&lt;/span>, Set&amp;lt;String&lt;span style="color:#228b22">/* brokerName */&lt;/span>&amp;gt;&amp;gt; clusterAddrTable;
+&lt;span style="color:#228b22">// 存活的 broker 地址列表
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> HashMap&amp;lt;String&lt;span style="color:#228b22">/* brokerAddr */&lt;/span>, BrokerLiveInfo&amp;gt; brokerLiveTable;
+&lt;span style="color:#228b22">// broker 对应的 filter server 列表
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> HashMap&amp;lt;String&lt;span style="color:#228b22">/* brokerAddr */&lt;/span>, List&amp;lt;String&amp;gt;&lt;span style="color:#228b22">/* Filter Server */&lt;/span>&amp;gt; filterServerTable;
+&lt;span style="color:#228b22">//...... 全部是关于上面这些缓存数据的修改更新等等代码
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>
+&lt;span style="color:#228b22">//额外的扫描清理方法
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">scanNotActiveBroker&lt;/span>() {
+Iterator&amp;lt;Entry&amp;lt;String, BrokerLiveInfo&amp;gt;&amp;gt; it = &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">brokerLiveTable&lt;/span>.&lt;span style="color:#658b00">entrySet&lt;/span>().&lt;span style="color:#658b00">iterator&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">while&lt;/span> (it.&lt;span style="color:#658b00">hasNext&lt;/span>()) {
+Entry&amp;lt;String, BrokerLiveInfo&amp;gt; next = it.&lt;span style="color:#658b00">next&lt;/span>();
+&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> last = next.&lt;span style="color:#658b00">getValue&lt;/span>().&lt;span style="color:#658b00">getLastUpdateTimestamp&lt;/span>();
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> ((last + BROKER_CHANNEL_EXPIRED_TIME) &amp;lt; System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>()) {
+RemotingUtil.&lt;span style="color:#658b00">closeChannel&lt;/span>(next.&lt;span style="color:#658b00">getValue&lt;/span>().&lt;span style="color:#658b00">getChannel&lt;/span>());
+it.&lt;span style="color:#658b00">remove&lt;/span>();
+log.&lt;span style="color:#658b00">warn&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;The broker channel expired, {} {}ms&amp;#34;&lt;/span>, next.&lt;span style="color:#658b00">getKey&lt;/span>(), BROKER_CHANNEL_EXPIRED_TIME);
+&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">onChannelDestroy&lt;/span>(next.&lt;span style="color:#658b00">getKey&lt;/span>(), next.&lt;span style="color:#658b00">getValue&lt;/span>().&lt;span style="color:#658b00">getChannel&lt;/span>());
+}
+}
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>DefaultRequestProcessor&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">DefaultRequestProcessor&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> AsyncNettyRequestProcessor &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> NettyRequestProcessor {
+&lt;span style="color:#707a7c">@Override&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> RemotingCommand &lt;span style="color:#008b45">processRequest&lt;/span>(ChannelHandlerContext ctx,
+RemotingCommand request) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> RemotingCommandException {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (ctx != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>) {
+log.&lt;span style="color:#658b00">debug&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;receive request, {} {} {}&amp;#34;&lt;/span>,
+request.&lt;span style="color:#658b00">getCode&lt;/span>(),
+RemotingHelper.&lt;span style="color:#658b00">parseChannelRemoteAddr&lt;/span>(ctx.&lt;span style="color:#658b00">channel&lt;/span>()),
+request);
+}
+&lt;span style="color:#8b008b;font-weight:bold">switch&lt;/span> (request.&lt;span style="color:#658b00">getCode&lt;/span>()) {
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">PUT_KV_CONFIG&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">putKVConfig&lt;/span>(ctx, request); &lt;span style="color:#228b22">// KvConfigManager 存放配置并持久化
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_KV_CONFIG&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getKVConfig&lt;/span>(ctx, request); &lt;span style="color:#228b22">// KvConfigManager 查询配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">DELETE_KV_CONFIG&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">deleteKVConfig&lt;/span>(ctx, request); &lt;span style="color:#228b22">// KvConfigManager 删除配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">QUERY_DATA_VERSION&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> queryBrokerTopicConfig(ctx, request); &lt;span style="color:#228b22">// 查询数据的版本信息
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">REGISTER_BROKER&lt;/span>:
+Version brokerVersion = MQVersion.&lt;span style="color:#658b00">value2Version&lt;/span>(request.&lt;span style="color:#658b00">getVersion&lt;/span>());
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (brokerVersion.&lt;span style="color:#658b00">ordinal&lt;/span>() &amp;gt;= MQVersion.&lt;span style="color:#658b00">Version&lt;/span>.&lt;span style="color:#658b00">V3_0_11&lt;/span>.&lt;span style="color:#658b00">ordinal&lt;/span>()) {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">registerBrokerWithFilterServer&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 注册 broker
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> } &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">registerBroker&lt;/span>(ctx, request);
+}
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">UNREGISTER_BROKER&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">unregisterBroker&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 解除注册 broker
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_ROUTEINFO_BY_TOPIC&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getRouteInfoByTopic&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 根据topic 获取 routeinfo
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_BROKER_CLUSTER_INFO&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getBrokerClusterInfo&lt;/span>(ctx, request); &lt;span style="color:#228b22">//获取 broker 信息
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">WIPE_WRITE_PERM_OF_BROKER&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">wipeWritePermOfBroker&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 获取 offset 信息
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_ALL_TOPIC_LIST_FROM_NAMESERVER&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> getAllTopicListFromNameserver(ctx, request); &lt;span style="color:#228b22">// 获取所有的 topic 列表
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">DELETE_TOPIC_IN_NAMESRV&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> deleteTopicInNamesrv(ctx, request); &lt;span style="color:#228b22">// 删除
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_KVLIST_BY_NAMESPACE&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getKVListByNamespace&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 获取 kvlist
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_TOPICS_BY_CLUSTER&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getTopicsByCluster&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 根据 cluster 获取 topic 列表
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_SYSTEM_TOPIC_LIST_FROM_NS&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getSystemTopicListFromNs&lt;/span>(ctx, request);
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_UNIT_TOPIC_LIST&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getUnitTopicList&lt;/span>(ctx, request);
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_HAS_UNIT_SUB_TOPIC_LIST&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getHasUnitSubTopicList&lt;/span>(ctx, request);
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_HAS_UNIT_SUB_UNUNIT_TOPIC_LIST&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getHasUnitSubUnUnitTopicList&lt;/span>(ctx, request);
+&lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">UPDATE_NAMESRV_CONFIG&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">updateConfig&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 更新 namesrv 配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">case&lt;/span> RequestCode.&lt;span style="color:#658b00">GET_NAMESRV_CONFIG&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">getConfig&lt;/span>(ctx, request); &lt;span style="color:#228b22">// 获取 namesrv 配置
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">default&lt;/span>:
+&lt;span style="color:#8b008b;font-weight:bold">break&lt;/span>;
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
+}
+&lt;span style="color:#228b22">//...... 其他代码省略.....
+&lt;/span>&lt;span style="color:#228b22">&lt;/span>}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="namesrv-启动流程">NameSrv 启动流程&lt;/h1>
+&lt;h2 id="rocketmq_namesrvrocketmqrocketmq-namesrvjpg">&lt;img src="https://pinkhello.me/rocketmq/rocketmq-namesrv.jpg" alt="rocketmq_namesrv">&lt;/h2>
+- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 通信组件</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</link><pubDate>Wed, 19 May 2021 15:09:45 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ -&lt;h1 id="rocketmq-核心基石">RocketMQ 核心基石&lt;/h1>
 &lt;p>前面已经介绍了 &lt;code>RocketMQ&lt;/code> 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, &lt;code>RocketMQ&lt;/code> 消息系各个组件 &lt;code>Producer&lt;/code>、&lt;code>Consumer&lt;/code>、&lt;code>Broker&lt;/code>、&lt;code>NameSrv&lt;/code> 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
 而 &lt;code>RocketMQ&lt;/code> 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 &lt;code>client&lt;/code>、&lt;code>broker&lt;/code>、&lt;code>namesrv&lt;/code> 应用。&lt;/p>
 &lt;p>直接先说 &lt;code>remoting&lt;/code> 的实现是基于 &lt;code>netty&lt;/code> 做了封装、启动了服务端和客户端，支持三种消息的发送方式:&lt;/p>
