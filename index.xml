@@ -1,12 +1,12 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:57 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 NameServer</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</link><pubDate>Wed, 19 May 2021 15:09:57 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ -&lt;h1 id="nameserver-角色">NameServer 角色&lt;/h1>
-&lt;p>NameSever 在 RocketMQ 起到重要的角色，承担着路由管理、服务注册、服务发现等核心功能。&lt;/p>
+&lt;p>&lt;code>NameSever&lt;/code> 在 &lt;code>RocketMQ&lt;/code> 起到重要的角色，承担着路由管理、服务注册、服务发现等核心功能。&lt;/p>
 &lt;ul>
-&lt;li>接收 Broker 的请求注册 Broker 路由信息&lt;/li>
-&lt;li>接收 Client 请求根据某个 topic 获取所有到 broker 的路由信息&lt;/li>
+&lt;li>接收 &lt;code>Broker&lt;/code> 的请求注册 &lt;code>Broker&lt;/code> 路由信息&lt;/li>
+&lt;li>接收 &lt;code>Client&lt;/code> 请求根据某个 &lt;code>topic&lt;/code> 获取所有到 &lt;code>broker&lt;/code> 的路由信息&lt;/li>
 &lt;/ul>
 &lt;h1 id="namesrv-核心类">NameSrv 核心类&lt;/h1>
 &lt;ul>
-&lt;li>NamesrvStartup&lt;/li>
+&lt;li>&lt;code>NamesrvStartup&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NamesrvStartup&lt;/span> {
 &lt;span style="color:#228b22">//...
@@ -55,7 +55,7 @@ controller.&lt;span style="color:#658b00">start&lt;/span>();
 }
 }
 &lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>NamesrvController&lt;/li>
+&lt;li>&lt;code>NamesrvController&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">NamesrvController&lt;/span> {
 &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">initialize&lt;/span>() {
@@ -95,7 +95,7 @@ NamesrvController.&lt;span style="color:#658b00">this&lt;/span>.&lt;span style="
 }
 }
 &lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>KvConfigManager&lt;/li>
+&lt;li>&lt;code>KvConfigManager&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">KVConfigManager&lt;/span> {
 &lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> ReadWriteLock lock = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> ReentrantReadWriteLock();
@@ -148,7 +148,7 @@ log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555
 }
 }
 &lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>RouteInfoManager&lt;/li>
+&lt;li>&lt;code>RouteInfoManager&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RouteInfoManager&lt;/span> {
 &lt;span style="color:#228b22">//读写锁
@@ -181,7 +181,7 @@ log.&lt;span style="color:#658b00">warn&lt;/span>(&lt;span style="color:#cd5555"
 }
 }
 &lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>DefaultRequestProcessor&lt;/li>
+&lt;li>&lt;code>DefaultRequestProcessor&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">DefaultRequestProcessor&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">extends&lt;/span> AsyncNettyRequestProcessor &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> NettyRequestProcessor {
 &lt;span style="color:#707a7c">@Override&lt;/span>
@@ -247,30 +247,30 @@ Version brokerVersion = MQVersion.&lt;span style="color:#658b00">value2Version&l
 &lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="namesrv-启动流程">NameSrv 启动流程&lt;/h1>
 &lt;p>&lt;img src="https://pinkhello.me/rocketmq/rocketmq-namesrv.jpg" alt="rocketmq_namesrv">&lt;/p>
 &lt;ul>
-&lt;li>入口从 NamesrvStartup#main0 启动进入, 创建了一个 核心类 NamesrvController 实例, NamesrvController#createNamesrvController 开启了配置参数、网络参数的配置&lt;/li>
-&lt;li>第二步，从 start 方法开启 调用 NamesrvController#initialize 方法&lt;/li>
+&lt;li>入口从 &lt;code>NamesrvStartup#main0&lt;/code> 启动进入, 创建了一个 核心类 &lt;code>NamesrvController&lt;/code> 实例, &lt;code>NamesrvController#createNamesrvController&lt;/code> 开启了配置参数、网络参数的配置&lt;/li>
+&lt;li>第二步，从 &lt;code>start&lt;/code> 方法开启 调用 &lt;code>NamesrvController#initialize&lt;/code> 方法&lt;/li>
 &lt;li>
 &lt;ul>
-&lt;li>KvConfigManager#load 从配置里面捞取配置合并配置到内存中&lt;/li>
+&lt;li>&lt;code>KvConfigManager#load&lt;/code> 从配置里面捞取配置合并配置到内存中&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>
 &lt;ul>
-&lt;li>构建了 NettyRemotingServer 实例&lt;/li>
+&lt;li>构建了 &lt;code>NettyRemotingServer&lt;/code> 实例&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>第6步 注册指令处理器，用于从网络接收到的指令，异步在线程池中执行业务&lt;/li>
 &lt;li>第7、8步 定时器进行扫描检查和移除非活的有问题的 broker&lt;/li>
 &lt;li>第9、10步 定期打印配置&lt;/li>
-&lt;li>最后是 start 方法&lt;/li>
+&lt;li>最后是 &lt;code>start&lt;/code> 方法&lt;/li>
 &lt;li>
 &lt;ul>
-&lt;li>开启了 netty romting server 开启netty服务监听&lt;/li>
+&lt;li>开启了 &lt;code>netty romting server&lt;/code> 开启 &lt;code>netty&lt;/code> 服务监听&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>
 &lt;ul>
-&lt;li>开启 fileWatchService 监听&lt;/li>
+&lt;li>开启 &lt;code>fileWatchService&lt;/code> 监听&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
