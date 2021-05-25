@@ -1,417 +1,4 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 25 May 2021 19:00:00 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>07 Fabric使用</title><link>https://pinkhello.me/posts/07-fabric%E4%BD%BF%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:40:46 +0800</pubDate><guid>https://pinkhello.me/posts/07-fabric%E4%BD%BF%E7%94%A8/</guid><description>PinkHello https://pinkhello.me/posts/07-fabric%E4%BD%BF%E7%94%A8/ -&lt;h2 id="docker-加入systemctl环境并启动docker">docker 加入systemctl环境并启动docker&lt;/h2>
-&lt;p>快速安装docker&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">curl -sSL https://get.daocloud.io/docker | sh
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">systemctl &lt;span style="color:#658b00">enable&lt;/span> docker
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">systemctl start docker
-&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="docker-compose-安装">docker-compose 安装&lt;/h2>
-&lt;p>走外网或者 &lt;code>github&lt;/code> 太慢,可以使用内部加速&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash"> curl -L &lt;span style="color:#cd5555">&amp;#34;https://github.com/docker/compose/releases/download/X.XX.X/docker-compose-&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>uname -s&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>&lt;span style="color:#cd5555">-&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>uname -m&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>&lt;span style="color:#cd5555">&amp;#34;&lt;/span> -o /usr/local/bin/docker-compose
-&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash"> curl -L https://get.daocloud.io/docker/compose/releases/download/1.26.2/docker-compose-&lt;span style="color:#cd5555">`&lt;/span>uname -s&lt;span style="color:#cd5555">`&lt;/span>-&lt;span style="color:#cd5555">`&lt;/span>uname -m&lt;span style="color:#cd5555">`&lt;/span> &amp;gt; /usr/local/bin/docker-compose
-&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="fabric-自动运维">fabric 自动运维&lt;/h2>
-&lt;h3 id="python-虚拟环境安装">python 虚拟环境安装&lt;/h3>
-&lt;p>&lt;a href="https://www.liaoxuefeng.com/wiki/1016959663602400/1019273143120480">参考&lt;/a>&lt;/p>
-&lt;p>创建一个独立的虚拟环境&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#658b00">cd&lt;/span> 目标目录
-virtualenv --no-site-packages venv
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>激活虚拟环境&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">&lt;span style="color:#658b00">source&lt;/span> venv/bin/activate
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="python-pip-安装-fabric">python pip 安装 Fabric&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip install fabric3
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="python-pip-导出依赖">python pip 导出依赖&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip freeze &amp;gt; requirements.txt
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="其他python-pip-导入安装">其他python pip 导入安装&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-bash" data-lang="bash">pip install -r requirements.txt
-&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="fabric-文档-fabfiles-文档httpsfabric-chsreadthedocsiozh_cnchsusagefabfileshtml">&lt;a href="https://fabric-chs.readthedocs.io/zh_CN/chs/usage/fabfiles.html">Fabric 文档 fabfiles 文档&lt;/a>&lt;/h3>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-python" data-lang="python">&lt;span style="color:#228b22"># encoding=utf-8&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">fabric.api&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> *
-&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">fabric.context_managers&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> *
-env.user = &lt;span style="color:#cd5555">&amp;#39;root&amp;#39;&lt;/span>
-env.gateway = &lt;span style="color:#cd5555">&amp;#39;192.168.1.118&amp;#39;&lt;/span>
-env.hosts = [&lt;span style="color:#cd5555">&amp;#39;10.10.2.6&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;10.10.2.7&amp;#39;&lt;/span>]
-env.passwords = {
-&lt;span style="color:#cd5555">&amp;#39;root@10.10.2.6:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_2&amp;#39;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#39;root@10.10.2.7:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_2&amp;#39;&lt;/span>,
-&lt;span style="color:#cd5555">&amp;#39;root@192.168.1.118:22&amp;#39;&lt;/span>:&lt;span style="color:#cd5555">&amp;#39;PASSWORD_1&amp;#39;&lt;/span>
-}
-jump_server = &lt;span style="color:#cd5555">&amp;#39;jump_server&amp;#39;&lt;/span>
-astra_server = &lt;span style="color:#cd5555">&amp;#39;astra_server&amp;#39;&lt;/span>
-&lt;span style="color:#228b22"># 指定 role 角色组&lt;/span>
-env.roledefs= {
-jump_server: [&lt;span style="color:#cd5555">&amp;#39;192.168.1.118&amp;#39;&lt;/span>],
-astra_server: [&lt;span style="color:#cd5555">&amp;#39;10.10.2.6&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;10.10.2.7&amp;#39;&lt;/span>]
-}
-&lt;span style="color:#228b22"># 测试&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(jump_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">test&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;ls -la &amp;amp;&amp;amp; pwd&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 登录私有仓库&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">docker_login&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;docker login -u USERNAME -p PASSWORD docker-registery.xxx.com&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 测试&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">docker_ps&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;docker ps&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 上传docker-compose&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">put_docker_compose&lt;/span>():
-&lt;span style="color:#228b22"># 上传失败，照样往下执行 with settings(warn_only=True)&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">with&lt;/span> settings(warn_only=True):
-result = put(&lt;span style="color:#cd5555">&amp;#39;deploy/prod/docker-compose.yml&amp;#39;&lt;/span>,&lt;span style="color:#cd5555">&amp;#39;~/docker-compose.yml&amp;#39;&lt;/span>)
-&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> result.failed:
-abort(&lt;span style="color:#cd5555">&amp;#39;Aborting file put task!&amp;#39;&lt;/span>)
-&lt;span style="color:#228b22"># 重新docker-compose部署&lt;/span>
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#707a7c">@roles&lt;/span>(astra_server)
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">restart_docker_compose&lt;/span>():
-run(&lt;span style="color:#cd5555">&amp;#39;docker-compose stop &amp;amp;&amp;amp; docker-compose up -d&amp;#39;&lt;/span>)
-&lt;span style="color:#707a7c">@task&lt;/span>
-&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">deploy&lt;/span>():
-docker_login()
-docker_ps()
-put_docker_compose()
-restart_docker_compose()
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/07-fabric%E4%BD%BF%E7%94%A8/ - PinkHello, All Rights Reserved</description></item><item><title>06 高性能队列Disruptor</title><link>https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</link><pubDate>Wed, 10 Feb 2021 08:35:29 +0800</pubDate><guid>https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/</guid><description>PinkHello https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ -&lt;h1 id="背景">背景&lt;/h1>
-&lt;p>&lt;code>Disruptor&lt;/code> 是 外汇交易公司&lt;code>LMAX&lt;/code>开发的高性能队列、研发是为了解决内存队列延迟问题。
-&lt;code>Disruptor&lt;/code> 一般用于线程间的消息传递。
-&lt;a href="http://lmax-exchange.github.io/disruptor/">Disruptor GitHub 地址&lt;/a>&lt;/p>
-&lt;h1 id="disruptor-介绍">&lt;code>Disruptor&lt;/code> 介绍&lt;/h1>
-&lt;p>理解 &lt;code>Disruptor&lt;/code> 最好的方式，选择一个最接近熟悉的样本进行比较。在这个前提下，可以选择 &lt;code>Java&lt;/code> 中的 &lt;code>BlockingQueue&lt;/code>.
-和队列相似，&lt;code>Disruptor&lt;/code> 也是在同一个进程中不同的线程之间进行传递数据的（例如消息或者事件），同时 &lt;code>Disruptor&lt;/code> 提供了一些将关键功能和队列分开的特性：&lt;/p>
-&lt;ul>
-&lt;li>向消费者发送多播事件&lt;/li>
-&lt;li>消息者依赖关系图&lt;/li>
-&lt;li>预先为事件分配内存&lt;/li>
-&lt;li>可选的（无锁）&lt;/li>
-&lt;/ul>
-&lt;h1 id="disruptor-核心概念">&lt;code>Disruptor&lt;/code> 核心概念&lt;/h1>
-&lt;p>在我们理解&lt;code>Disruptor&lt;/code>如何工作之前，了解下核心概念&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java">Ring Buffer&lt;/a>
-环形数组设计，为了避免垃圾回收，采用的数组结构，从3.0开始，环形缓冲区主要存储和更新在&lt;code>Disruptor&lt;/code>中移动的数据（事件）&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/Sequence.java">Sequence&lt;/a>
-&lt;code>Disruptor&lt;/code> 每个消费者(&lt;code>EventProcessor&lt;/code>)维护一个 &lt;code>Sequence&lt;/code>，并发的大多数代码都依赖 &lt;code>Sequence&lt;/code> 值的改动，所以 &lt;code>Sequence&lt;/code> 支持 &lt;code>AtomicLong&lt;/code> 的大部分也行, 唯一不同的是 &lt;code>Sequence&lt;/code> 包含额外的功能来阻止&lt;code>Sequence&lt;/code>和其他值之间的伪共享(&lt;code>false sharing&lt;/code>)&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/Sequencer.java">Sequencer&lt;/a>&lt;br>
-&lt;code>Disruptor&lt;/code> 核心逻辑, 两个实现: 单生产者和多生产者。他们实现了生产者与消费者之间的快速传递的并发算法。&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/SequenceBarrier.java">Sequence Barrier&lt;/a>
-由 &lt;code>Sequencer&lt;/code> 生成，包含此 &lt;code>Sequencer&lt;/code> 发布的 &lt;code>Sequence&lt;/code> 指针以及依赖的其他消费者的 &lt;code>Sequence&lt;/code>。包含了消费者检查是否有可用的事件的代码。&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/WaitStrategy.java">Wait Strategy&lt;/a>
-消费者等待事件的策略，这个事件由生产者放入，决定了消费者怎么等待生产者将事件放入 &lt;code>Disruptor&lt;/code>&lt;/li>
-&lt;li>Event 生产者与消费者传递的事件，完全由用户定义&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/EventProcessor.java">EventProcessor&lt;/a>
-处理事件的主要循环（&lt;code>main event loop&lt;/code>），包含了一个 &lt;code>Sequeuece&lt;/code>. 有一个具体的实现类 &lt;code>BatchEventProcessor&lt;/code>&lt;/li>
-&lt;li>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/EventHandler.java">EventHandler&lt;/a>
-用户实现的接口，代表一个消费者。处理事件。&lt;/li>
-&lt;li>Producer 生产者、先获得占位，然后提交事件。&lt;/li>
-&lt;/ul>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/Disruptor%E8%AE%BE%E8%AE%A1%E7%BB%84%E4%BB%B6%E5%9B%BE.jpg" alt="Disruptor设计组件图">&lt;/p>
-&lt;ul>
-&lt;li>
-&lt;p>事件广播(&lt;code>Multicast Events&lt;/code>)&lt;/p>
-&lt;p>事件广播是 &lt;code>Disruptor&lt;/code> 与 &lt;code>Queue&lt;/code> 最大的区别，当你有多个消费者监听一个 &lt;code>Disruptor&lt;/code>, 所有的事件将会发布到这个所有的消费者。
-&lt;code>Disruptor&lt;/code> 这一特性被用来需要对同一数据进行多个并行操作的情况。
-如在LMAX系统中有三个操作可以同时进行：日志（将数据持久到日志文件中），复制（将数据发送到其他的机器上，以确保存在数据远程副本），业务逻辑处理。
-也可以使用&lt;code>WokrerPool&lt;/code>来并行处理不同的事件。&lt;/p>
-&lt;p>如上图。可以看到有3个事件处理程序正在侦听&lt;code>Disrupto&lt;/code>r（&lt;code>JournalConsumer&lt;/code>，&lt;code>ReplicationConsumer&lt;/code> 和 &lt;code>ApplicationConsumer&lt;/code>），
-这些事件处理程序中的每个将接收&lt;code>Disruptor&lt;/code>中所有可用的消息（按相同顺序）。这允许这些消费者中的每一个并行工作。&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>消费者依赖关系图(&lt;code>Consumer Dependency Graph&lt;/code>)&lt;/p>
-&lt;p>为了支持实现业务并行处理流程，&lt;code>Disruptor&lt;/code> 提供了多个消费者之间的协作功能。回到上面的例子中，我们可以将 &lt;code>journalling&lt;/code> 和 &lt;code>replication&lt;/code> 消费完成他们的业务，后再继续执行业务逻辑流程。
-我们称呼这个功能为 &lt;code>gating&lt;/code> , &lt;code>gating&lt;/code> 发生在两种场景下:&lt;/p>
-&lt;ul>
-&lt;li>确保 &lt;code>Producer&lt;/code> 不能运行超过 &lt;code>Consumer&lt;/code> ，可以通多调用 &lt;code>RingBuffer.addGatingConsumers()&lt;/code> 来增加相关的消费者来完成&lt;/li>
-&lt;li>之前所说的场景，通过必须先完成的&lt;code>Consumer&lt;/code> 的 &lt;code>Sequence&lt;/code>的&lt;code>SequenceBarrier&lt;/code>来实现。&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>
-&lt;p>事件预分配(&lt;code>Event Preallocation&lt;/code>)&lt;/p>
-&lt;p>&lt;code>Disruptor&lt;/code> 的一个目标就是在低延时环境下，减少或异常内存的占用。（在JAVA环境下，需要较少GC停顿的次数）（C/C++环境下，大量的内存分配也是一个问题）&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>可选择的无锁(&lt;code>Optionally Lock-free&lt;/code>)&lt;/p>
-&lt;p>无锁的 &lt;code>Disruptor&lt;/code> 的低延迟的无锁的特性实现细节是都是基于 内存屏障 和 CAS 操作实现的，只有一个场景 &lt;code>BlockingWaitStrategy&lt;/code> 中使用的 &lt;code>Lock&lt;/code>
-是为了使用 &lt;code>Lock&lt;/code> 里面的 &lt;code>Condition&lt;/code>, 方便消费者线程被 &lt;code>Park&lt;/code> 时候等待新的事件来触发。许多低延迟系统使用自旋（&lt;code>busy-wait&lt;/code>）来避免使用 &lt;code>Condition&lt;/code>造成的抖动
-然而，太多的 &lt;code>busy-wait&lt;/code> 会导致性能下降，特别在CPU资源受限的情况下。&lt;/p>
-&lt;/li>
-&lt;/ul>
-&lt;h1 id="disruptor-几个核心的设计">&lt;code>Disruptor&lt;/code> 几个核心的设计&lt;/h1>
-&lt;h2 id="sequence-设计">&lt;code>Sequence&lt;/code> 设计&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/Sequence.jpg" alt="Sequence 设计">&lt;/p>
-&lt;p>Sequence 真正计数是 &lt;code>value&lt;/code> 采用缓冲行防止 &lt;code>false sharing&lt;/code>。在&lt;code>value&lt;/code>的前后有7个 &lt;code>long&lt;/code> 型的填充值，做&lt;code>CPU cache line&lt;/code>填充防止伪共享。&lt;/p>
-&lt;h2 id="ringbuffer-设计">&lt;code>RingBuffer&lt;/code> 设计&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/RingBuffer.jpg" alt="RingBuffer 设计">&lt;/p>
-&lt;p>&lt;code>RingBuffer&lt;/code> 是一个环（首尾相接），可以用作不同的上下文（线程）间传递数据的 &lt;code>Buffer&lt;/code>环形设计，每个元素都有个坐标，取得元素通过取mod操作。
-是数组设计、非链表。&lt;/p>
-&lt;p>一般是&lt;code>2^N&lt;/code>次方，这样 sequence &amp;amp; (array length - 1 ) = array index。哈希Map也是这种位运算做的。&lt;/p>
-&lt;p>&lt;code>RingBuffer&lt;/code> 特点&lt;/p>
-&lt;ul>
-&lt;li>数组实现、快速访问&lt;/li>
-&lt;li>元素是覆盖式的，不主动清除&lt;/li>
-&lt;li>神奇的缓存行（缓存是由缓存行组成的，通常64个字节、一个JAVA long 类型 8 字节）&lt;/li>
-&lt;/ul>
-&lt;h2 id="消费者依赖设计">消费者依赖设计&lt;/h2>
-&lt;h2 id="缓存内存加载过程">缓存内存加载过程&lt;/h2>
-&lt;p>&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-1.jpg" alt="缓存加载过程">
-&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-2.jpg" alt="缓存加载过程">
-&lt;img src="https://pinkhello.me/%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97-Disruptor/cache-line-3.jpg" alt="缓存加载过程">&lt;/p>
-&lt;p>&lt;a href="https://github.com/LMAX-Exchange/disruptor/blob/master/src/main/java/com/lmax/disruptor/RingBuffer.java">神奇的解决方式&amp;mdash;&amp;ndash; 缓存行填充&lt;/a>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> p1, p2, p3, p4, p5, p6, p7; &lt;span style="color:#228b22">// cache line padding
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">volatile&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> cursor = INITIAL_CURSOR_VALUE;
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> p8, p9, p10, p11, p12, p13, p14; &lt;span style="color:#228b22">// cache line padding
-&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="disruptor-使用demo">&lt;code>Disruptor&lt;/code> 使用Demo&lt;/h1>
-&lt;p>&lt;code>TransactionOrder&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">TransactionOrder&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String id;
-&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> &lt;span style="color:#00688b;font-weight:bold">double&lt;/span> price;
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>TransactionHandler&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">TransactionHandler&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> EventHandler&amp;lt;TransactionOrder&amp;gt;, WorkHandler&amp;lt;TransactionOrder&amp;gt; {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">onEvent&lt;/span>(TransactionOrder transactionOrder, &lt;span style="color:#00688b;font-weight:bold">long&lt;/span> sequence, &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> endOfBatch) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-&lt;span style="color:#8b008b;font-weight:bold">this&lt;/span>.&lt;span style="color:#658b00">onEvent&lt;/span>(transactionOrder);
-}
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">onEvent&lt;/span>(TransactionOrder transactionOrder) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-&lt;span style="color:#228b22">//具体的消费逻辑
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> transactionOrder.&lt;span style="color:#658b00">setId&lt;/span>(UUID.&lt;span style="color:#658b00">randomUUID&lt;/span>().&lt;span style="color:#658b00">toString&lt;/span>());
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo1&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo1&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> ExecutionException, InterruptedException {
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
-&lt;span style="color:#228b22">//createSingleProducer 创建单生产者的 RingBuffer
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> RingBuffer&amp;lt;TransactionOrder&amp;gt; ringBuffer =
-RingBuffer.&lt;span style="color:#658b00">createSingleProducer&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
-}
-}, BUFFER_SIZE, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> YieldingWaitStrategy());
-&lt;span style="color:#228b22">//创建线程池
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
-&lt;span style="color:#228b22">//创建 SequenceBarrier
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> SequenceBarrier sequenceBarrier = ringBuffer.&lt;span style="color:#658b00">newBarrier&lt;/span>();
-&lt;span style="color:#228b22">//创建消息处理器
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> BatchEventProcessor&amp;lt;TransactionOrder&amp;gt; eventProcessor =
-&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> BatchEventProcessor&amp;lt;TransactionOrder&amp;gt;(ringBuffer, sequenceBarrier, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler());
-&lt;span style="color:#228b22">//这一部分是让 RingBuffer根据消费者状态进行gating, 只有一个消费者的话可以省略
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">addGatingSequences&lt;/span>(eventProcessor.&lt;span style="color:#658b00">getSequence&lt;/span>());
-&lt;span style="color:#228b22">//把消息处理器提交到线程池
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> service.&lt;span style="color:#658b00">submit&lt;/span>(eventProcessor);
-Future&amp;lt;?&amp;gt; future = service.&lt;span style="color:#658b00">submit&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Callable&amp;lt;Void&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> Void &lt;span style="color:#008b45">call&lt;/span>() &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> Exception {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> seq;
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> i = 0; i&amp;lt;10000; i++) {
-seq = ringBuffer.&lt;span style="color:#658b00">next&lt;/span>(); &lt;span style="color:#228b22">//ringbuffer 的一个可用区块
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">get&lt;/span>(seq).&lt;span style="color:#658b00">setPrice&lt;/span>(Math.&lt;span style="color:#658b00">random&lt;/span>() *9999); &lt;span style="color:#228b22">// 给这个区块放入数据
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">publish&lt;/span>(seq); &lt;span style="color:#228b22">//发布数据使得 consumer 可以获取该数据
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> }
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span>;
-}
-});
-future.&lt;span style="color:#658b00">get&lt;/span>(); &lt;span style="color:#228b22">//等待生产者结束
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-eventProcessor.&lt;span style="color:#658b00">halt&lt;/span>(); &lt;span style="color:#228b22">//通知事件
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-service.&lt;span style="color:#658b00">shutdown&lt;/span>(); &lt;span style="color:#228b22">//终止线程
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo2&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo2&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) {
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
-EventFactory&amp;lt;TransactionOrder&amp;gt; eventFactory = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
-}
-};
-RingBuffer&amp;lt;TransactionOrder&amp;gt; ringBuffer = RingBuffer.&lt;span style="color:#658b00">createSingleProducer&lt;/span>(eventFactory, BUFFER_SIZE);
-SequenceBarrier sequenceBarrier = ringBuffer.&lt;span style="color:#658b00">newBarrier&lt;/span>();
-ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
-WorkHandler&amp;lt;TransactionOrder&amp;gt; workHandler = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler();
-WorkerPool&amp;lt;TransactionOrder&amp;gt; workerPool =
-&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> WorkerPool&amp;lt;TransactionOrder&amp;gt;(ringBuffer, sequenceBarrier, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> IgnoreExceptionHandler(),
-workHandler);
-&lt;span style="color:#228b22">//序列协调者
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> ringBuffer.&lt;span style="color:#658b00">addGatingSequences&lt;/span>(workerPool.&lt;span style="color:#658b00">getWorkerSequences&lt;/span>());
-workerPool.&lt;span style="color:#658b00">start&lt;/span>(service);
-&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> i=0; i&amp;lt;8; i++) {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> seq = ringBuffer.&lt;span style="color:#658b00">next&lt;/span>();
-ringBuffer.&lt;span style="color:#658b00">get&lt;/span>(seq).&lt;span style="color:#658b00">setPrice&lt;/span>(Math.&lt;span style="color:#658b00">random&lt;/span>() * 9999);
-ringBuffer.&lt;span style="color:#658b00">publish&lt;/span>(seq);
-}
-workerPool.&lt;span style="color:#658b00">halt&lt;/span>();
-service.&lt;span style="color:#658b00">shutdown&lt;/span>();
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Demo3&lt;/code>&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">Demo3&lt;/span> {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#00688b;font-weight:bold">void&lt;/span> &lt;span style="color:#008b45">main&lt;/span>(String[] args) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> InterruptedException {
-&lt;span style="color:#00688b;font-weight:bold">long&lt;/span> start = System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>();
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> BUFFER_SIZE = 1024;
-&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> THREAD_NUM = 4;
-ExecutorService service = Executors.&lt;span style="color:#658b00">newFixedThreadPool&lt;/span>(THREAD_NUM);
-Disruptor&amp;lt;TransactionOrder&amp;gt; disruptor = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> Disruptor&amp;lt;TransactionOrder&amp;gt;(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> EventFactory&amp;lt;TransactionOrder&amp;gt;() {
-&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> TransactionOrder &lt;span style="color:#008b45">newInstance&lt;/span>() {
-&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionOrder();
-}
-}, BUFFER_SIZE, service, ProducerType.&lt;span style="color:#658b00">SINGLE&lt;/span>, &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> BusySpinWaitStrategy());
-&lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * 菱形操作
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#228b22">//使用 disruptor 创建消费组 C1 与 C2
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> EventHandlerGroup&amp;lt;TransactionOrder&amp;gt; eventHandlerGroup =
-disruptor.&lt;span style="color:#658b00">handleEventsWith&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionHandler(), &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionVasConsumer());
-&lt;span style="color:#228b22">//C3
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> TransactionJmsNotifyHandler jmsNotifyHandler = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionJmsNotifyHandler();
-&lt;span style="color:#228b22">//声明在 C1 和 C2 完事后 执行 JMS消息发送操作（C3）
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> eventHandlerGroup.&lt;span style="color:#658b00">then&lt;/span>(jmsNotifyHandler);
-&lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * 顺序执行
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#228b22">// disruptor.handleEventsWith(new TransactionHandler())
-&lt;/span>&lt;span style="color:#228b22">// .then(new TransactionVasConsumer())
-&lt;/span>&lt;span style="color:#228b22">// .then(new TransactionJmsNotifyHandler());
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#228b22">/**
-&lt;/span>&lt;span style="color:#228b22"> * 六边形操作
-&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
-&lt;span style="color:#228b22">// TransactionHandler h1 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h2 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h3 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h4 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h5 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// TransactionHandler h6 = new TransactionHandler();
-&lt;/span>&lt;span style="color:#228b22">// disruptor.handleEventsWith(h1, h2);
-&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h1).handleEventsWith(h4);
-&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h2).handleEventsWith(h5);
-&lt;/span>&lt;span style="color:#228b22">// disruptor.after(h4, h5).handleEventsWith(h3);
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-&lt;span style="color:#228b22">//启动
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> disruptor.&lt;span style="color:#658b00">start&lt;/span>();
-CountDownLatch latch = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> CountDownLatch(1);
-&lt;span style="color:#228b22">//生产者准备
-&lt;/span>&lt;span style="color:#228b22">&lt;/span> service.&lt;span style="color:#658b00">submit&lt;/span>(&lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> TransactionPubllisher(disruptor, latch));
-latch.&lt;span style="color:#658b00">await&lt;/span>(); &lt;span style="color:#228b22">//等待生产者完事
-&lt;/span>&lt;span style="color:#228b22">&lt;/span>
-disruptor.&lt;span style="color:#658b00">shutdown&lt;/span>();
-service.&lt;span style="color:#658b00">shutdown&lt;/span>();
-System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b00">println&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;总耗时:&amp;#34;&lt;/span>+ (System.&lt;span style="color:#658b00">currentTimeMillis&lt;/span>() - start));
-}
-}
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/06-%E9%AB%98%E6%80%A7%E8%83%BD%E9%98%9F%E5%88%97disruptor/ - PinkHello, All Rights Reserved</description></item><item><title>05 OAuth2.0 那点事</title><link>https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</link><pubDate>Wed, 10 Feb 2021 08:32:02 +0800</pubDate><guid>https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/</guid><description>PinkHello https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ -&lt;h2 id="oauth20-是什么">&lt;code>OAuth2.0&lt;/code> 是什么?&lt;/h2>
-&lt;p>&lt;code>OAuth2.0&lt;/code> Framework RFC 6749 [https://tools.ietf.org/html/rfc6749]&lt;/p>
-&lt;p>&lt;code>OAuth&lt;/code> 就是一种授权机制，它介于客户端与资源所有者的授权层，为了分离不同的角色。
-在资源所有者同意并向客户端颁发令牌后，客户端携带令牌可以访问部分或全部资源。&lt;/p>
-&lt;p>&lt;!-- raw HTML omitted -->OAuth2.0&lt;!-- raw HTML omitted --> 是&lt;!-- raw HTML omitted -->OAuth&lt;!-- raw HTML omitted --> 协议的一个版本，为&lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted -->版本。有意思的是 &lt;!-- raw HTML omitted -->2.0&lt;!-- raw HTML omitted --> 与 &lt;!-- raw HTML omitted -->1.0&lt;!-- raw HTML omitted --> 并不兼容。&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h2 id="oauth20-授权方式">&lt;code>OAuth2.0&lt;/code> 授权方式&lt;/h2>
-&lt;p>获取授权的过程&lt;/p>
-&lt;ul>
-&lt;li>授权码(&lt;!-- raw HTML omitted -->authorization-code&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;li>隐藏式(&lt;!-- raw HTML omitted -->implicit&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;li>密码(&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;li>客户端凭证(&lt;!-- raw HTML omitted -->client credentials&lt;!-- raw HTML omitted -->)&lt;/li>
-&lt;/ul>
-&lt;p>不管哪种方式，都需要在第三方应用申请令牌之前，需要在系统中申请身份唯一标识: 客户端ID &lt;!-- raw HTML omitted -->Client ID&lt;!-- raw HTML omitted --> 和 客户端秘钥 &lt;!-- raw HTML omitted -->Client Secret&lt;!-- raw HTML omitted -->.
-这样能确保Token不被恶意使用。&lt;/p>
-&lt;p>授权重要的参数和指标:&lt;/p>
-&lt;ul>
-&lt;li>&lt;!-- raw HTML omitted -->response_type&lt;!-- raw HTML omitted --> 响应类型: &lt;!-- raw HTML omitted -->code&lt;!-- raw HTML omitted -->(要求返回授权码),&lt;!-- raw HTML omitted -->token&lt;!-- raw HTML omitted -->(要求返回授权Token)&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->client_id&lt;!-- raw HTML omitted --> 客户端身份标识&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->client_secret&lt;!-- raw HTML omitted --> 客户端秘钥&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->redirect_uri&lt;!-- raw HTML omitted --> 重定向地址&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->scope&lt;!-- raw HTML omitted --> 授权范围, &lt;!-- raw HTML omitted -->read&lt;!-- raw HTML omitted --> 只读权限, &lt;!-- raw HTML omitted -->all&lt;!-- raw HTML omitted --> 全部权限&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted --> 授权方式 &lt;!-- raw HTML omitted -->authorization_code&lt;!-- raw HTML omitted -->(授权码)、&lt;!-- raw HTML omitted -->password&lt;!-- raw HTML omitted -->(密码)、&lt;!-- raw HTML omitted -->client_credentials&lt;!-- raw HTML omitted -->
-(凭证)、&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->(更新令牌)&lt;/li>
-&lt;li>&lt;!-- raw HTML omitted -->state&lt;!-- raw HTML omitted --> 应用程序传递的一个随机数，防止 &lt;!-- raw HTML omitted -->CSRF&lt;!-- raw HTML omitted --> 攻击&lt;/li>
-&lt;/ul>
-&lt;h3 id="授权码httpswwwoauthcomoauth2-serversaccess-tokensauthorization-code-request-authorization-code-request">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/" title="authorization-code-request">授权码&lt;/a>&lt;/h3>
-&lt;p>在访问第三方应用先申请一个授权码，然后再用授权码获取令牌.这种方式也是最常用的流程，安全性也是最高的，适用于有后端的&lt;!-- raw HTML omitted -->Web&lt;!-- raw HTML omitted -->应用。授权码通过前端传送，令牌存储在后端。所有的和资源服务器的交互都在服务端完成，避免了令牌的泄露。
-授权码和令牌的在 浏览器和客户端&lt;!-- raw HTML omitted -->WEB&lt;!-- raw HTML omitted -->应用以及资源服务器的交互流程大致如下:
-&lt;img src="https://pinkhello.me/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/auth_code.png" alt="authorization-code">&lt;/p>
-&lt;ul>
-&lt;li>1.2.3.4 用户选择 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 登陆 &lt;!-- raw HTML omitted -->yelp.com&lt;!-- raw HTML omitted -->&lt;/li>
-&lt;li>3.4 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 请求用户授权 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted --> 权限&lt;/li>
-&lt;li>5.6 用户同意后返回授权码
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;/li>
-&lt;li>7.8 &lt;!-- raw HTML omitted -->Yelp.com&lt;!-- raw HTML omitted --> 通过授权码 会向 &lt;!-- raw HTML omitted -->Google&lt;!-- raw HTML omitted -->发起请求&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;/li>
-&lt;li>9 验证必要参数，返回 &lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->&lt;/li>
-&lt;li>10.11 操作请求&lt;/li>
-&lt;/ul>
-&lt;h3 id="隐藏式httpsauth0comblogoauth2-implicit-grant-and-spa-oauth2-implicit-grant-and-spa">&lt;a href="https://auth0.com/blog/oauth2-implicit-grant-and-spa/" title="oauth2-implicit-grant-and-spa">隐藏式&lt;/a>&lt;/h3>
-&lt;p>&lt;img src="https://pinkhello.me/OAuth2-0%E9%82%A3%E7%82%B9%E4%BA%8B/implicit.png" alt="implicit">&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h3 id="密码式httpswwwoauthcomoauth2-serversaccess-tokenspassword-grant-password-grant">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/password-grant/" title="password-grant">密码式&lt;/a>&lt;/h3>
-&lt;p>顾名思议,在自己的系统输入第三方系统的账号密码,自己的系统拿账号密码去申请令牌，响应题里面返回token&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h3 id="凭证式httpswwwoauthcomoauth2-serversaccess-tokensclient-credentials-client-credentials">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/client-credentials/" title="client-credentials">凭证式&lt;/a>&lt;/h3>
-&lt;p>凭证式和密码很相似，主要给没有前端输入的项目或者命令行&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h2 id="令牌的使用和更新">令牌的使用和更新&lt;/h2>
-&lt;h3 id="令牌的使用">&lt;a href="">令牌的使用&lt;/a>&lt;/h3>
-&lt;p>令牌的拿到了，就可以调用Google的API进行请求数据了，
-一般讲 Token 放入请求头 Authorization.&lt;/p>
-&lt;h3 id="令牌的更新httpswwwoauthcomoauth2-serversaccess-tokensrefreshing-access-tokens-refreshing-access-tokens">&lt;a href="https://www.oauth.com/oauth2-servers/access-tokens/refreshing-access-tokens/" title="refreshing-access-tokens">令牌的更新&lt;/a>&lt;/h3>
-&lt;p>&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted --> 是有时效性的，一旦过期就需要重新获取，但是重走一遍授权流程，不仅麻烦而且用户体验也不好，那如何让用户使用的优雅呢？&lt;/p>
-&lt;p>一般在颁发令牌的时候，颁发两个&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->, 一个授权&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->,一个&lt;!-- raw HTML omitted -->Refresh Token&lt;!-- raw HTML omitted -->,
-在更新&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->时候,将&lt;!-- raw HTML omitted -->grant_type&lt;!-- raw HTML omitted -->指定为&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->,
-参数&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->是用于更新&lt;!-- raw HTML omitted -->Token&lt;!-- raw HTML omitted -->的&lt;!-- raw HTML omitted -->refresh_token&lt;!-- raw HTML omitted -->&lt;/p>
-&lt;!-- raw HTML omitted -->
-&lt;!-- raw HTML omitted -->
-&lt;h1 id="总结">总结&lt;/h1>
-&lt;h1 id="安利">安利&lt;/h1>
-&lt;ul>
-&lt;li>Client
-&lt;ul>
-&lt;li>Go &lt;a href="https://godoc.org/golang.org/x/oauth2">https://godoc.org/golang.org/x/oauth2&lt;/a>&lt;/li>
-&lt;li>Java
-&lt;ul>
-&lt;li>&lt;a href="https://spring.io/projects/spring-social/">https://spring.io/projects/spring-social/&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://spring.io/projects/spring-security/">https://spring.io/projects/spring-security/&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>Server
-&lt;ul>
-&lt;li>Go
-&lt;ul>
-&lt;li>&lt;a href="https://github.com/go-oauth2/oauth2">https://github.com/go-oauth2/oauth2&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://github.com/zalando/gin-oauth2">https://github.com/zalando/gin-oauth2&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>Java &lt;a href="https://github.com/zalando/tokens">https://github.com/zalando/tokens&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;p>参考&lt;/p>
-&lt;ul>
-&lt;li>jsonwebtoken.io &lt;a href="https://www.jsonwebtoken.io/">https://www.jsonwebtoken.io/&lt;/a>&lt;/li>
-&lt;li>oauth.net &lt;a href="https://oauth.net/2/">https://oauth.net/2/&lt;/a>&lt;/li>
-&lt;li>aliyun.com
-&lt;ul>
-&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N">https://help.aliyun.com/document_detail/32144.html?spm=5176.87240.400427.53.32fa4614S88B0N&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT">https://help.aliyun.com/document_detail/32008.html?spm=a2c4g.11186623.6.780.40435837SXpbPT&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri">https://help.aliyun.com/document_detail/32026.html?spm=a2c4g.11186623.6.856.20b1c06dgVW6Ri&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-- https://pinkhello.me/posts/05-oauth2.0%E9%82%A3%E7%82%B9%E4%BA%8B/ - PinkHello, All Rights Reserved</description></item><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>PinkHello https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ -&lt;p>1、什么叫RPC?&lt;/p>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 25 May 2021 19:00:00 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>04 如何构建一个简单的RPC调用</title><link>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</link><pubDate>Wed, 10 Feb 2021 08:24:19 +0800</pubDate><guid>https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/</guid><description>PinkHello https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ -&lt;p>1、什么叫RPC?&lt;/p>
 &lt;!-- raw HTML omitted -->
 &lt;!-- raw HTML omitted -->
 &lt;p>&lt;img src="https://pinkhello.me/%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BARPC%E8%B0%83%E7%94%A8/RPC%E8%B0%83%E7%94%A8%E6%9C%8D%E5%8A%A1%E8%BF%87%E7%A8%8B.jpg" alt="RPC调用服务过程">&lt;/p>
@@ -541,7 +128,330 @@ p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
-- https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ - PinkHello, All Rights Reserved</description></item><item><title>03 String为什么设计成final</title><link>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Wed, 10 Feb 2021 08:19:51 +0800</pubDate><guid>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>PinkHello https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
+- https://pinkhello.me/posts/04-%E5%A6%82%E4%BD%95%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84rpc%E8%B0%83%E7%94%A8/ - PinkHello, All Rights Reserved</description></item><item><title>链接</title><link>https://pinkhello.me/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.me/links/</guid><description>PinkHello https://pinkhello.me/links/ -- https://pinkhello.me/links/ - PinkHello, All Rights Reserved</description></item><item><title>关于我</title><link>https://pinkhello.me/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.me/about/</guid><description>PinkHello https://pinkhello.me/about/ -&lt;hr>
+&lt;h2 id="-个人介绍">👷 个人介绍&lt;/h2>
+&lt;p>PinkHello &lt;img src="https://views.whatilearened.today/views/github/pinkhello/pinkhello.svg" alt="views">&lt;/p>
+&lt;p>&lt;img src="https://github-readme-stats.vercel.app/api?username=pinkhello&amp;amp;show_icons=true&amp;amp;theme=vue&amp;amp;hide_border=true&amp;amp;line_height=20&amp;amp;count_private=true" alt="">&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-go" data-lang="go">PinkHello := &amp;amp;Info {
+Name: &lt;span style="color:#cd5555">&amp;#34;PinkHello&amp;#34;&lt;/span>,
+Occupation: &lt;span style="color:#cd5555">&amp;#34;Full Stack Developer&amp;#34;&lt;/span>,
+Email: &lt;span style="color:#cd5555">&amp;#34;lee123lee123@163.com&amp;#34;&lt;/span>,
+Wechat: &lt;span style="color:#cd5555">&amp;#34;chess_1&amp;#34;&lt;/span>,
+Website: &lt;span style="color:#cd5555">&amp;#34;https://pinkhello.me&amp;#34;&lt;/span>,
+Location: &lt;span style="color:#cd5555">&amp;#34;Shanghai China&amp;#34;&lt;/span>
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;hr>
+&lt;h2 id="-技能">⚡ 技能&lt;/h2>
+&lt;p>Language&lt;br>
+&lt;img src="https://img.shields.io/badge/-Java-black?style=flat-square&amp;amp;logo=Java" alt="Java">
+&lt;img src="https://img.shields.io/badge/-Go-black?style=flat-square&amp;amp;logo=Go" alt="Go">
+&lt;img src="https://img.shields.io/badge/-Python-black?style=flat-square&amp;amp;logo=Python" alt="Python">
+&lt;img src="https://img.shields.io/badge/-JavaScript-black?style=flat-square&amp;amp;logo=JavaScript" alt="JavaScript">&lt;/p>
+&lt;p>Framework&lt;br>
+&lt;img src="https://img.shields.io/badge/-Vue-000000?style=flat-square&amp;amp;logo=Vue.js" alt="Vue">
+&lt;img src="https://img.shields.io/badge/-Spring-black?style=flat-square&amp;amp;logo=Spring" alt="Spring">
+&lt;img src="https://img.shields.io/badge/-Spring%20Boot(Cloud)-black?style=flat-square&amp;amp;logo=Spring%20Boot(Cloud)" alt="Spring Boot(Cloud)">
+&lt;img src="https://img.shields.io/badge/-Dubbo-black?style=flat-square&amp;amp;logo=Dubbo" alt="Dubbo">
+&lt;img src="https://img.shields.io/badge/-Flask-black?style=flat-square&amp;amp;logo=Flask" alt="Flask">
+&lt;img src="https://img.shields.io/badge/-Echo-black?style=flat-square&amp;amp;logo=Echo" alt="Echo">
+&lt;img src="https://img.shields.io/badge/-Gin-black?style=flat-square&amp;amp;logo=Gin" alt="Gin">
+&lt;img src="https://img.shields.io/badge/-Grpc-black?style=flat-square&amp;amp;logo=Grpc" alt="Grpc">&lt;/p>
+&lt;p>Tools&lt;br>
+&lt;img src="https://img.shields.io/badge/-Redis-black?style=flat-square&amp;amp;logo=Redis" alt="Redis">
+&lt;img src="https://img.shields.io/badge/-MySQL-black?style=flat-square&amp;amp;logo=mysql" alt="MySQL">
+&lt;img src="https://img.shields.io/badge/-Nginx-black?style=flat-square&amp;amp;logo=Nginx" alt="Nginx">
+&lt;img src="https://img.shields.io/badge/-MongoDB-black?style=flat-square&amp;amp;logo=MongoDB" alt="MongoDB">
+&lt;img src="https://img.shields.io/badge/-Pulsar-black?style=flat-square&amp;amp;logo=Pulsar" alt="Pulsar">
+&lt;img src="https://img.shields.io/badge/-Kafka-black?style=flat-square&amp;amp;logo=Kafka" alt="Kafka">
+&lt;img src="https://img.shields.io/badge/-Nsq-black?style=flat-square&amp;amp;logo=Nsq" alt="Nsq">
+&lt;img src="https://img.shields.io/badge/-RabbitMQ-black?style=flat-square&amp;amp;logo=RabbitMQ" alt="RabbitMQ">
+&lt;img src="https://img.shields.io/badge/-GitHub-181717?style=flat-square&amp;amp;logo=github" alt="GitHub">&lt;/p>
+&lt;p>Others&lt;br>
+&lt;img src="https://img.shields.io/badge/-Kubernetes-black?style=flat-square&amp;amp;logo=Kubernetes" alt="Kubernetes">
+&lt;img src="https://img.shields.io/badge/-Docker-black?style=flat-square&amp;amp;logo=Docker" alt="Docker">
+&lt;img src="https://img.shields.io/badge/-Linux-black?style=flat-square&amp;amp;logo=Linux" alt="Linux">
+&lt;img src="https://img.shields.io/badge/-Deepin-007CFF?style=flat-square&amp;amp;logo=deepin" alt="Deepin">
+&lt;img src="https://img.shields.io/badge/-Centos-262577?style=flat-square&amp;amp;logo=Centos" alt="Centos">
+&lt;img src="https://img.shields.io/badge/-Raspberry%20Pi-C51A4A?style=flat-square&amp;amp;logo=Raspberry-Pi" alt="Raspberry Pi">&lt;/p>
+&lt;hr>
+&lt;h2 id="-个人开源项目">🐳 个人开源项目&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">项目&lt;/th>
+&lt;th style="text-align:left">描述&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/GoPush">GoPush&lt;/a>&lt;/td>
+&lt;td style="text-align:left">一个实时推送组件&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/spring-boot-starter-dubbo">spring-boot-starter-dubbo&lt;/a>&lt;/td>
+&lt;td style="text-align:left">dubbo-spring-boot-脚手架&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/go-starter">go-starter&lt;/a>&lt;/td>
+&lt;td style="text-align:left">Go服务开发脚手架&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2 id="-2021-okr-进度">🚀 2021 OKR 进度&lt;/h2>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th style="text-align:left">动作&lt;/th>
+&lt;th style="text-align:left">进度&lt;/th>
+&lt;th style="text-align:left">目标&lt;/th>
+&lt;th style="text-align:left">缺陷&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td style="text-align:left">👯 Go服务开发脚手架&lt;/td>
+&lt;td style="text-align:left">done&lt;/td>
+&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/go-starter">go-starter&lt;/a>&lt;/td>
+&lt;td style="text-align:left">ut&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">💵 Go服务开发脚手架开发一个简单前后端系统&lt;/td>
+&lt;td style="text-align:left">done&lt;/td>
+&lt;td style="text-align:left">&lt;a href="http://121.4.242.26">房产CRM信息系统&lt;/a> test/123456&lt;/td>
+&lt;td style="text-align:left">-&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">🐳 K8S原理&lt;/td>
+&lt;td style="text-align:left">running&lt;/td>
+&lt;td style="text-align:left">&lt;a href="https://pinkhello.me/categories/k8s/">K8S博客成档&lt;/a>&lt;/td>
+&lt;td style="text-align:left">-&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">🚀 RocketMQ 源代码阅读(Java)&lt;/td>
+&lt;td style="text-align:left">running&lt;/td>
+&lt;td style="text-align:left">&lt;a href="https://pinkhello.me/categories/rocketmq/">RocketMQ博客成档&lt;/a>&lt;/td>
+&lt;td style="text-align:left">-&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">🚀 RocketMQ 客户端代码阅读(Compare Go/Java)&lt;/td>
+&lt;td style="text-align:left">running&lt;/td>
+&lt;td style="text-align:left">&lt;a href="https://pinkhello.me/categories/rocketmq/">RocketMQ博客成档&lt;/a>&lt;/td>
+&lt;td style="text-align:left">-&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">😄 MySQL实现原理解析&lt;/td>
+&lt;td style="text-align:left">prepare&lt;/td>
+&lt;td style="text-align:left">博客成档&lt;/td>
+&lt;td style="text-align:left">-&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td style="text-align:left">🏫 数据结构与算法之美&lt;/td>
+&lt;td style="text-align:left">prepare&lt;/td>
+&lt;td style="text-align:left">博客成档&lt;/td>
+&lt;td style="text-align:left">-&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+- https://pinkhello.me/about/ - PinkHello, All Rights Reserved</description></item><item><title>14 工作纪实2020</title><link>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</link><pubDate>Mon, 10 Feb 2020 10:00:19 +0800</pubDate><guid>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</guid><description>PinkHello https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ -&lt;h1 id="每日一思篇">每日一思篇&lt;/h1>
+&lt;h2 id="2019-10-12-每日一思-mysql-wal技术-和-ringbuffer-思想好一致">[2019-10-12 每日一思] Mysql WAL技术 和 RingBuffer 思想好一致?&lt;/h2>
+&lt;h2 id="2019-10-14-每日一思-jwt-续签该如何做">[2019-10-14 每日一思] JWT 续签该如何做?&lt;/h2>
+&lt;h2 id="2019-10-16-每日一思-tcpip-协议具体指哪些">[2019-10-16 每日一思] TCP/IP 协议具体指哪些?&lt;/h2>
+&lt;blockquote>
+&lt;p>我们都知道网络是7层模型，应表会传网数物，
+现在我只讨论应传网数这4层。TCP/IP协议应该被称为TCP/IP族，
+我的理解他不是属于单个的协议类型，是一个统称，知道网络模型核心设计思想是分层，为什么分层，分层从设计上和实现难度上都简单很多，哪一层需要修改只需要修改这一层。&lt;/p>
+&lt;ul>
+&lt;li>应用层，像最常见的http、ftp、dns、rtsp、rtmp等等协议都是属于这类，&lt;/li>
+&lt;li>传输层呢按照传输类型又分了TCP和UDP,&lt;/li>
+&lt;li>网络层，是数据包交互的层面，&lt;/li>
+&lt;li>数据链路层是处理网卡、操作系统等等软硬抽象出的可见部分。&lt;/li>
+&lt;/ul>
+&lt;p>举一个栗子，一个http请求，在应用层面是完整的，后面被传输层（TCP层）被分包，并打上序号标记，再进入网络层（IP层）添加IP首部（目标mac地址等等），
+下面就是开始疯狂的发送了，接收方一样是这个过程的逆序。应用处理完成后面的响应过程与请求过程一样的一个过程。同时可以扩展出L4与L7的问题，
+各自是如何去实现负载均衡的？L4是可以看出是基于传输层即TCP层工作（通过发布VIP（第三层）以及第四层端口），L7基于应用层工作（第四层基础上+考虑应用特征），
+比如HTTP的URL、客户端的类别、语言类型等等。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-10-18-每日一思一种场景rabbitmq-的-exchange-为-fanout-类型绑定到多个queue-什么情况会触发-rabbitmq-流控如何解决">[2019-10-18 每日一思]一种场景，rabbitmq 的 Exchange 为 fanout 类型，绑定到多个queue, 什么情况会触发 rabbitmq 流控？如何解决？&lt;/h2>
+&lt;h2 id="2019-10-22-每日一思id序列生产器怎么实现呢">[2019-10-22 每日一思]ID序列生产器怎么实现呢？&lt;/h2>
+&lt;blockquote>
+&lt;p>uuid生成&lt;/p>
+&lt;ul>
+&lt;li>基于时间（60位utc时间 和 时间序列值14位，以及mac地址）&lt;/li>
+&lt;li>基于名称（针对命名空间dns、url等分配，把名称转成字节序列，再用md5或sha-1与命名空间标识进行计算，产生哈希结果）&lt;/li>
+&lt;li>基于随机数（密码学随机数，系统的硬盘内存线程堆栈进程句柄等sha-1生成哈希结果）&lt;/li>
+&lt;/ul>
+&lt;p>snowflake，64bit，long型ID&lt;/p>
+&lt;ul>
+&lt;li>ID生成方式 1bit（不使用），41bit时间戳（当前毫秒数、69年一轮回），10bit机器码（1024台，5bit数据中心，5bit机器ID），12bit作为毫秒内序列号（单机理论 409.6w/s）&lt;/li>
+&lt;li>雪花算法，多台机器，有因为时钟回拨导致的ID生成问题，当然可以通过发生时钟回拨后一个阈值，在阈值内则不允许产生新的ID，同步阻塞，在阈值外重新设置机器ID来解决&lt;/li>
+&lt;li>github.com/baidu/uid-generator 技术老铁百度开源的基于snowflake实现的ID生成器，可以借鉴研读一下&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="2019-11-01-每日一思我们常说的限流是什么为什么要限流限流有哪些方式">[2019-11-01 每日一思]我们常说的限流是什么？为什么要限流？限流有哪些方式？&lt;/h2>
+&lt;blockquote>
+&lt;p>我们常说的限流，顾名思义即限制流量. 限制系统的输入和输出
+常用的限流发展至今，有四种方式&lt;/p>
+&lt;ul>
+&lt;li>固定时间计数器&lt;/li>
+&lt;li>漏桶&lt;/li>
+&lt;li>令牌桶&lt;/li>
+&lt;li>滑动窗口计数器&lt;/li>
+&lt;/ul>
+&lt;p>固定窗口计数器：以单位时间内进入系统（系统级别）或者某一个单一接口服务（系统服务级别）请求次数，在这个单位时间内的超过次数，拒绝服务或者更换其他方案（降级、熔断）达到限流目的。&lt;/p>
+&lt;blockquote>
+&lt;p>可以看出，明显的缺点，从整体曲线上，毛刺现象非常严重，假设单位时间 1s 内限制 100 次，在0-10ms内我已经请求超过100次了，后面的请求全部拒绝或者做其他处理了。无法控制单位时间内的突发流量。&lt;/p>
+&lt;/blockquote>
+&lt;p>漏桶: 桶的容量固定，桶流出的速率恒定。桶满则限流。也是无法应对突发流量&lt;/p>
+&lt;p>令牌桶： 还是桶的方式， 桶中存放的是 token ，根据限流的大小， token 以恒定速率进入桶中，设置桶的最大的 token 容量，当桶满时候拒绝新添加的token
+，或者直接丢弃。所有请求进入先获取令牌，得到令牌继续下面的业务逻辑，处理完成删除 token。&lt;/p>
+&lt;blockquote>
+&lt;p>相比 漏桶， 一定程度上允许突发流量，平滑限流，因为 桶 中的 token 是匀速放入的，抵御突发流量。桶的 token 数量不会超过给定的最大值。
+参考 guava rate limiter&lt;/p>
+&lt;/blockquote>
+&lt;p>滑动窗口计数器:(参考Sentinel中使用的默认限流方式)
+是对固定时间窗口计数器的优化，就是为了解决固定时间计数器的无法面对突发流量，何为滑动窗口呢？
+假设单位时间定位 1s， 计数器限制在 1000 次， 再将者 1s 划分为 100ms 为一个小格子，总共 10 个格子，
+每个格子还有计数器，当一个请求进来，在对应的时间格子里面的计数器 +1 ，只要总的这个单位时间内所有的时间格子计数器总和小于 限制次数，就不会启动限流作用。
+可以看出来，假如我的划分的格子很小，滑动窗口滚动将是越平滑的。
+ps： 0.00 - 1.00 有 10 个格子，这是一个滑动窗口期，然后 0.10-1.10是一个窗口期，这样计算的&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-11-04-每日一思-假如mq消息队列产生了堆积如何更快的消费">[2019-11-04 每日一思] 假如MQ消息队列产生了堆积，如何更快的消费？&lt;/h2>
+&lt;blockquote>
+&lt;p>会从多种队列去分析，rabbitmq，kafka，rocketmq，pulsar等多个消息中间件去分析。
+RabbitMq得看是什么模式，如果是生产消费者模式是可以的，发布订阅模式就没卵用，加个订阅者而已。kafka看consumer的数量吧，如果已经大于等于partition数量了，加consumer也没卵用。pulsar
+是也一样啊，有生产者消费者模式，也有独占和失败替补模式。&lt;/p>
+&lt;p>对的，先说kafka和RocketMQ，他们都是基于partition的存储模型，也就是说每个subject分为一个或多个partition，Server收到消息分发到某个partition上，而consumer
+消费时候是与partition相对应的，当partition与consumer数量相等时，是一对一，当小于时候，会有consumer空闲，大于时候，看数量，有consumer
+会负责多个，比较繁忙。在产生队列积压时候，这时候最合理的分配减压策略是 partition数量和consumer数量成倍数关系，单个增加consumer
+数量并不能有效提高时候，并且并不能马上提高消费效率，需要添加对应的partition数量，但是就带来了另外的问题，partition数量增加，特别是kafka，partition资源是一个比较重的资源，增加partition
+数量还需要考虑集群的处理能力，另外在高峰过后，想要consumer缩容也比较麻烦哦，因为partition只能增加不能减少。&lt;/p>
+&lt;p>针对partition存储方式的，扩容相关的问题，已经堆积的消息是不能快速消费的，假设是2partition对2个consumer，这时候增加partition和consumer是无用的，因为已经堆积的只能由这两个consumer
+消费，横向扩展不可能了，只能纵向扩展，这时候要么只能接受已经堆积慢慢消费，并且尽量减少入这两个partition的消息，或者执行比较重点再均衡策略！&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-11-18-每日一思-httpdns有啥好处-httpdns-为什么一般只适用于-app-或者-cs-架构bs-为何不适用">[2019-11-18 每日一思] HttpDNS有啥好处, HttpDNS 为什么一般只适用于 APP 或者 C/S 架构，B/S 为何不适用?#&lt;/h2>
+&lt;blockquote>
+&lt;p>HttpDNS 是基于HTTP协议发起服务器A记录的地址，不存在向本地运营商询问 domain 解析过程
+适用于APP或者C/S架构，是它的特殊性导致的，&lt;/p>
+&lt;ul>
+&lt;li>一般在终端这种信号差、信号不稳定下，要想尽量的介绍交互&lt;/li>
+&lt;li>跑马机制选取就近地址&lt;/li>
+&lt;li>SDK嵌入&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="2019-12-12-每日一思我们知道许多长链接情况下保证链接有效大部分是通过-tcp-keepalive-与-应用心跳-来确定各自的定位是什么为什么大多数情况下很多im系统同时使用-tcp-keepalive-与-应用层心跳去确认-应用层心跳设计上有啥讲究">[2019-12-12 每日一思]我们知道许多长链接情况下，保证链接有效大部分是通过 TCP Keepalive 与 应用心跳 来确定，各自的定位是什么？为什么大多数情况下很多IM系统同时使用 TCP Keepalive 与 应用层心跳去确认？ 应用层心跳设计上有啥讲究？&lt;/h2>
+&lt;blockquote>
+&lt;p>TCP Keepalive 是 TCP/IP 协议自带，无需额外的开发，但是不灵活，而且我们一般在应用层面是无法感知。更改TCP Keepalive 相关参数需要修改/etc/sysctl.conf&lt;/p>
+&lt;p>应用层心跳是为了保活，保证链接的可用性&lt;/p>
+&lt;ul>
+&lt;li>运营商的环境，，存在 NAT 超时断链问题&lt;/li>
+&lt;li>让应用知晓网络可用情况，酌情处理断链重连问题&lt;/li>
+&lt;li>可以有效的江都服务端为了维护无效链接的开销&lt;/li>
+&lt;/ul>
+&lt;p>应用层心跳设计上&lt;/p>
+&lt;ul>
+&lt;li>固定频率，通常只有请求头，消息体空包（在判断这类心跳处理时候，客户端一般要判断超时时间大于心跳间隔【可能存在网络延迟】）&lt;/li>
+&lt;li>智能心跳，根据网络状况自动调整发送的频率，来适配当前网络情况的最佳心跳频率（各个地区各个服务商 NAT 超时设计不一样，长的多达几个小时，少的只有几秒）&lt;/li>
+&lt;/ul>
+&lt;p>智能心跳，一般采用二分法来逐渐逼近服务商的 NAT 超时设计。心跳设计上不会是空包，而是传输的是客户端的心跳频率是多少。
+（假设 最小值 20 s 最大值 1小时）===&amp;gt; 逐渐二分下去&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-12-14-每日一思-如何判断任意用户上传的文件在服务端是否存在呢网盘的秒传的实现思路">[2019-12-14 每日一思] 如何判断任意用户上传的文件在服务端是否存在呢？网盘的“秒传”的实现思路？&lt;/h2>
+&lt;blockquote>
+&lt;p>对比文件，确实是使用的文件的提取的特征值（单项哈希算法）,哈希算法是有冲突的，虽然概率较小， 那么如何这种冲突呢：在服务端，
+对该文件进行不同的单向Hash算法（MD5，SHA-1）等等得到多个值，一一对比，只有全部相同才认为是同一个文件。&lt;/p>
+&lt;p>为什么要哈希？为了将一个不定长、不确定的东东 转化成 固定长度的固化的特征值，并要保证唯一性。&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="填坑记录">填坑记录&lt;/h1>
+&lt;h2 id="docker相关">docker相关&lt;/h2>
+&lt;ul>
+&lt;li>docker默认网桥问题&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>服务器默认网桥 172.19.0.0, 而 docker 网桥默认172.17.0.0,
+在启动多个的docker容器的时候会导致地址冲突，桥接网卡凉，
+需要更改docker 默认的网桥地址&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-markdown" data-lang="markdown"> {
+&amp;#34;debug&amp;#34; : true,
+&amp;#34;default-address-pools&amp;#34; : [
+{
+&amp;#34;base&amp;#34; : &amp;#34;172.31.0.0/16&amp;#34;,
+&amp;#34;size&amp;#34; : 24
+}
+]
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>更改成和主机不一样的的网段地址&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="redis分布式锁">redis分布式锁&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
+&lt;span style="color:#8b008b;font-weight:bold">package&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">com.kezaihui.thor.biz.core.adapter.redis.lock&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">lombok.extern.slf4j.Slf4j&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.beans.factory.annotation.Autowired&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.data.redis.core.RedisTemplate&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.data.redis.core.script.DefaultRedisScript&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.stereotype.Component&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">java.util.Collections&lt;/span>;
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * RedisTemplateDistributeLockUtil
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#707a7c">@Slf4j&lt;/span>
+&lt;span style="color:#707a7c">@Component&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RedisTemplateDistributeLockUtil&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String LOCK_SCRIPT =
+&lt;span style="color:#cd5555">&amp;#34;local key = KEYS[1]; local value = ARGV[1]; if redis.call(&amp;#39;set&amp;#39;, key, value, &amp;#39;NX&amp;#39; ,&amp;#39;PX&amp;#39;, %d) &amp;#34;&lt;/span>
++ &lt;span style="color:#cd5555">&amp;#34;then return 1 else return 0 end&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String UNLOCK_SCRIPT =
+&lt;span style="color:#cd5555">&amp;#34;if redis.call(&amp;#39;get&amp;#39;, KEYS[1]) == ARGV[1] then return redis.call(&amp;#39;del&amp;#39;,KEYS[1]) else return 0 end&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> EXPIRE = 5000;
+&lt;span style="color:#707a7c">@Autowired&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> RedisTemplate redisTemplate;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String &lt;span style="color:#008b45">lockExpireScript&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (expireMills &amp;lt;= 0) {
+expireMills = EXPIRE;
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> String.&lt;span style="color:#658b00">format&lt;/span>(LOCK_SCRIPT, expireMills);
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">lock&lt;/span>(String key, String value, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) {
+String script = lockExpireScript(expireMills);
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long execute = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key),
+Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(value));
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> execute != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; execute != 0;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">blockLock&lt;/span>(String key, String value, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> DistributeLockTimeoutException {
+&lt;span style="color:#228b22">// 被阻塞的时间超过5秒就停止获取锁
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> blockTime = expireMills;
+&lt;span style="color:#228b22">// 默认的间隔时间
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (; ; ) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (blockTime &amp;gt;= 0) {
+String script = lockExpireScript(expireMills);
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long result = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key), value);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (result != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; result == 1) {
+&lt;span style="color:#228b22">// 得到了锁
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>;
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+blockTime -= 300;
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+Thread.&lt;span style="color:#658b00">sleep&lt;/span>(300);
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (InterruptedException e) {
+log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;RedisTemplateDistributeLockUtil.blockLock error!&amp;#34;&lt;/span>, e);
+}
+}
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#228b22">// 已经超时
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DistributeLockTimeoutException(&lt;span style="color:#cd5555">&amp;#34;Distribute Lock Timeout&amp;#34;&lt;/span>);
+}
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">unlock&lt;/span>(String key, String value) {
+String script = UNLOCK_SCRIPT;
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long execute = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key), value);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> execute != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; execute != 0;
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ - PinkHello, All Rights Reserved</description></item><item><title>03 String为什么设计成final</title><link>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Sun, 10 Feb 2019 08:19:51 +0800</pubDate><guid>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>PinkHello https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
 &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">String&lt;/span>
 &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> java.&lt;span style="color:#658b00">io&lt;/span>.&lt;span style="color:#658b00">Serializable&lt;/span>, Comparable&amp;lt;String&amp;gt;, CharSequence {
@@ -616,7 +526,7 @@ String s2 = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> String
 &lt;li>运行时，在堆中产生 &amp;ldquo;3&amp;rdquo; 的副本两个 &lt;code>String&lt;/code> 对象，并产生 &lt;code>StringBuilder(&amp;quot;11&amp;quot;)&lt;/code> 对象以及 &lt;code>toString&lt;/code> 的 &lt;code>String&lt;/code> 对象&lt;/li>
 &lt;/ul>
 &lt;/blockquote>
-- https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ - PinkHello, All Rights Reserved</description></item><item><title>02 关于final的思考</title><link>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Wed, 10 Feb 2021 08:09:36 +0800</pubDate><guid>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>PinkHello https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ -&lt;h2 id="关于final的思考">关于&lt;code>final&lt;/code>的思考&lt;/h2>
+- https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ - PinkHello, All Rights Reserved</description></item><item><title>02 关于final的思考</title><link>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</link><pubDate>Sun, 10 Feb 2019 08:09:36 +0800</pubDate><guid>https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/</guid><description>PinkHello https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ -&lt;h2 id="关于final的思考">关于&lt;code>final&lt;/code>的思考&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>final&lt;/code> 是声明数据域最终的,不可以修改的，常见的 是类的 序列化&lt;code>ID&lt;/code>&lt;/li>
 &lt;li>&lt;code>String&lt;/code> 类，其数据域都是 &lt;code>final&lt;/code> 的&lt;/li>
@@ -690,7 +600,7 @@ System.&lt;span style="color:#658b00">out&lt;/span>.&lt;span style="color:#658b0
 输出
 STATIC HELLO, WORLD!
 &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> hello world
-&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ - PinkHello, All Rights Reserved</description></item><item><title>01 一致性哈希算法</title><link>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:50:46 +0800</pubDate><guid>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ -&lt;h1 id="分布式均衡寻址算法">分布式均衡寻址算法&lt;/h1>
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/02-%E5%85%B3%E4%BA%8Efinal%E7%9A%84%E6%80%9D%E8%80%83/ - PinkHello, All Rights Reserved</description></item><item><title>01 一致性哈希算法</title><link>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</link><pubDate>Sat, 09 Feb 2019 22:50:46 +0800</pubDate><guid>https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ -&lt;h1 id="分布式均衡寻址算法">分布式均衡寻址算法&lt;/h1>
 &lt;p>在分布式集群中，对机器的添加删除，或者机器故障后自动脱落集群的操作是分布式集群管理的基本功能。&lt;/p>
 &lt;blockquote>
 &lt;p>在集群环境中，判断分布式寻址算法好坏的原则：&lt;/p>
@@ -919,7 +829,7 @@ IP=192.168.1.103: RATE=16%
 IP=192.168.1.104: RATE=16%
 IP=192.168.1.106: RATE=16%
 IP=192.168.1.107: RATE=16%
-&lt;/code>&lt;/pre>- https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Tue, 09 Feb 2021 22:25:26 +0800</pubDate><guid>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
+&lt;/code>&lt;/pre>- https://pinkhello.me/posts/01-%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>00 Threadlocal 魔法</title><link>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</link><pubDate>Sat, 09 Feb 2019 22:25:26 +0800</pubDate><guid>https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/</guid><description>PinkHello https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ -&lt;h1 id="threadlocal-详解">&lt;code>ThreadLocal&lt;/code> 详解&lt;/h1>
 &lt;h2 id="前言">前言&lt;/h2>
 &lt;p>对于 &lt;code>ThreadLocal&lt;/code> 的使用，并不难，这次主要讲述 &lt;code>ThreadLocal&lt;/code> 的实现方式以及原理&lt;/p>
 &lt;h2 id="threadlocal-是什么">&lt;code>ThreadLocal&lt;/code> 是什么&lt;/h2>
@@ -1122,129 +1032,4 @@ m.&lt;span style="color:#658b00">remove&lt;/span>(&lt;span style="color:#8b008b;
 &lt;li>此方法为 1.5 引入，旨在协助&lt;code>jvm&lt;/code>进行有效的快速 &lt;code>gc&lt;/code>；&lt;/li>
 &lt;li>假如不移除 &lt;code>ThreadLocal&lt;/code> 副本变量 另外 &lt;code>ThreadLocalMap&lt;/code> 的 &lt;code>key&lt;/code> 为弱引用&lt;/li>
 &lt;/ul>
-- https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item><item><title>链接</title><link>https://pinkhello.me/links/</link><pubDate>Tue, 09 Feb 2021 10:38:21 +0800</pubDate><guid>https://pinkhello.me/links/</guid><description>PinkHello https://pinkhello.me/links/ -- https://pinkhello.me/links/ - PinkHello, All Rights Reserved</description></item><item><title>关于我</title><link>https://pinkhello.me/about/</link><pubDate>Tue, 09 Feb 2021 10:36:43 +0800</pubDate><guid>https://pinkhello.me/about/</guid><description>PinkHello https://pinkhello.me/about/ -&lt;hr>
-&lt;h2 id="-个人介绍">👷 个人介绍&lt;/h2>
-&lt;p>PinkHello &lt;img src="https://views.whatilearened.today/views/github/pinkhello/pinkhello.svg" alt="views">&lt;/p>
-&lt;p>&lt;img src="https://github-readme-stats.vercel.app/api?username=pinkhello&amp;amp;show_icons=true&amp;amp;theme=vue&amp;amp;hide_border=true&amp;amp;line_height=20&amp;amp;count_private=true" alt="">&lt;/p>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-go" data-lang="go">PinkHello := &amp;amp;Info {
-Name: &lt;span style="color:#cd5555">&amp;#34;PinkHello&amp;#34;&lt;/span>,
-Occupation: &lt;span style="color:#cd5555">&amp;#34;Full Stack Developer&amp;#34;&lt;/span>,
-Email: &lt;span style="color:#cd5555">&amp;#34;lee123lee123@163.com&amp;#34;&lt;/span>,
-Wechat: &lt;span style="color:#cd5555">&amp;#34;chess_1&amp;#34;&lt;/span>,
-Website: &lt;span style="color:#cd5555">&amp;#34;https://pinkhello.me&amp;#34;&lt;/span>,
-Location: &lt;span style="color:#cd5555">&amp;#34;Shanghai China&amp;#34;&lt;/span>
-}
-&lt;/code>&lt;/pre>&lt;/div>&lt;hr>
-&lt;h2 id="-技能">⚡ 技能&lt;/h2>
-&lt;p>Language&lt;br>
-&lt;img src="https://img.shields.io/badge/-Java-black?style=flat-square&amp;amp;logo=Java" alt="Java">
-&lt;img src="https://img.shields.io/badge/-Go-black?style=flat-square&amp;amp;logo=Go" alt="Go">
-&lt;img src="https://img.shields.io/badge/-Python-black?style=flat-square&amp;amp;logo=Python" alt="Python">
-&lt;img src="https://img.shields.io/badge/-JavaScript-black?style=flat-square&amp;amp;logo=JavaScript" alt="JavaScript">&lt;/p>
-&lt;p>Framework&lt;br>
-&lt;img src="https://img.shields.io/badge/-Vue-000000?style=flat-square&amp;amp;logo=Vue.js" alt="Vue">
-&lt;img src="https://img.shields.io/badge/-Spring-black?style=flat-square&amp;amp;logo=Spring" alt="Spring">
-&lt;img src="https://img.shields.io/badge/-Spring%20Boot(Cloud)-black?style=flat-square&amp;amp;logo=Spring%20Boot(Cloud)" alt="Spring Boot(Cloud)">
-&lt;img src="https://img.shields.io/badge/-Dubbo-black?style=flat-square&amp;amp;logo=Dubbo" alt="Dubbo">
-&lt;img src="https://img.shields.io/badge/-Flask-black?style=flat-square&amp;amp;logo=Flask" alt="Flask">
-&lt;img src="https://img.shields.io/badge/-Echo-black?style=flat-square&amp;amp;logo=Echo" alt="Echo">
-&lt;img src="https://img.shields.io/badge/-Gin-black?style=flat-square&amp;amp;logo=Gin" alt="Gin">
-&lt;img src="https://img.shields.io/badge/-Grpc-black?style=flat-square&amp;amp;logo=Grpc" alt="Grpc">&lt;/p>
-&lt;p>Tools&lt;br>
-&lt;img src="https://img.shields.io/badge/-Redis-black?style=flat-square&amp;amp;logo=Redis" alt="Redis">
-&lt;img src="https://img.shields.io/badge/-MySQL-black?style=flat-square&amp;amp;logo=mysql" alt="MySQL">
-&lt;img src="https://img.shields.io/badge/-Nginx-black?style=flat-square&amp;amp;logo=Nginx" alt="Nginx">
-&lt;img src="https://img.shields.io/badge/-MongoDB-black?style=flat-square&amp;amp;logo=MongoDB" alt="MongoDB">
-&lt;img src="https://img.shields.io/badge/-Pulsar-black?style=flat-square&amp;amp;logo=Pulsar" alt="Pulsar">
-&lt;img src="https://img.shields.io/badge/-Kafka-black?style=flat-square&amp;amp;logo=Kafka" alt="Kafka">
-&lt;img src="https://img.shields.io/badge/-Nsq-black?style=flat-square&amp;amp;logo=Nsq" alt="Nsq">
-&lt;img src="https://img.shields.io/badge/-RabbitMQ-black?style=flat-square&amp;amp;logo=RabbitMQ" alt="RabbitMQ">
-&lt;img src="https://img.shields.io/badge/-GitHub-181717?style=flat-square&amp;amp;logo=github" alt="GitHub">&lt;/p>
-&lt;p>Others&lt;br>
-&lt;img src="https://img.shields.io/badge/-Kubernetes-black?style=flat-square&amp;amp;logo=Kubernetes" alt="Kubernetes">
-&lt;img src="https://img.shields.io/badge/-Docker-black?style=flat-square&amp;amp;logo=Docker" alt="Docker">
-&lt;img src="https://img.shields.io/badge/-Linux-black?style=flat-square&amp;amp;logo=Linux" alt="Linux">
-&lt;img src="https://img.shields.io/badge/-Deepin-007CFF?style=flat-square&amp;amp;logo=deepin" alt="Deepin">
-&lt;img src="https://img.shields.io/badge/-Centos-262577?style=flat-square&amp;amp;logo=Centos" alt="Centos">
-&lt;img src="https://img.shields.io/badge/-Raspberry%20Pi-C51A4A?style=flat-square&amp;amp;logo=Raspberry-Pi" alt="Raspberry Pi">&lt;/p>
-&lt;hr>
-&lt;h2 id="-个人开源项目">🐳 个人开源项目&lt;/h2>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th style="text-align:left">项目&lt;/th>
-&lt;th style="text-align:left">描述&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/GoPush">GoPush&lt;/a>&lt;/td>
-&lt;td style="text-align:left">一个实时推送组件&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/spring-boot-starter-dubbo">spring-boot-starter-dubbo&lt;/a>&lt;/td>
-&lt;td style="text-align:left">dubbo-spring-boot-脚手架&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/go-starter">go-starter&lt;/a>&lt;/td>
-&lt;td style="text-align:left">Go服务开发脚手架&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;hr>
-&lt;h2 id="-2021-okr-进度">🚀 2021 OKR 进度&lt;/h2>
-&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th style="text-align:left">动作&lt;/th>
-&lt;th style="text-align:left">进度&lt;/th>
-&lt;th style="text-align:left">目标&lt;/th>
-&lt;th style="text-align:left">缺陷&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td style="text-align:left">👯 Go服务开发脚手架&lt;/td>
-&lt;td style="text-align:left">done&lt;/td>
-&lt;td style="text-align:left">&lt;a href="https://github.com/PinkHello/go-starter">go-starter&lt;/a>&lt;/td>
-&lt;td style="text-align:left">ut&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">💵 Go服务开发脚手架开发一个简单前后端系统&lt;/td>
-&lt;td style="text-align:left">done&lt;/td>
-&lt;td style="text-align:left">&lt;a href="http://121.4.242.26">房产CRM信息系统&lt;/a> test/123456&lt;/td>
-&lt;td style="text-align:left">-&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">🐳 K8S原理&lt;/td>
-&lt;td style="text-align:left">running&lt;/td>
-&lt;td style="text-align:left">&lt;a href="https://pinkhello.me/categories/k8s/">K8S博客成档&lt;/a>&lt;/td>
-&lt;td style="text-align:left">-&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">🚀 RocketMQ 源代码阅读(Java)&lt;/td>
-&lt;td style="text-align:left">running&lt;/td>
-&lt;td style="text-align:left">&lt;a href="https://pinkhello.me/categories/rocketmq/">RocketMQ博客成档&lt;/a>&lt;/td>
-&lt;td style="text-align:left">-&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">🚀 RocketMQ 客户端代码阅读(Compare Go/Java)&lt;/td>
-&lt;td style="text-align:left">running&lt;/td>
-&lt;td style="text-align:left">&lt;a href="https://pinkhello.me/categories/rocketmq/">RocketMQ博客成档&lt;/a>&lt;/td>
-&lt;td style="text-align:left">-&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">😄 MySQL实现原理解析&lt;/td>
-&lt;td style="text-align:left">prepare&lt;/td>
-&lt;td style="text-align:left">博客成档&lt;/td>
-&lt;td style="text-align:left">-&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td style="text-align:left">🏫 数据结构与算法之美&lt;/td>
-&lt;td style="text-align:left">prepare&lt;/td>
-&lt;td style="text-align:left">博客成档&lt;/td>
-&lt;td style="text-align:left">-&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-- https://pinkhello.me/about/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.me/posts/00-threadlocal-%E9%AD%94%E6%B3%95/ - PinkHello, All Rights Reserved</description></item></channel></rss>
