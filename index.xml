@@ -245,7 +245,35 @@ Version brokerVersion = MQVersion.&lt;span style="color:#658b00">value2Version&l
 &lt;span style="color:#228b22">//...... 其他代码省略.....
 &lt;/span>&lt;span style="color:#228b22">&lt;/span>}
 &lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="namesrv-启动流程">NameSrv 启动流程&lt;/h1>
-&lt;h2 id="rocketmq_namesrvrocketmqrocketmq-namesrvjpg">&lt;img src="https://pinkhello.me/rocketmq/rocketmq-namesrv.jpg" alt="rocketmq_namesrv">&lt;/h2>
+&lt;p>&lt;img src="https://pinkhello.me/rocketmq/rocketmq-namesrv.jpg" alt="rocketmq_namesrv">&lt;/p>
+&lt;ul>
+&lt;li>入口从 NamesrvStartup#main0 启动进入, 创建了一个 核心类 NamesrvController 实例, NamesrvController#createNamesrvController 开启了配置参数、网络参数的配置&lt;/li>
+&lt;li>第二步，从 start 方法开启 调用 NamesrvController#initialize 方法&lt;/li>
+&lt;li>
+&lt;ul>
+&lt;li>KvConfigManager#load 从配置里面捞取配置合并配置到内存中&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;ul>
+&lt;li>构建了 NettyRemotingServer 实例&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>第6步 注册指令处理器，用于从网络接收到的指令，异步在线程池中执行业务&lt;/li>
+&lt;li>第7、8步 定时器进行扫描检查和移除非活的有问题的 broker&lt;/li>
+&lt;li>第9、10步 定期打印配置&lt;/li>
+&lt;li>最后是 start 方法&lt;/li>
+&lt;li>
+&lt;ul>
+&lt;li>开启了 netty romting server 开启netty服务监听&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;ul>
+&lt;li>开启 fileWatchService 监听&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 - https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 通信组件</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</link><pubDate>Wed, 19 May 2021 15:09:45 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ -&lt;h1 id="rocketmq-核心基石">RocketMQ 核心基石&lt;/h1>
 &lt;p>前面已经介绍了 &lt;code>RocketMQ&lt;/code> 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, &lt;code>RocketMQ&lt;/code> 消息系各个组件 &lt;code>Producer&lt;/code>、&lt;code>Consumer&lt;/code>、&lt;code>Broker&lt;/code>、&lt;code>NameSrv&lt;/code> 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
 而 &lt;code>RocketMQ&lt;/code> 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 &lt;code>client&lt;/code>、&lt;code>broker&lt;/code>、&lt;code>namesrv&lt;/code> 应用。&lt;/p>
