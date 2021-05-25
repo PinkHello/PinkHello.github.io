@@ -1,4 +1,17 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:45 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 通信组件</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</link><pubDate>Wed, 19 May 2021 15:09:45 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ -&lt;h1 id="rocketmq-核心基石">RocketMQ 核心基石&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Wed, 19 May 2021 15:09:57 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>RocketMQ源码阅读 NameServer</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</link><pubDate>Wed, 19 May 2021 15:09:57 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ -&lt;pre>&lt;code class="language-sequence" data-lang="sequence">title: 三个臭皮匠的故事
+participant 小王
+participant 小李
+participant 小异常
+note left of 小王: 我是小王
+note over 小李: 我是小李
+note right of 小异常: 大家好！\n我是小异常
+小王-&amp;gt;小王: 小王想：今天要去见两个好朋友咯~
+小王-&amp;gt;小李: 嘿，小李好久不见啊~
+小李--&amp;gt;&amp;gt;小王: 是啊
+小李-&amp;gt;小异常: 小异常，你好啊
+小异常--&amp;gt;小王: 哈，小王！\n最近身体怎么样了？
+小王-&amp;gt;&amp;gt;小异常: 还可以吧
+&lt;/code>&lt;/pre>- https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-nameserver/ - PinkHello, All Rights Reserved</description></item><item><title>RocketMQ源码阅读 通信组件</title><link>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</link><pubDate>Wed, 19 May 2021 15:09:45 +0800</pubDate><guid>https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/</guid><description>PinkHello https://pinkhello.me/posts/rocketmq%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E9%80%9A%E4%BF%A1%E7%BB%84%E4%BB%B6/ -&lt;h1 id="rocketmq-核心基石">RocketMQ 核心基石&lt;/h1>
 &lt;p>前面已经介绍了 &lt;code>RocketMQ&lt;/code> 的基本的概念和组件。今天我们开启真正的源码的阅读诗篇, &lt;code>RocketMQ&lt;/code> 消息系各个组件 &lt;code>Producer&lt;/code>、&lt;code>Consumer&lt;/code>、&lt;code>Broker&lt;/code>、&lt;code>NameSrv&lt;/code> 通通离不开交互，那是使用的什么交互的呢。答案是TCP长链接。
 而 &lt;code>RocketMQ&lt;/code> 开源代码内部，对通信相关的进行了一次封装，都在 rocketmq-remoting 模块下，这个模块被其他 &lt;code>client&lt;/code>、&lt;code>broker&lt;/code>、&lt;code>namesrv&lt;/code> 应用。&lt;/p>
 &lt;p>直接先说 &lt;code>remoting&lt;/code> 的实现是基于 &lt;code>netty&lt;/code> 做了封装、启动了服务端和客户端，支持三种消息的发送方式:&lt;/p>
@@ -2111,42 +2124,4 @@ Kubernetes的做法是 Pod 绑定一个 Service 服务，而 Service 服务声�
 &lt;/ul>
 &lt;/blockquote>
 &lt;p>&lt;code>声明式 API&lt;/code> 对应的 &lt;code>编排对象&lt;/code> 和 &lt;code>服务对象&lt;/code>，都是 Kubernetes 项目中的 API 对象（API Object）&lt;/p>
-- https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - PinkHello, All Rights Reserved</description></item><item><title>17 回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Thu, 11 Feb 2021 10:50:42 +0800</pubDate><guid>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>PinkHello https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
-&lt;p>在容器之前, 火爆云计算市场的是 &lt;code>PAAS&lt;/code>, &lt;code>PAAS&lt;/code>已经深入人心. 那时候突然有一家公司 dotCloud 剑走偏锋, 直接开源出了 &lt;code>Docker&lt;/code> 项目，并且直接面向的社区。 这样的做法直接将当时的&lt;code>PAAS&lt;/code>流主要公司打的屁滚尿流。&lt;/p>
-&lt;p>回头看, &lt;code>PAAS&lt;/code> 最核心的是隔离环境,或者叫 &lt;code>沙盒&lt;/code>,在我看来也就是 &lt;code>容器&lt;/code>. 而 &lt;code>Docker&lt;/code> 项目和 &lt;code>Cloud Foundry&lt;/code> 的容器没有太大的不同,但是它为什么能针对 &lt;code>PAAS&lt;/code>进行了一场快速的闪电战呢？&lt;/p>
-&lt;blockquote>
-&lt;p>对的, 就是 &lt;code>Docker&lt;/code> 镜像, 这个小小的创新, 迅速改变了云计算的发展轨迹! &lt;code>Docker&lt;/code> 镜像解决的是 &lt;code>打包&lt;/code> 问题。也许有人说&lt;code>Docker&lt;/code> 镜像就是一个压缩包。但是就是这个压缩包包含了完整的操作系统文件和目录, 包含了整个应用所需要的依赖，一包在手, 你可以轻易的运行你的&lt;code>沙盒&lt;/code>,并且本地环境与云端环境高度一致（这是最宝贵的）。&lt;/p>
-&lt;/blockquote>
-&lt;p>&lt;code>Docker&lt;/code>给&lt;code>PAAS&lt;/code>进行了致命打击, 提供了便利的打包机制, 面向后端开发者来说, 屏蔽了机器、内核等技术细节, 避免了在不同环境间的差异引入的试错成本。是一次解放生产力的革命。当然很多开发者用脚投票, 了结了&lt;code>PAAS&lt;/code>时代。&lt;/p>
-&lt;h1 id="docker-三大利器">&lt;code>Docker&lt;/code> 三大利器&lt;/h1>
-&lt;ul>
-&lt;li>&lt;code>Docker&lt;/code>项目的高调开源, 解决了打包和发布困扰运维的技术难题，同时它也第一次纯后端的概念通过友好的设计和封装交付到了开发者的手里。&lt;/li>
-&lt;li>&lt;code>Swarm&lt;/code>,&lt;code>Docker&lt;/code>是创建和启停容器的工具,那么&lt;code>Swarm&lt;/code>是为了向平台化发展而提出的。它提供了完整的整体对外提供集群管理功能,它的亮点是完全使用&lt;code>Docker&lt;/code>原本的管理容器的API来完成集群管理&lt;/li>
-&lt;/ul>
-&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># Swarm多机环境下，指令会被Swarm拦截处理，后面通过调度算法找到合适的Docker Daemon运行&lt;/span>
-docker run -H &lt;span style="color:#cd5555">&amp;#34;Swarm集群API&amp;#34;&lt;/span> &lt;span style="color:#cd5555">&amp;#34;我的容器&amp;#34;&lt;/span>
-&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
-&lt;li>&lt;code>Compose&lt;/code>(Fig)项目, 这是第一次在开发者面前提出 &lt;code>容器编排&lt;/code>(Container Orchestration)概念。&lt;/li>
-&lt;/ul>
-&lt;blockquote>
-&lt;p>应用容器 A, 数据库容器B, 负载均衡容器C, Compose 允许 A、B、C 三个容器定义在配置文件中, 并指定关联关系. 只需要执行 (fig/docker-compose up)&lt;/p>
-&lt;/blockquote>
-&lt;h1 id="容器化群雄并起与尘埃落定">容器化群雄并起与尘埃落定&lt;/h1>
-&lt;p>容器开启火爆模式, 大量围绕 &lt;code>Docker&lt;/code> 项目的网络、存储、监控、&lt;code>CI/CD&lt;/code>、UI 等涌现了诸如 &lt;code>Rancher&lt;/code>、&lt;code>Tutum&lt;/code> 等在开源和商业上取得成功的创业公司。
-在 &lt;code>Docker&lt;/code> 、 &lt;code>Google&lt;/code>、&lt;code>CoreOS&lt;/code>、&lt;code>ReaHat&lt;/code> 等公司在云计算大打出手的时候，落在下风的 &lt;code>Google&lt;/code>、&lt;code>CoreOS&lt;/code>、&lt;code>RedHat&lt;/code> 开始忽悠 &lt;code>Docker&lt;/code> 将 &lt;code>Libcontainer&lt;/code> 项目捐出、组建一个完全独立中立的基金会管理，以 &lt;code>RunC&lt;/code>（改名的 &lt;code>Libcontainer&lt;/code> ）为依据，大家共同制定一套容器和镜像的标准和规范。这套标准和规范就是 &lt;code>OCI&lt;/code>(&lt;code>Open Container Initiative&lt;/code>),
-&lt;code>OCI&lt;/code> 的提出，将容器运行时和镜像的实现从&lt;code>Docker&lt;/code>项目只完全剥离开来。（好一招围魏救赵，改善&lt;code>Docker&lt;/code>公司一家独大，其他公司不依赖与&lt;code>Docker&lt;/code>项目）
-这是第一步，后面就是容器之上的平台层，就是 &lt;code>PAAS&lt;/code> 层了,后来&lt;code>Google&lt;/code>、&lt;code>RedHat&lt;/code> 等基础设施玩家，共同发起 &lt;code>CNCF&lt;/code>(&lt;code>Cloud Native Computing Foundation&lt;/code>) 基金会。以 &lt;code>Kubernetes&lt;/code> 项目为基础，建立由开源基础设施厂商领导的按照基金会方式运营的平台级社区。&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>Kubernetes&lt;/code> 项目必须能够在容器编排领域取得足够大的竞争优势&lt;/li>
-&lt;li>&lt;code>CNCF&lt;/code> 社区必须以 &lt;code>Kubernetes&lt;/code> 项目为核心，覆盖更多的常见&lt;/li>
-&lt;/ul>
-&lt;p>&lt;code>Kubernetes&lt;/code> 当初为什么被认为设计思想过于超前，就是因为 Google 在容器化多年的沉淀和升华（&lt;code>Borg&lt;/code> 和 &lt;code>Omega&lt;/code> 特性、落在 &lt;code>K8S&lt;/code> 上就是 &lt;code>Pod&lt;/code>、&lt;code>Sidecar&lt;/code> 的功能和设计模式）
-&lt;code>Kubernetes&lt;/code> 当初没有选择和 &lt;code>Swarm&lt;/code> 展开同质化竞争，而是提出太多的设计理念和号召力，很快构建了不同的容器编排的管理的生态理念。超过了&lt;code>Swarm&lt;/code>项目。有了这个后，又将容器监控事实标准 &lt;code>prometheus&lt;/code>融入其中，后面又新增了 &lt;code>Fluentd&lt;/code>、&lt;code>OpenTracing&lt;/code>、&lt;code>CNDI&lt;/code> 等诸多容器生态工具和项目。后面又一记补刀：整个社区进行推进&lt;code>民主化&lt;/code>架构, 从 API 到 容器运行时的 每一层,
-&lt;code>Kubernetes&lt;/code> 项目都为开发者暴露出了可以扩展的插件机制, 鼓励社区用户通过代码的方式介入 &lt;code>Kubernetes&lt;/code> 项目的每一个阶段。这个操作针对 &lt;code>Docker&lt;/code> 来说是致命的,整个容器社区催生了大量的、基于 &lt;code>Kubernetes API&lt;/code> 的做扩展的和二次开发创新的&lt;/p>
-&lt;ul>
-&lt;li>微服务治理项目 &lt;code>Istio&lt;/code>&lt;/li>
-&lt;li>状态应用部署架构 &lt;code>Operator&lt;/code>&lt;/li>
-&lt;li>&amp;hellip;&lt;/li>
-&lt;/ul>
-&lt;p>经过一些列骚操作后，K8S 大行其道，编排之争落下帷幕，容器社区的后续繁荣完全以 &lt;code>Kubernetes&lt;/code> 项目为核心的百家争鸣, 从 &lt;code>Rancher&lt;/code>项目 的历史迭代过程中也能看出这个精彩纷呈的展现。&lt;/p>
-- https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ - PinkHello, All Rights Reserved</description></item></channel></rss>
+- https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - PinkHello, All Rights Reserved</description></item></channel></rss>
