@@ -1,4 +1,609 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 25 May 2021 19:00:00 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>03 String为什么设计成final</title><link>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Sun, 10 Feb 2019 08:19:51 +0800</pubDate><guid>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>PinkHello https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 25 May 2021 19:00:00 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>回望K8S 白话容器</title><link>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Sat, 15 Feb 2020 10:16:34 +0800</pubDate><guid>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>PinkHello https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;h1 id="进程开启">进程开启&lt;/h1>
+&lt;h2 id="容器-到底是什么">容器, 到底是什么?&lt;/h2>
+&lt;blockquote>
+&lt;p>前面提出: 容器是一种沙盒技术. 就是一个集装箱, 把应用装起来的技术. 这样, 应用与应用之间有了边界不至于互相干扰; 有了这些集装箱, 也方便搬来搬去.&lt;/p>
+&lt;/blockquote>
+&lt;p>码农都知道可执行的二进制文件是代码的可执行镜像(&lt;code>executable image&lt;/code>). 一旦程序执行起来, 内存数据、寄存器的值、堆栈的指令、打开的文件等这些集合汇集成一个程序的计算机执行环境总和: 进程.&lt;/p>
+&lt;p>&lt;code>进程&lt;/code>: 静态表现是程序, 动态表现计算机的数据和状态的总和。&lt;/p>
+&lt;p>容器的核心功能, 就是通过约束和修改进程的动态表现, 从而为其创造一个&amp;quot;边界&amp;quot;.&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Cgroups 技术&lt;/code> 制造约束的主要手段&lt;/li>
+&lt;li>&lt;code>Namespace 技术&lt;/code> 修改进程视图的主要方法&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>docker run&lt;/code> , &lt;code>-it&lt;/code> 告诉 &lt;code>Docker&lt;/code> 启动容器后, 需要分配一个文本输入/输出环境, 也就是 &lt;code>TTY&lt;/code>, 跟容器的标准输入相关联, 这样我们就可以和这个&lt;code>Docker&lt;/code>容器进行交互了。而 &lt;code>/bin/sh&lt;/code> 就是我们在 &lt;code>Docker&lt;/code> 容器里运行的程序.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; docker run -it busybox /bin/sh
+/ &lt;span style="color:#228b22">#&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>帮我启动一个容器, 在容器里执行 &lt;code>/bin/sh&lt;/code>, 并且给我分配一个命令行终端跟这个容器进行交互, 在这个执行环境下可以完全执行&lt;code>LINUX&lt;/code>命令,且与宿主机完全隔离在不同的世界中.&lt;/p>
+&lt;p>&lt;code>Docker&lt;/code>对被隔离应用的进程空间做了手脚, 使得这些进程只能看到重新计算的进程编号, 可是实际上, 他们在宿主机的操作系统里, 还是原来的第&lt;code>N&lt;/code>号进程. 这种技术就是&lt;code>Linux&lt;/code>内部的&lt;code>Namespace&lt;/code>机制。&lt;/p>
+&lt;p>&lt;code>Namespace&lt;/code> 的使用方式也非常有意思：它其实只是 &lt;code>Linux&lt;/code> 创建新进程的一个可选参数。我们知道，在 &lt;code>Linux&lt;/code> 系统中创建线程的系统调用是 &lt;code>clone()&lt;/code>，比如：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">int &lt;span style="color:#00688b">pid&lt;/span> = clone(main_function, stack_size, SIGCHLD, NULL);
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个系统调用就会创建一个新的进程，并且返回的它的进程号 pid。&lt;/p>
+&lt;p>当调用 clone() 系统调用创建一个新进程时，就可以在参数中指定 CLONE_NEWPID 参数，比如：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">int &lt;span style="color:#00688b">pid&lt;/span> = clone(main_function, stack_size, CLONE_NEWPID | SIGCHLD, NULL);
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这时，新创建的这个进程就会看到一个全新的进程空间，在这个进程空间里，他的&lt;code>PID&lt;/code>是&lt;code>1&lt;/code>，之所以说看到，是因为是一个障眼法，在宿主机真实的进程空间里，这个&lt;code>PID&lt;/code>还是真实的数值.当多次执行&lt;code>clone()&lt;/code>调用, 会创建多个 &lt;code>PID Namespace&lt;/code>, 每个 Namespace 里的应用进程，都会认为自己是当前容器里的第&lt;code>1&lt;/code>号进程，看不仅&lt;code>宿主机&lt;/code>的也看不到其他的&lt;code>Namespace&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>备注:
+Linux提供了不同的Namespace，去应对不同的进程上下文&lt;/p>
+&lt;ul>
+&lt;li>PID Namespace&lt;/li>
+&lt;li>Mount Namespace&lt;/li>
+&lt;li>IPC Namespace&lt;/li>
+&lt;li>UTS Namespace&lt;/li>
+&lt;li>Network Namespace&lt;/li>
+&lt;li>User Namespace&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>Docker容器，就是在创建容器进程时候，指定了这个进程所需要启用的一组 Namespace 参数, 这样, 容器就只能 看到 当前 Namespace 所限定的 资源、文件、设备、状态 或者 配置。所以说, 容器，其实是一种特殊的进程。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/%E5%AE%B9%E5%99%A8%E4%B8%8E%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86.jpg" alt="容器与虚拟机工作原理">&lt;/p>
+&lt;p>可以看出图中 &lt;code>Hypervisor&lt;/code> 是虚拟机主要部分。它通过硬件虚拟化功能，模拟出了运行一个操作系统需要的各种硬件，比如 CPU、内存、I/O设备等。 这样，用户的进程可以在这个虚拟的机器中，只能看到虚拟环境的文件和目录以及设备，起到隔离的作用。
+而右边的图，&lt;code>Docker Engine&lt;/code>替换了&lt;code>Hypervisor&lt;/code>,但是有个核心一点&lt;code>Docker Engine&lt;/code>并不少&lt;code>轻量级&lt;/code>虚拟化技术。&lt;/p>
+&lt;p>在&lt;code>Linux&lt;/code>的&lt;code>Namespace&lt;/code>工作方式后, 在使用&lt;code>Docker&lt;/code>的时候,&lt;code>Docker&lt;/code>并没有一个真正的&lt;code>Docker容器&lt;/code>运行在宿主机里面，而是&lt;code>Docker&lt;/code>启动还是原来的应用进程，只不过在创建这些进程时候，加上了各种&lt;code>Namespace&lt;/code>参数，使得这些进程觉得自己是在各自的&lt;code>PID Namespace&lt;/code>是第一号进程，并且只能看到各自&lt;code>Mount Namespace&lt;/code>里挂在的目录和文件、只能访问各自&lt;code>Network Namespace&lt;/code>里的网络设备.&lt;/p>
+&lt;h1 id="隔离和限制">隔离和限制&lt;/h1>
+&lt;p>前面提到实现 &lt;code>隔离&lt;/code> 的手段: &lt;code>Namespace&lt;/code>. &lt;code>Namespace&lt;/code> 技术实际修改了应用进程看待整个计算机的&amp;quot;视图&amp;quot;，即它的&amp;quot;视线&amp;quot;被操作系统做了限制，只能&amp;quot;看到&amp;quot;某些知道的内容.&lt;/p>
+&lt;h2 id="为什么需要隔离">为什么需要&lt;code>隔离&lt;/code>&lt;/h2>
+&lt;ul>
+&lt;li>首先，既然容器只是运行在宿主机上的一种特殊的进程，那么多个容器之间使用的就还是同一个宿主机的操作系统内核。&lt;/li>
+&lt;li>在Linux内核中，还有许多资源和对象是不能被 Namespace 化的，最典型的例子是：时间
+&lt;blockquote>
+&lt;p>容器中使用 settimeofday(2) 系统调用修改了时间，整个宿主机的时间都会被随之修改。这样肯定与预期不符&lt;/p>
+&lt;/blockquote>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="上述是为什么要隔离下面说为什么要限制这个问题">上述是为什么要&lt;code>隔离&lt;/code>，下面说为什么要&lt;code>限制&lt;/code>这个问题。&lt;/h2>
+&lt;blockquote>
+&lt;p>在宿主机上,启动多个容器都是在宿主机上的特殊进程,但是在不同的进程之间, 资源（CPU、内存）还是可能被其他进程（或者容器）占用的。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;code>Linux Cgroups&lt;/code>全称&lt;code>Linux Control Group&lt;/code> 就是 Linux 内核中用来为进程设置资源限制的一个重要功能, 限制一个进程组能够使用的资源上限, 包括 CPU、内存、磁盘、网络带宽 等等。此外 &lt;code>Cgroups&lt;/code> 还能够对进程进行优先级设置、审计，以及将进程挂起和恢复操作。&lt;/p>
+&lt;p>在&lt;code>Linux&lt;/code>中,&lt;code>Cgroups&lt;/code>给用户暴露出来的操作接口是文件系统，即它以文件和目录的方式组织在操作系统的 &lt;code>/sys/fs/cgroup&lt;/code> 路径下&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># Ubuntu 下 mount 指令展示出来&lt;/span>
+&amp;gt; mount -t cgroup
+cpuset on /sys/fs/cgroup/cpuset &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,cpuset)
+cpu on /sys/fs/cgroup/cpu &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,cpu)
+cpuacct on /sys/fs/cgroup/cpuacct &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,cpuacct)
+blkio on /sys/fs/cgroup/blkio &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,blkio)
+memory on /sys/fs/cgroup/memory &lt;span style="color:#658b00">type&lt;/span> cgroup (rw,nosuid,nodev,noexec,relatime,memory)
+...
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看到在 &lt;code>/sys/fs/cgroup&lt;/code> 下面又很多诸如&lt;code>cpuset&lt;/code>、&lt;code>cpu&lt;/code>、&lt;code>memory&lt;/code>这样的子目,也叫子系统.这些都是可以被&lt;code>Cgroups&lt;/code>进行限制的资源种类,而在子系统对应的资源种类下, 你就可以看到该类资源具体可以被限制的方法。比如, 对&lt;code>CPU&lt;/code>子系统来说，我们就可以看到几个配置文件，这个指令是：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; ls /sys/fs/cgroup/cpu
+cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_release
+cgroup.procs cpu.cfs_quota_us cpu.rt_runtime_us cpu.stat tasks
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>输出中&lt;code>cfs_period&lt;/code>和&lt;code>cfs_quota&lt;/code>这样的关键词。组合使用,限制进程在长度为&lt;code>cfs_period&lt;/code>的一段时间内,只能被分配到总量为&lt;code>cfs_quota&lt;/code>的&lt;code>CPU&lt;/code>时间&lt;/p>
+&lt;p>如何使用&lt;code>cgroups&lt;/code>呢？&lt;/p>
+&lt;p>在对应的子系统的下面创建一个目录，比如限制CPU进入 &lt;code>/sys/fs/cgroups/cpu&lt;/code> 目录下&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; &lt;span style="color:#658b00">cd&lt;/span> /sys/fs/cgroups/cpu
+&amp;gt; mkdir container
+&amp;gt; ls container/
+cgroup.clone_children cpu.cfs_period_us cpu.rt_period_us cpu.shares notify_on_releasecgroup.procs cpu.cfs_quota_us cpu.rt_runtime_us cpu.stat tasks
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个目录就称为一个控制组，操作系统自动在新创建的 &lt;code>container&lt;/code> 目录下，自动生成该子系统的对应的资源限制文件.&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 查看 container 控制组的 CPU quota 还没有任何限制：-1，CPU period 则是默认的 100 ms (100000 us)&lt;/span>
+&amp;gt; cat /sys/fs/cgroup/cpu/container/cpu.cfs_quota_us
+-1
+&amp;gt; cat /sys/fs/cgroup/cpu/container/cpu.cfs_period_us
+&lt;span style="color:#b452cd">100000&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>向 &lt;code>container&lt;/code> 组里的 &lt;code>cfs_quota&lt;/code> 文件写入 20 ms（20000 us）&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22">#意味着在每 100 ms 的时间里，被该控制组限制的进程只能使用 20 ms 的 CPU 时间，也就是说这个进程只能使用到 20% 的 CPU 带宽。&lt;/span>
+&amp;gt; &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#b452cd">20000&lt;/span> &amp;gt; /sys/fs/cgroup/cpu/container/cpu.cfs_quota_us
+&lt;span style="color:#228b22"># 现在把需要被限制的进程的 PID 写入 container 组里的 tasks 文件，上面的设置就会对该进程生效了&lt;/span>
+&amp;gt; &lt;span style="color:#658b00">echo&lt;/span> &lt;span style="color:#cd5555">${&lt;/span>&lt;span style="color:#00688b">需要限制的进程PID&lt;/span>&lt;span style="color:#cd5555">}&lt;/span> &amp;gt; /sys/fs/cgroup/cpu/container/tasks
+&lt;span style="color:#228b22"># top 指令查看, 计算机CPU使用率立刻降低到20%&lt;/span>
+&amp;gt; top
+%Cpu0 : 20.3 us, 0.0 sy, 0.0 ni, 79.7 id, 0.0 wa, 0.0 hi, 0.0 si, 0.0 st
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这样, &lt;code>Cgroups&lt;/code> 的每一个子系统都有其独有的资源限制能力&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>cpu&lt;/code>, 为进程设定&lt;code>cpu&lt;/code>使用的限制;&lt;/li>
+&lt;li>&lt;code>blkio&lt;/code>, 为块设备设定 I/O 限制, 一般用户磁盘等设备;&lt;/li>
+&lt;li>&lt;code>cpuset&lt;/code>, 为进程分配单独的 CPU核和对应的内存节点;&lt;/li>
+&lt;li>&lt;code>memory&lt;/code>, 为进程设定内存使用的限制&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>Linux Cgroups&lt;/code>的设计，它就是&lt;code>一个子系统的目录加上一组资源限制文件的组合&lt;/code>。而对于&lt;code>Docker&lt;/code>等&lt;code>Linux&lt;/code>容器项目来说，它们只需要在每个子系统下面，为每个容器创建一个控制组(即创建一个新目录), 然后在启动进程之后，把这个进程的&lt;code>PID&lt;/code>写到对应的控制组的&lt;code>tasks&lt;/code>文件中.&lt;/p>
+&lt;p>那么在&lt;code>Docker&lt;/code>容器中，如何启动的时候知道控制组下面的资源如何使用呢？&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># docker run 时的参数指定&lt;/span>
+&amp;gt; docker run -it --cpu-period=&lt;span style="color:#b452cd">100000&lt;/span> --cpu-quota=&lt;span style="color:#b452cd">20000&lt;/span> ubuntu /bin/bash
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>在启动这个容器后，我们可以通过 &lt;code>Cgroups&lt;/code> 文件系统下，&lt;code>CPU&lt;/code>子系统中, &lt;code>docker&lt;/code>这个控制组里的资源限制文件内容来确认：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; cat /sys/fs/cgroup/cpu/docker/5d5c9f67d/cpu.cfs_period_us
+&lt;span style="color:#b452cd">100000&lt;/span>
+&amp;gt; cat /sys/fs/cgroup/cpu/docker/5d5c9f67d/cpu.cfs_quota_us
+&lt;span style="color:#b452cd">20000&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这就意味着这个&lt;code>Docker&lt;/code>容器,只能使用到 &lt;code>20%&lt;/code> 的&lt;code>CPU带宽&lt;/code>&lt;/p>
+&lt;p>核心概念：&lt;/p>
+&lt;blockquote>
+&lt;p>容器就是一个&lt;code>单进程&lt;/code>模型. 一个正在运行的&lt;code>Docker&lt;/code>容器,其实就是启用了多个&lt;code>Linux Namespace&lt;/code>的应用进程,而这个进程能够使用的资源量,则受&lt;code>Cgroups&lt;/code>配置的限制&lt;/p>
+&lt;/blockquote>
+&lt;p>一个容器的本质是一个进程, 用户的应用进程实际上就是容器的&lt;code>PID=1&lt;/code>的进程, 也是其他后续创建所有进程的父进程。这就意味着，在一个容器中，你没有办法同时运行两个不同的应用，除非你能事先找到公共的&lt;code>PID=1&lt;/code>的程序充当两个不同应用的父进程，这就是为什么很多会使用&lt;code>systemd&lt;/code>或者&lt;code>supervisord&lt;/code>代理应用本身作为容器的启动进程。&lt;/p>
+&lt;p>容器的本身设计，希望容器和应用能够同生命周期，这个对后续的容器编排非常重要。&lt;/p>
+&lt;p>&lt;code>Linux&lt;/code>下的&lt;code>/proc&lt;/code>目录存储的是纪录当前内核运行状态的一些列特殊文件，用户可以通过访问这些文件，查看系统以及当前正在运行的进程的信息, 比如 CPU使用、内存占用，&lt;code>top&lt;/code>指令查看系统信息的主要数据来源. 在容器中执行 top 指令, 发现宿主机的CPU和内存的数据，不是当前容器的数据。&lt;/p>
+&lt;blockquote>
+&lt;p>造成这个问题的原因就是，&lt;code>/proc&lt;/code> 文件系统并不知道用户通过 &lt;code>Cgroups&lt;/code> 给这个容器做了什么样的资源限制，即：&lt;code>/proc&lt;/code> 文件系统不了解 &lt;code>Cgroups&lt;/code> 限制的存在。
+当然可以借助其他 &lt;code>lxcfs&lt;/code> 可解决此问题&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="容器镜像">容器镜像&lt;/h1>
+&lt;h2 id="容器中的进程看到的文件系统又是什么样子的呢">容器中的进程看到的文件系统又是什么样子的呢？&lt;/h2>
+&lt;p>嘿嘿, &lt;code>Mount Namespace&lt;/code> 开启后，容器进行看到的文件系统也跟宿主机完全一样。&lt;code>Mount Namespace&lt;/code> 修改的，是容器进程对文件系统&amp;quot;挂载点&amp;quot;的认知。&lt;code>Mount Namespace&lt;/code> 跟其他的 &lt;code>Namespace&lt;/code> 的使用略有不同的地方：它对容器进程视图的改变，一定是伴随着挂载操作（&lt;code>mount&lt;/code>）才能生效。&lt;/p>
+&lt;p>在&lt;code>Linux&lt;/code>操作系统中，有一个 &lt;code>chroot&lt;/code> 的命令：&lt;code>change root file system&lt;/code>， 改变进程的根目录到你指定的位置。这个 &lt;code>Mount Namespace&lt;/code> 正是基于对 &lt;code>chroot&lt;/code> 的不断改良的，也是 &lt;code>Linux&lt;/code> 操作系统里第一个 &lt;code>Namespace&lt;/code>。
+而挂载在容器根目录上，用来为容器进程提供隔离后执行环境的文件系统，就是所谓的容器镜像。它还有一个更专业的名字叫做 &lt;code>rootfs&lt;/code>（根文件系统）&lt;/p>
+&lt;p>一个常见的 &lt;code>rootfs&lt;/code>，包含一些目录和文件:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; ls /
+bin dev etc home lib lib64 mnt opt proc root run sbin sys tmp usr var
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>而进入容器之后执行的 &lt;code>/bin/bash&lt;/code>, 就是 &lt;code>/bin&lt;/code> 目录下的可执行文件, 与宿主机的 &lt;code>/bin/bash&lt;/code> 完全不同。&lt;/p>
+&lt;p>对于 &lt;code>Docker&lt;/code> 项目来说，它最核心的原理就是为带创建的用户进程：&lt;/p>
+&lt;ul>
+&lt;li>启用 &lt;code>Linux Namespace&lt;/code> 配置；&lt;/li>
+&lt;li>设置指定的 &lt;code>Cgroups&lt;/code> 参数；&lt;/li>
+&lt;li>切换进程的根目录（&lt;code>Change Root&lt;/code>）.&lt;/li>
+&lt;/ul>
+&lt;p>这样，一个完整的容器就诞生了。不过，在&lt;code>Docker&lt;/code>项目在最后一步的切换上优先使用&lt;code>pivot_root&lt;/code>系统调用,如果系统不支持，才会使用&lt;code>chroot&lt;/code>。&lt;/p>
+&lt;p>&lt;code>rootfs&lt;/code>只是操作系统所包含的文件、配置和目录，并不包含操作系统内核。在&lt;code>Linux&lt;/code>操作系统中，这两部分分开存放的。操作系统只在开机启动的时候才会加载指定版本的内核镜像。
+所以说&lt;code>rootfs&lt;/code>只是操作系统的&amp;quot;躯壳&amp;quot;，并没有操作系统的&amp;quot;灵魂&amp;quot;，同一台机器的所有容器，都共享宿主机操作系统的内核。因为共享的宿主机内核，应用程序需要配置的内核参数、加载额外的内核模块，以及跟内核进行的直接交互。内核相对于主机上所有容器的是一个全局变量，牵一发而动全身。&lt;/p>
+&lt;p>由于&lt;code>rootfs&lt;/code>的存在,容器有了最重要的特性: 一致性&lt;/p>
+&lt;h2 id="什么是容器的一致性呢">什么是容器的一致性呢？&lt;/h2>
+&lt;p>在开发过程中、本地环境、云环境、打包是一个十分痛苦的过程（对于&lt;code>PAAS&lt;/code>环境来说），有了容器镜像（&lt;code>rootfs&lt;/code>）之后，优雅的解决了这个问题。&lt;/p>
+&lt;blockquote>
+&lt;p>由于 &lt;code>rootfs&lt;/code> 里打包的不只是应用，而是整个操作系统的文件和目录，也就意味着应用以及它运行的所需要的所有依赖，都被封装在一起。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>对于一个应用来说，操作系统本身才是它运行所需要的完整的&amp;quot;依赖库&amp;quot;，有了容器镜像打包操作系统的能力，这个最基础的依赖环境也终于变成了应用沙盒的一部分。这就赋予了容器的一致性：无论在本地、云端，还是在任何地方的机器上，用户只需要解压打包好的容器镜像，这样这个应用所需要的完整的执行环境就被重现出来了。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="如何解决每次升级如何解决重复制作-rootfs-的问题呢">如何解决每次升级，如何解决重复制作 &lt;code>rootfs&lt;/code> 的问题呢？&lt;/h2>
+&lt;p>&lt;code>Docker&lt;/code>公司实现&lt;code>Docker&lt;/code>镜像的时候没有使用重制作&lt;code>rootfs&lt;/code>流程，而是在&lt;code>Docker&lt;/code>在镜像的设计中，引入了层（&lt;code>layer&lt;/code>）的概念。也就是说，用户制作镜像的每一步操作，都会生成一个层，也就是一个增量的&lt;code>rootfs&lt;/code>.&lt;/p>
+&lt;p>联合文件系统(&lt;code>Union File System&lt;/code>) &lt;code>UnionFS&lt;/code>, 最主要的功能是将不同位置的目录联合挂载（&lt;code>union mount&lt;/code>）到同一个目录下。&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; tree
+.
+|- A
+| |- a
+| |- x
+|--- B
+|-- b
+|-- x
+&lt;span style="color:#228b22"># 联合挂载，两个目录挂载到公共目录C上&lt;/span>
+&amp;gt; mkdir C
+&amp;gt; mount -t aufs -o &lt;span style="color:#00688b">dirs&lt;/span>=./A:./B none ./C
+&lt;span style="color:#228b22"># 展示C文件&lt;/span>
+&amp;gt; tree ./C
+./C
+|-- a
+|-- b
+|-- x
+&lt;span style="color:#228b22"># 此时对 C 里的文件进行修改，在目录 A 和 B 中都会生效&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="docker-layer概念">&lt;code>docker&lt;/code> &lt;code>layer&lt;/code>概念&lt;/h2>
+&lt;p>关键目录:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">/var/lib/docker/aufs/diff/&amp;lt;layer_id&amp;gt;
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 拉取ubuntu镜像&lt;/span>
+&amp;gt; docker pull ubuntu:latest
+&lt;span style="color:#228b22"># 展示image的层&lt;/span>
+&amp;gt; docker image inspect ubuntu:latest
+...
+&lt;span style="color:#cd5555">&amp;#34;RootFS&amp;#34;&lt;/span>: {
+&lt;span style="color:#cd5555">&amp;#34;Type&amp;#34;&lt;/span>: &lt;span style="color:#cd5555">&amp;#34;layers&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;Layers&amp;#34;&lt;/span>: [
+&lt;span style="color:#cd5555">&amp;#34;sha256:f49017d4d5ce9c0f544c...&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;sha256:8f2b771487e9d6354080...&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;sha256:ccd4d61916aaa2159429...&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;sha256:c01d74f99de40e097c73...&amp;#34;&lt;/span>,
+&lt;span style="color:#cd5555">&amp;#34;sha256:268a067217b5fe78e000...&amp;#34;&lt;/span>
+]
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>ubuntu&lt;/code>镜像的是五层组成，这五层就是5个增量 &lt;code>rootfs&lt;/code>,每一层都是 &lt;code>ubuntu&lt;/code> 操作系统文件与目录的一部分; 而在使用镜像时, &lt;code>Docker&lt;/code> 会把这些增量的联合挂载在一个统一的挂载点上。挂载点就是 &lt;code>/var/lib/docker/aufs/mnt/&lt;/code>,比如:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">/var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fcfa2a2f5c89dc21ee30e166be823ceaeba15dce645b3e
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 这个目录下是一个完整的 ubuntu 操作系统&lt;/span>
+&amp;gt; ls /var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fcfa2a2f5c89dc21ee30e166be823ceaeba15dce645b3e
+bin boot dev etc home lib lib64 media mnt opt proc root run sbin srv sys tmp usr var
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>前面的五个镜像层，如何被挂载到这样一个完整的&lt;code>Ubuntu&lt;/code>的文件系统的呢？这个信息纪录在 &lt;code>AuFS&lt;/code> 的系统目录 &lt;code>/sys/fs/aufs&lt;/code> 下面。查看 &lt;code>AuFS&lt;/code> 的挂载信息, 我们可以找到这个目录对应的 &lt;code>AuFS&lt;/code> 的内部ID（也叫&lt;code>si&lt;/code>），&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># si=972c6d361e6b32ba&lt;/span>
+&amp;gt; cat /proc/mounts| grep aufs
+none /var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fc... aufs rw,relatime,si=972c6d361e6b32ba,dio,dirperm1 &lt;span style="color:#b452cd">0&lt;/span> &lt;span style="color:#b452cd">0&lt;/span>
+&lt;span style="color:#228b22"># 查看被联合挂载在一起的各个层的信息&lt;/span>
+&amp;gt; cat /sys/fs/aufs/si_972c6d361e6b32ba/br[0-9]*
+/var/lib/docker/aufs/diff/6e3be5d2ecccae7cc...=rw
+/var/lib/docker/aufs/diff/6e3be5d2ecccae7cc...-init=ro+wh
+/var/lib/docker/aufs/diff/32e8e20064858c0f2...=ro+wh
+/var/lib/docker/aufs/diff/2b8858809bce62e62...=ro+wh
+/var/lib/docker/aufs/diff/20707dce8efc0d267...=ro+wh
+/var/lib/docker/aufs/diff/72b0744e06247c7d0...=ro+wh
+/var/lib/docker/aufs/diff/a524a729adadedb90...=ro+wh
+&lt;span style="color:#228b22"># 镜像的层都放置在 `/var/lib/docker/aufs/diff` 目录下，然后被联合挂载在 `/var/lib/docker/aufs/mnt` 里面 &lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/ubuntu-layer.png" alt="容器的rootfs的展示">&lt;/p>
+&lt;ul>
+&lt;li>第一部分: 只读层
+&lt;blockquote>
+&lt;p>它是这个容器 &lt;code>rootfs&lt;/code> 最下面的 5 层, 对应的正是 &lt;code>ubuntu&lt;/code> 镜像的五层.他们的挂载方式都是只读的（ro+wh readonly+whiteout）&lt;/p>
+&lt;/blockquote>
+&lt;/li>
+&lt;li>第二部分: 可读写层
+&lt;blockquote>
+&lt;p>它是这个容器的 &lt;code>rootfs&lt;/code> 最上面的一层（6e3be5d2ecccae7cc），它的挂载方式为：&lt;code>rw&lt;/code> （read write）, 在这个容器中进行修改产生的内容就会以增量的方式出现在这一层。
+假如删除只读层的一个文件呢？这时候 &lt;code>AuFS&lt;/code> 在可读写层创建了一个 &lt;code>whiteout&lt;/code> 文件，把只读层里的文件 遮挡 起来了。对上层来说，这个文件就是不可见的。
+这边可读写层的作用就是存放我们自己修改后的 &lt;code>rootfs&lt;/code> 后产生的增量，无论增删改都在此处处理，增量的 &lt;code>rootfs&lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;/li>
+&lt;li>第三部分: &lt;code>Init&lt;/code> 层
+&lt;blockquote>
+&lt;p>它是以&amp;quot;-init&amp;quot;结尾的层，夹在只读层和读写层之间, &lt;code>Init&lt;/code> 层是&lt;code>Docker&lt;/code>项目单独生成的内部层，专门用来存放 &lt;code>/etc/hosts&lt;/code>、&lt;code>/etc/resolv.conf&lt;/code> 等信息，这些文件本来属于只读的&lt;code>Ubuntu&lt;/code>镜像一部分，但用户往往需要在启动的时候写入一定指定的值 &lt;code>hostname&lt;/code>，用户可以在可读写层对他们进行修改。&lt;/p>
+&lt;p>可是我们修改往往只对当前容器生效，我们并不希望执行 &lt;code>docker commit&lt;/code> 时，把这些信息连同可读写层一起提交掉。所以&lt;code>Docker&lt;/code>的做法，时修改的这些文件以后，以一个单独的层挂载出来，而用户执行的 &lt;code>docker commit&lt;/code> 只会提交可读写层，所以不会包含这些内容。&lt;/p>
+&lt;p>最终这 7 层都被联合挂载到 &lt;code>/var/lib/docker/aufs/mnt&lt;/code> 目录下&lt;/p>
+&lt;/blockquote>
+&lt;/li>
+&lt;/ul>
+&lt;h1 id="docker容器">&lt;code>Docker&lt;/code>容器&lt;/h1>
+&lt;h2 id="docker-如何实现容器的">docker 如何实现容器的&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>Linux Namespace&lt;/code> 隔离能力&lt;/li>
+&lt;li>&lt;code>Linux Cgroups&lt;/code> 限制能力&lt;/li>
+&lt;li>基于 &lt;code>rootfs&lt;/code> 文件系统的增量实现&lt;/li>
+&lt;/ul>
+&lt;h2 id="开发的应用的如何容器化的步骤">开发的应用的如何容器化的步骤&lt;/h2>
+&lt;h3 id="1dockerfile-制作容器镜像">1、&lt;code>Dockerfile&lt;/code> 制作容器镜像&lt;/h3>
+&lt;p>制作&lt;code>rootfs&lt;/code>过程，&lt;code>Docker&lt;/code>提供了一个便捷的方式: &lt;code>Dockerfile&lt;/code>&lt;/p>
+&lt;p>举例个写个 &lt;code>app.py&lt;/code>, 使用 &lt;code>Flask&lt;/code> 启动一个&lt;code>Web&lt;/code>服务器。&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-python" data-lang="python">&lt;span style="color:#8b008b;font-weight:bold">from&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">flask&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> Flask
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">socket&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">os&lt;/span>
+app = Flask(__name__)
+&lt;span style="color:#707a7c">@app.route&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;/&amp;#39;&lt;/span>)
+&lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">hello&lt;/span>():
+html = &lt;span style="color:#cd5555">&amp;#34;&amp;lt;h3&amp;gt;Hello {name}!&amp;lt;/h3&amp;gt;&amp;#34;&lt;/span> \
+&lt;span style="color:#cd5555">&amp;#34;&amp;lt;b&amp;gt;Hostname:&amp;lt;/b&amp;gt; {hostname}&amp;lt;br/&amp;gt;&amp;#34;&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> html.format(name=os.getenv(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>, &lt;span style="color:#cd5555">&amp;#34;world&amp;#34;&lt;/span>), hostname=socket.gethostname())
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> __name__ == &lt;span style="color:#cd5555">&amp;#34;__main__&amp;#34;&lt;/span>:
+app.run(host=&lt;span style="color:#cd5555">&amp;#39;0.0.0.0&amp;#39;&lt;/span>, port=&lt;span style="color:#b452cd">80&lt;/span>)
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 展示 Python 依赖的关系&lt;/span>
+&amp;gt; cat requirements.txt
+Flask
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-dockerfile" data-lang="dockerfile">&lt;span style="color:#228b22"># 使用官方 python镜像&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">FROM&lt;/span>&lt;span style="color:#cd5555"> python&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#228b22"># 切换工作目录&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">WORKDIR&lt;/span>&lt;span style="color:#cd5555"> /app&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#228b22"># 将当前目录下内容复制到 /app&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ADD&lt;/span> . /app&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#228b22"># 按照应用依赖&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">RUN&lt;/span> pip install -r requirements.txt&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#228b22"># 允许外界访问容器80端口&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">EXPOSE&lt;/span>&lt;span style="color:#cd5555"> 80&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#228b22"># 设置环境变量&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ENV&lt;/span> NAME helloworld&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#228b22"># 启动python应用&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;span style="color:#a61717;background-color:#e3d2d2">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">CMD&lt;/span> [&lt;span style="color:#cd5555">&amp;#34;python&amp;#34;&lt;/span>,&lt;span style="color:#cd5555">&amp;#34;app.py&amp;#34;&lt;/span>]&lt;span style="color:#a61717;background-color:#e3d2d2">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>有了 Dockerfile 可以进行 Docker 镜像的制作&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># 使用dockerfile打一个 名为 helloworld 的镜像&lt;/span>
+&amp;gt; docker build -t helloword .
+&lt;span style="color:#228b22"># 展示docker&lt;/span>
+&amp;gt; docker image ls
+REPOSITORY TAG IMAGE ID
+helloworld latest 654286cdf963
+&lt;span style="color:#228b22"># 启动一个容器 8080 映射 80&lt;/span>
+&amp;gt; docker run -p 8080:80 helloword
+&lt;span style="color:#228b22"># docker push&lt;/span>
+&lt;span style="color:#228b22"># docker tag&lt;/span>
+&amp;gt; docker inspect --format &lt;span style="color:#cd5555">&amp;#39;{{ .State.Pid }}&amp;#39;&lt;/span> 4ddf4638572d
+&lt;span style="color:#b452cd">25686&lt;/span>
+&lt;span style="color:#228b22"># 可以看到，一个进程的每种 Linux Namespace，都在它对应的 /proc/[进程号]/ns 下有一个对应的虚拟文件，并且链接到一个真实的 Namespace 文件上。&lt;/span>
+&amp;gt; ls -l /proc/25686/ns
+total &lt;span style="color:#b452cd">0&lt;/span>
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 cgroup -&amp;gt; cgroup:[4026531835]
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 ipc -&amp;gt; ipc:[4026532278]
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 mnt -&amp;gt; mnt:[4026532276]
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 net -&amp;gt; net:[4026532281]
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 pid -&amp;gt; pid:[4026532279]
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 pid_for_children -&amp;gt; pid:[4026532279]
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 user -&amp;gt; user:[4026531837]
+lrwxrwxrwx &lt;span style="color:#b452cd">1&lt;/span> root root &lt;span style="color:#b452cd">0&lt;/span> Aug &lt;span style="color:#b452cd">13&lt;/span> 14:05 uts -&amp;gt; uts:[4026532277]
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这也就意味着：一个进程，可以选择加入到某个进程已有的 &lt;code>Namespace&lt;/code> 当中，从而达到“进入”这个进程所在容器的目的，这正是 &lt;code>docker exec&lt;/code> 的实现原理。&lt;/p>
+&lt;h3 id="2volume-机制允许将宿主机上的指定的目录或者文件挂载到容器里面进行读取和修改">2、&lt;code>Volume&lt;/code> 机制，允许将宿主机上的指定的目录或者文件挂载到容器里面进行读取和修改&lt;/h3>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; docker run -v /test ...
+&amp;gt; docker run -v /home:/test ...
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>只不过，在第一种情况下，由于你并没有显示声明宿主机目录，那么 &lt;code>Docker&lt;/code> 就会默认在宿主机上创建一个临时目录 &lt;code>/var/lib/docker/volumes/[VOLUME_ID]/_data&lt;/code>，然后把它挂载到容器的 &lt;code>/test&lt;/code> 目录上。而在第二种情况下，&lt;code>Docker&lt;/code> 就直接把宿主机的 &lt;code>/home&lt;/code> 目录挂载到容器的 &lt;code>/test&lt;/code> 目录上。&lt;/p>
+&lt;p>当容器进程被创建之后，尽管开启了 &lt;code>Mount Namespace&lt;/code>，但是在它执行 &lt;code>chroot&lt;/code>（或者 &lt;code>pivot_root&lt;/code>）之前，容器进程一直可以看到宿主机上的整个文件系统。&lt;/p>
+&lt;p>而宿主机上的文件系统，也自然包括了我们要使用的容器镜像。这个镜像的各个层，保存在 &lt;code>/var/lib/docker/aufs/diff&lt;/code> 目录下，在容器进程启动后，它们会被联合挂载在 &lt;code>/var/lib/docker/aufs/mnt/&lt;/code> 目录中，这样容器所需的 &lt;code>rootfs&lt;/code> 就准备好了。&lt;/p>
+&lt;p>所以，我们只需要在 &lt;code>rootfs&lt;/code> 准备好之后，在执行 &lt;code>chroot&lt;/code> 之前，把 &lt;code>Volume&lt;/code> 指定的宿主机目录（比如 &lt;code>/home&lt;/code> 目录），挂载到指定的容器目录（比如 &lt;code>/test&lt;/code> 目录）在宿主机上对应的目录（即 &lt;code>/var/lib/docker/aufs/mnt/[可读写层 ID]/test&lt;/code>）上，这个 &lt;code>Volume&lt;/code> 的挂载工作就完成了。&lt;/p>
+&lt;p>更重要的是，由于执行这个挂载操作时，“容器进程”已经创建了，也就意味着此时 &lt;code>Mount Namespace&lt;/code> 已经开启了。所以，这个挂载事件只在这个容器里可见。你在宿主机上，是看不见容器内部的这个挂载点的。这就保证了容器的隔离性不会被 &lt;code>Volume&lt;/code> 打破。&lt;/p>
+&lt;p>而这里要使用到的挂载技术，就是 &lt;code>Linux&lt;/code> 的绑定挂载（&lt;code>bind mount&lt;/code>）机制。它的主要作用就是，允许你将一个目录或者文件，而不是整个设备，挂载到一个指定的目录上。并且，这时你在该挂载点上进行的任何操作，只是发生在被挂载的目录或者文件上，而原挂载点的内容则会被隐藏起来且不受影响。&lt;/p>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/python-app-image.jpg" alt="应用的镜像">&lt;/p>
+&lt;h1 id="kubernetes-本质">&lt;code>Kubernetes&lt;/code> 本质&lt;/h1>
+&lt;h2 id="回顾">回顾&lt;/h2>
+&lt;p>一个容器：&lt;code>Linux Namespace&lt;/code>、&lt;code>Linux Cgroups&lt;/code>、 &lt;code>rootfs&lt;/code> 三种技术构建的进程隔离环境。&lt;/p>
+&lt;p>一个正在允许的 &lt;code>Linux&lt;/code> 的容器:&lt;/p>
+&lt;ul>
+&lt;li>一组联合挂载在 &lt;code>/var/lib/docker/aufs/mnt&lt;/code> 上的 &lt;code>rootfs&lt;/code>, 容器的静态视图（容器镜像）&lt;/li>
+&lt;li>一个有 &lt;code>Namespace&lt;/code> + &lt;code>Cgroups&lt;/code> 构成的隔离环境，容器的动态视图（容器运行时）&lt;/li>
+&lt;/ul>
+&lt;h2 id="总结">总结&lt;/h2>
+&lt;p>在整个开发流程中 &amp;ldquo;开发 - 测试 - 发布&amp;rdquo;，真正承载容器信息传递的是&lt;code>容器镜像&lt;/code>！然而云计算商想要与全部用户关联起来，那么只有通过&lt;code>容器镜像&lt;/code>。
+容器只是开发者手里的小工具，但是想从容器进入容器云的方式，就需要 &lt;code>容器编排&lt;/code> 技术.&lt;/p>
+&lt;h2 id="容器编排技术">&lt;code>容器编排&lt;/code>技术&lt;/h2>
+&lt;p>大战之后，Kubernetes 应运而生&lt;/p>
+&lt;h3 id="kubernetes-顶层设计">Kubernetes 顶层设计&lt;/h3>
+&lt;ul>
+&lt;li>编排、调度、容器云、集群管理&lt;/li>
+&lt;li>路由网关、水平扩展、监控、备份、灾难恢复&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/kubernetes-%E6%9E%B6%E6%9E%84.png" alt="kubernetes架构">&lt;/p>
+&lt;p>Kubernetes 是由 Master 和 Node 两种节点，控制节点 与 计算节点&lt;/p>
+&lt;ul>
+&lt;li>控制节点（三个组件）
+&lt;ul>
+&lt;li>kube-apiserver 负责API服务&lt;/li>
+&lt;li>kube-scheduler 负责调度&lt;/li>
+&lt;li>kube-controller-manager 负责容器编排&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>计算节点
+&lt;ul>
+&lt;li>核心 kubelet 负责和容器运行时（比如docker）交互
+&lt;ul>
+&lt;li>交互的时候的依赖接口 CRI （Container Runtime Interface）的远程调用接口&lt;/li>
+&lt;li>通过 gRPC 协议 与 Device Plugin 进行交互&lt;/li>
+&lt;li>调用网络插件为容器配置网络 CNI （Container Networking Interface）&lt;/li>
+&lt;li>调用存储插件为容器配置持久化存储 CSI （Container Storage Interface）&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>etcd 整个集群的持久化数据，由 kube-apiserver 处理后保存在 Etcd 中&lt;/li>
+&lt;/ul>
+&lt;p>从一开始，Kubernetes 就没有衣服到 Docker 项目上，没有将它作为架构的核心，只是将它作为了最底层的容器运行时的实现&lt;/p>
+&lt;p>Kubernetes 项目最主要的设计思想：从宏观的角度、以统一的方式定义任务之间的各种关系，为将来支持更多种类的关系留有余地&lt;/p>
+&lt;blockquote>
+&lt;p>例如：
+Kubernetes 在访问关系上的操作&lt;/p>
+&lt;p>Pod 是 Kubernetes 的最基础的对象。
+Service 是 Kubernetes 提供的访问关系的服务对象&lt;/p>
+&lt;p>我现在两个应用各自为POD，现在要做到A应用访问B应用，在使用时候，对于容器需要 IP 地址信息不变等等。
+Kubernetes的做法是 Pod 绑定一个 Service 服务，而 Service 服务声明的 IP 地址等信息是不变的，这个Service服务主要作用就是作为 Pod 的代理入口，从而替代Pod对外暴露一个固定的网络地址。
+这样对于调用方只需要关系 Service 声明信息，而Service后端真正代理的Pod 的IP地址、端口等信息的自动更新、维护是 Kubernetes的职责。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/kubernetes-%E5%85%A8%E6%99%AF%E5%9B%BE.png" alt="kubernetes全景图">&lt;/p>
+&lt;ul>
+&lt;li>Pod&lt;/li>
+&lt;li>Service 描述访问关系&lt;/li>
+&lt;li>Secret 密钥&lt;/li>
+&lt;li>Job 描述一次性运行的POD&lt;/li>
+&lt;li>DaemonSet 描述每个宿主机必须且只能运行一个副本的守护进程服务&lt;/li>
+&lt;li>CronJob 描述定时任务&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>如何编排一个K8S项目&lt;/p>
+&lt;ul>
+&lt;li>通过编排对象, 比如 Pod、Job、CronJob 等，来描述试图管理的应用；&lt;/li>
+&lt;li>定义服务对象, 比如 Service、Secret、Horizontal Pod Autoscaler等，会负责具体的平台级功能&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>&lt;code>声明式 API&lt;/code> 对应的 &lt;code>编排对象&lt;/code> 和 &lt;code>服务对象&lt;/code>，都是 Kubernetes 项目中的 API 对象（API Object）&lt;/p>
+- https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ - PinkHello, All Rights Reserved</description></item><item><title>回望K8S 小鲸鱼容器技术</title><link>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</link><pubDate>Tue, 11 Feb 2020 10:50:42 +0800</pubDate><guid>https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/</guid><description>PinkHello https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ -&lt;h1 id="什么是容器">什么是容器&lt;/h1>
+&lt;p>在容器之前, 火爆云计算市场的是 &lt;code>PAAS&lt;/code>, &lt;code>PAAS&lt;/code>已经深入人心. 那时候突然有一家公司 dotCloud 剑走偏锋, 直接开源出了 &lt;code>Docker&lt;/code> 项目，并且直接面向的社区。 这样的做法直接将当时的&lt;code>PAAS&lt;/code>流主要公司打的屁滚尿流。&lt;/p>
+&lt;p>回头看, &lt;code>PAAS&lt;/code> 最核心的是隔离环境,或者叫 &lt;code>沙盒&lt;/code>,在我看来也就是 &lt;code>容器&lt;/code>. 而 &lt;code>Docker&lt;/code> 项目和 &lt;code>Cloud Foundry&lt;/code> 的容器没有太大的不同,但是它为什么能针对 &lt;code>PAAS&lt;/code>进行了一场快速的闪电战呢？&lt;/p>
+&lt;blockquote>
+&lt;p>对的, 就是 &lt;code>Docker&lt;/code> 镜像, 这个小小的创新, 迅速改变了云计算的发展轨迹! &lt;code>Docker&lt;/code> 镜像解决的是 &lt;code>打包&lt;/code> 问题。也许有人说&lt;code>Docker&lt;/code> 镜像就是一个压缩包。但是就是这个压缩包包含了完整的操作系统文件和目录, 包含了整个应用所需要的依赖，一包在手, 你可以轻易的运行你的&lt;code>沙盒&lt;/code>,并且本地环境与云端环境高度一致（这是最宝贵的）。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;code>Docker&lt;/code>给&lt;code>PAAS&lt;/code>进行了致命打击, 提供了便利的打包机制, 面向后端开发者来说, 屏蔽了机器、内核等技术细节, 避免了在不同环境间的差异引入的试错成本。是一次解放生产力的革命。当然很多开发者用脚投票, 了结了&lt;code>PAAS&lt;/code>时代。&lt;/p>
+&lt;h1 id="docker-三大利器">&lt;code>Docker&lt;/code> 三大利器&lt;/h1>
+&lt;ul>
+&lt;li>&lt;code>Docker&lt;/code>项目的高调开源, 解决了打包和发布困扰运维的技术难题，同时它也第一次纯后端的概念通过友好的设计和封装交付到了开发者的手里。&lt;/li>
+&lt;li>&lt;code>Swarm&lt;/code>,&lt;code>Docker&lt;/code>是创建和启停容器的工具,那么&lt;code>Swarm&lt;/code>是为了向平台化发展而提出的。它提供了完整的整体对外提供集群管理功能,它的亮点是完全使用&lt;code>Docker&lt;/code>原本的管理容器的API来完成集群管理&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># Swarm多机环境下，指令会被Swarm拦截处理，后面通过调度算法找到合适的Docker Daemon运行&lt;/span>
+docker run -H &lt;span style="color:#cd5555">&amp;#34;Swarm集群API&amp;#34;&lt;/span> &lt;span style="color:#cd5555">&amp;#34;我的容器&amp;#34;&lt;/span>
+&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>&lt;code>Compose&lt;/code>(Fig)项目, 这是第一次在开发者面前提出 &lt;code>容器编排&lt;/code>(Container Orchestration)概念。&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>应用容器 A, 数据库容器B, 负载均衡容器C, Compose 允许 A、B、C 三个容器定义在配置文件中, 并指定关联关系. 只需要执行 (fig/docker-compose up)&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="容器化群雄并起与尘埃落定">容器化群雄并起与尘埃落定&lt;/h1>
+&lt;p>容器开启火爆模式, 大量围绕 &lt;code>Docker&lt;/code> 项目的网络、存储、监控、&lt;code>CI/CD&lt;/code>、UI 等涌现了诸如 &lt;code>Rancher&lt;/code>、&lt;code>Tutum&lt;/code> 等在开源和商业上取得成功的创业公司。
+在 &lt;code>Docker&lt;/code> 、 &lt;code>Google&lt;/code>、&lt;code>CoreOS&lt;/code>、&lt;code>ReaHat&lt;/code> 等公司在云计算大打出手的时候，落在下风的 &lt;code>Google&lt;/code>、&lt;code>CoreOS&lt;/code>、&lt;code>RedHat&lt;/code> 开始忽悠 &lt;code>Docker&lt;/code> 将 &lt;code>Libcontainer&lt;/code> 项目捐出、组建一个完全独立中立的基金会管理，以 &lt;code>RunC&lt;/code>（改名的 &lt;code>Libcontainer&lt;/code> ）为依据，大家共同制定一套容器和镜像的标准和规范。这套标准和规范就是 &lt;code>OCI&lt;/code>(&lt;code>Open Container Initiative&lt;/code>),
+&lt;code>OCI&lt;/code> 的提出，将容器运行时和镜像的实现从&lt;code>Docker&lt;/code>项目只完全剥离开来。（好一招围魏救赵，改善&lt;code>Docker&lt;/code>公司一家独大，其他公司不依赖与&lt;code>Docker&lt;/code>项目）
+这是第一步，后面就是容器之上的平台层，就是 &lt;code>PAAS&lt;/code> 层了,后来&lt;code>Google&lt;/code>、&lt;code>RedHat&lt;/code> 等基础设施玩家，共同发起 &lt;code>CNCF&lt;/code>(&lt;code>Cloud Native Computing Foundation&lt;/code>) 基金会。以 &lt;code>Kubernetes&lt;/code> 项目为基础，建立由开源基础设施厂商领导的按照基金会方式运营的平台级社区。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Kubernetes&lt;/code> 项目必须能够在容器编排领域取得足够大的竞争优势&lt;/li>
+&lt;li>&lt;code>CNCF&lt;/code> 社区必须以 &lt;code>Kubernetes&lt;/code> 项目为核心，覆盖更多的常见&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>Kubernetes&lt;/code> 当初为什么被认为设计思想过于超前，就是因为 Google 在容器化多年的沉淀和升华（&lt;code>Borg&lt;/code> 和 &lt;code>Omega&lt;/code> 特性、落在 &lt;code>K8S&lt;/code> 上就是 &lt;code>Pod&lt;/code>、&lt;code>Sidecar&lt;/code> 的功能和设计模式）
+&lt;code>Kubernetes&lt;/code> 当初没有选择和 &lt;code>Swarm&lt;/code> 展开同质化竞争，而是提出太多的设计理念和号召力，很快构建了不同的容器编排的管理的生态理念。超过了&lt;code>Swarm&lt;/code>项目。有了这个后，又将容器监控事实标准 &lt;code>prometheus&lt;/code>融入其中，后面又新增了 &lt;code>Fluentd&lt;/code>、&lt;code>OpenTracing&lt;/code>、&lt;code>CNDI&lt;/code> 等诸多容器生态工具和项目。后面又一记补刀：整个社区进行推进&lt;code>民主化&lt;/code>架构, 从 API 到 容器运行时的 每一层,
+&lt;code>Kubernetes&lt;/code> 项目都为开发者暴露出了可以扩展的插件机制, 鼓励社区用户通过代码的方式介入 &lt;code>Kubernetes&lt;/code> 项目的每一个阶段。这个操作针对 &lt;code>Docker&lt;/code> 来说是致命的,整个容器社区催生了大量的、基于 &lt;code>Kubernetes API&lt;/code> 的做扩展的和二次开发创新的&lt;/p>
+&lt;ul>
+&lt;li>微服务治理项目 &lt;code>Istio&lt;/code>&lt;/li>
+&lt;li>状态应用部署架构 &lt;code>Operator&lt;/code>&lt;/li>
+&lt;li>&amp;hellip;&lt;/li>
+&lt;/ul>
+&lt;p>经过一些列骚操作后，K8S 大行其道，编排之争落下帷幕，容器社区的后续繁荣完全以 &lt;code>Kubernetes&lt;/code> 项目为核心的百家争鸣, 从 &lt;code>Rancher&lt;/code>项目 的历史迭代过程中也能看出这个精彩纷呈的展现。&lt;/p>
+- https://pinkhello.me/posts/17-%E5%9B%9E%E6%9C%9Bk8s-%E5%B0%8F%E9%B2%B8%E9%B1%BC%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/ - PinkHello, All Rights Reserved</description></item><item><title>14 工作纪实2020</title><link>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</link><pubDate>Mon, 10 Feb 2020 10:00:19 +0800</pubDate><guid>https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/</guid><description>PinkHello https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ -&lt;h1 id="每日一思篇">每日一思篇&lt;/h1>
+&lt;h2 id="2019-10-12-每日一思-mysql-wal技术-和-ringbuffer-思想好一致">[2019-10-12 每日一思] Mysql WAL技术 和 RingBuffer 思想好一致?&lt;/h2>
+&lt;h2 id="2019-10-14-每日一思-jwt-续签该如何做">[2019-10-14 每日一思] JWT 续签该如何做?&lt;/h2>
+&lt;h2 id="2019-10-16-每日一思-tcpip-协议具体指哪些">[2019-10-16 每日一思] TCP/IP 协议具体指哪些?&lt;/h2>
+&lt;blockquote>
+&lt;p>我们都知道网络是7层模型，应表会传网数物，
+现在我只讨论应传网数这4层。TCP/IP协议应该被称为TCP/IP族，
+我的理解他不是属于单个的协议类型，是一个统称，知道网络模型核心设计思想是分层，为什么分层，分层从设计上和实现难度上都简单很多，哪一层需要修改只需要修改这一层。&lt;/p>
+&lt;ul>
+&lt;li>应用层，像最常见的http、ftp、dns、rtsp、rtmp等等协议都是属于这类，&lt;/li>
+&lt;li>传输层呢按照传输类型又分了TCP和UDP,&lt;/li>
+&lt;li>网络层，是数据包交互的层面，&lt;/li>
+&lt;li>数据链路层是处理网卡、操作系统等等软硬抽象出的可见部分。&lt;/li>
+&lt;/ul>
+&lt;p>举一个栗子，一个http请求，在应用层面是完整的，后面被传输层（TCP层）被分包，并打上序号标记，再进入网络层（IP层）添加IP首部（目标mac地址等等），
+下面就是开始疯狂的发送了，接收方一样是这个过程的逆序。应用处理完成后面的响应过程与请求过程一样的一个过程。同时可以扩展出L4与L7的问题，
+各自是如何去实现负载均衡的？L4是可以看出是基于传输层即TCP层工作（通过发布VIP（第三层）以及第四层端口），L7基于应用层工作（第四层基础上+考虑应用特征），
+比如HTTP的URL、客户端的类别、语言类型等等。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-10-18-每日一思一种场景rabbitmq-的-exchange-为-fanout-类型绑定到多个queue-什么情况会触发-rabbitmq-流控如何解决">[2019-10-18 每日一思]一种场景，rabbitmq 的 Exchange 为 fanout 类型，绑定到多个queue, 什么情况会触发 rabbitmq 流控？如何解决？&lt;/h2>
+&lt;h2 id="2019-10-22-每日一思id序列生产器怎么实现呢">[2019-10-22 每日一思]ID序列生产器怎么实现呢？&lt;/h2>
+&lt;blockquote>
+&lt;p>uuid生成&lt;/p>
+&lt;ul>
+&lt;li>基于时间（60位utc时间 和 时间序列值14位，以及mac地址）&lt;/li>
+&lt;li>基于名称（针对命名空间dns、url等分配，把名称转成字节序列，再用md5或sha-1与命名空间标识进行计算，产生哈希结果）&lt;/li>
+&lt;li>基于随机数（密码学随机数，系统的硬盘内存线程堆栈进程句柄等sha-1生成哈希结果）&lt;/li>
+&lt;/ul>
+&lt;p>snowflake，64bit，long型ID&lt;/p>
+&lt;ul>
+&lt;li>ID生成方式 1bit（不使用），41bit时间戳（当前毫秒数、69年一轮回），10bit机器码（1024台，5bit数据中心，5bit机器ID），12bit作为毫秒内序列号（单机理论 409.6w/s）&lt;/li>
+&lt;li>雪花算法，多台机器，有因为时钟回拨导致的ID生成问题，当然可以通过发生时钟回拨后一个阈值，在阈值内则不允许产生新的ID，同步阻塞，在阈值外重新设置机器ID来解决&lt;/li>
+&lt;li>github.com/baidu/uid-generator 技术老铁百度开源的基于snowflake实现的ID生成器，可以借鉴研读一下&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="2019-11-01-每日一思我们常说的限流是什么为什么要限流限流有哪些方式">[2019-11-01 每日一思]我们常说的限流是什么？为什么要限流？限流有哪些方式？&lt;/h2>
+&lt;blockquote>
+&lt;p>我们常说的限流，顾名思义即限制流量. 限制系统的输入和输出
+常用的限流发展至今，有四种方式&lt;/p>
+&lt;ul>
+&lt;li>固定时间计数器&lt;/li>
+&lt;li>漏桶&lt;/li>
+&lt;li>令牌桶&lt;/li>
+&lt;li>滑动窗口计数器&lt;/li>
+&lt;/ul>
+&lt;p>固定窗口计数器：以单位时间内进入系统（系统级别）或者某一个单一接口服务（系统服务级别）请求次数，在这个单位时间内的超过次数，拒绝服务或者更换其他方案（降级、熔断）达到限流目的。&lt;/p>
+&lt;blockquote>
+&lt;p>可以看出，明显的缺点，从整体曲线上，毛刺现象非常严重，假设单位时间 1s 内限制 100 次，在0-10ms内我已经请求超过100次了，后面的请求全部拒绝或者做其他处理了。无法控制单位时间内的突发流量。&lt;/p>
+&lt;/blockquote>
+&lt;p>漏桶: 桶的容量固定，桶流出的速率恒定。桶满则限流。也是无法应对突发流量&lt;/p>
+&lt;p>令牌桶： 还是桶的方式， 桶中存放的是 token ，根据限流的大小， token 以恒定速率进入桶中，设置桶的最大的 token 容量，当桶满时候拒绝新添加的token
+，或者直接丢弃。所有请求进入先获取令牌，得到令牌继续下面的业务逻辑，处理完成删除 token。&lt;/p>
+&lt;blockquote>
+&lt;p>相比 漏桶， 一定程度上允许突发流量，平滑限流，因为 桶 中的 token 是匀速放入的，抵御突发流量。桶的 token 数量不会超过给定的最大值。
+参考 guava rate limiter&lt;/p>
+&lt;/blockquote>
+&lt;p>滑动窗口计数器:(参考Sentinel中使用的默认限流方式)
+是对固定时间窗口计数器的优化，就是为了解决固定时间计数器的无法面对突发流量，何为滑动窗口呢？
+假设单位时间定位 1s， 计数器限制在 1000 次， 再将者 1s 划分为 100ms 为一个小格子，总共 10 个格子，
+每个格子还有计数器，当一个请求进来，在对应的时间格子里面的计数器 +1 ，只要总的这个单位时间内所有的时间格子计数器总和小于 限制次数，就不会启动限流作用。
+可以看出来，假如我的划分的格子很小，滑动窗口滚动将是越平滑的。
+ps： 0.00 - 1.00 有 10 个格子，这是一个滑动窗口期，然后 0.10-1.10是一个窗口期，这样计算的&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-11-04-每日一思-假如mq消息队列产生了堆积如何更快的消费">[2019-11-04 每日一思] 假如MQ消息队列产生了堆积，如何更快的消费？&lt;/h2>
+&lt;blockquote>
+&lt;p>会从多种队列去分析，rabbitmq，kafka，rocketmq，pulsar等多个消息中间件去分析。
+RabbitMq得看是什么模式，如果是生产消费者模式是可以的，发布订阅模式就没卵用，加个订阅者而已。kafka看consumer的数量吧，如果已经大于等于partition数量了，加consumer也没卵用。pulsar
+是也一样啊，有生产者消费者模式，也有独占和失败替补模式。&lt;/p>
+&lt;p>对的，先说kafka和RocketMQ，他们都是基于partition的存储模型，也就是说每个subject分为一个或多个partition，Server收到消息分发到某个partition上，而consumer
+消费时候是与partition相对应的，当partition与consumer数量相等时，是一对一，当小于时候，会有consumer空闲，大于时候，看数量，有consumer
+会负责多个，比较繁忙。在产生队列积压时候，这时候最合理的分配减压策略是 partition数量和consumer数量成倍数关系，单个增加consumer
+数量并不能有效提高时候，并且并不能马上提高消费效率，需要添加对应的partition数量，但是就带来了另外的问题，partition数量增加，特别是kafka，partition资源是一个比较重的资源，增加partition
+数量还需要考虑集群的处理能力，另外在高峰过后，想要consumer缩容也比较麻烦哦，因为partition只能增加不能减少。&lt;/p>
+&lt;p>针对partition存储方式的，扩容相关的问题，已经堆积的消息是不能快速消费的，假设是2partition对2个consumer，这时候增加partition和consumer是无用的，因为已经堆积的只能由这两个consumer
+消费，横向扩展不可能了，只能纵向扩展，这时候要么只能接受已经堆积慢慢消费，并且尽量减少入这两个partition的消息，或者执行比较重点再均衡策略！&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-11-18-每日一思-httpdns有啥好处-httpdns-为什么一般只适用于-app-或者-cs-架构bs-为何不适用">[2019-11-18 每日一思] HttpDNS有啥好处, HttpDNS 为什么一般只适用于 APP 或者 C/S 架构，B/S 为何不适用?#&lt;/h2>
+&lt;blockquote>
+&lt;p>HttpDNS 是基于HTTP协议发起服务器A记录的地址，不存在向本地运营商询问 domain 解析过程
+适用于APP或者C/S架构，是它的特殊性导致的，&lt;/p>
+&lt;ul>
+&lt;li>一般在终端这种信号差、信号不稳定下，要想尽量的介绍交互&lt;/li>
+&lt;li>跑马机制选取就近地址&lt;/li>
+&lt;li>SDK嵌入&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;h2 id="2019-12-12-每日一思我们知道许多长链接情况下保证链接有效大部分是通过-tcp-keepalive-与-应用心跳-来确定各自的定位是什么为什么大多数情况下很多im系统同时使用-tcp-keepalive-与-应用层心跳去确认-应用层心跳设计上有啥讲究">[2019-12-12 每日一思]我们知道许多长链接情况下，保证链接有效大部分是通过 TCP Keepalive 与 应用心跳 来确定，各自的定位是什么？为什么大多数情况下很多IM系统同时使用 TCP Keepalive 与 应用层心跳去确认？ 应用层心跳设计上有啥讲究？&lt;/h2>
+&lt;blockquote>
+&lt;p>TCP Keepalive 是 TCP/IP 协议自带，无需额外的开发，但是不灵活，而且我们一般在应用层面是无法感知。更改TCP Keepalive 相关参数需要修改/etc/sysctl.conf&lt;/p>
+&lt;p>应用层心跳是为了保活，保证链接的可用性&lt;/p>
+&lt;ul>
+&lt;li>运营商的环境，，存在 NAT 超时断链问题&lt;/li>
+&lt;li>让应用知晓网络可用情况，酌情处理断链重连问题&lt;/li>
+&lt;li>可以有效的江都服务端为了维护无效链接的开销&lt;/li>
+&lt;/ul>
+&lt;p>应用层心跳设计上&lt;/p>
+&lt;ul>
+&lt;li>固定频率，通常只有请求头，消息体空包（在判断这类心跳处理时候，客户端一般要判断超时时间大于心跳间隔【可能存在网络延迟】）&lt;/li>
+&lt;li>智能心跳，根据网络状况自动调整发送的频率，来适配当前网络情况的最佳心跳频率（各个地区各个服务商 NAT 超时设计不一样，长的多达几个小时，少的只有几秒）&lt;/li>
+&lt;/ul>
+&lt;p>智能心跳，一般采用二分法来逐渐逼近服务商的 NAT 超时设计。心跳设计上不会是空包，而是传输的是客户端的心跳频率是多少。
+（假设 最小值 20 s 最大值 1小时）===&amp;gt; 逐渐二分下去&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="2019-12-14-每日一思-如何判断任意用户上传的文件在服务端是否存在呢网盘的秒传的实现思路">[2019-12-14 每日一思] 如何判断任意用户上传的文件在服务端是否存在呢？网盘的“秒传”的实现思路？&lt;/h2>
+&lt;blockquote>
+&lt;p>对比文件，确实是使用的文件的提取的特征值（单项哈希算法）,哈希算法是有冲突的，虽然概率较小， 那么如何这种冲突呢：在服务端，
+对该文件进行不同的单向Hash算法（MD5，SHA-1）等等得到多个值，一一对比，只有全部相同才认为是同一个文件。&lt;/p>
+&lt;p>为什么要哈希？为了将一个不定长、不确定的东东 转化成 固定长度的固化的特征值，并要保证唯一性。&lt;/p>
+&lt;/blockquote>
+&lt;h1 id="填坑记录">填坑记录&lt;/h1>
+&lt;h2 id="docker相关">docker相关&lt;/h2>
+&lt;ul>
+&lt;li>docker默认网桥问题&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>服务器默认网桥 172.19.0.0, 而 docker 网桥默认172.17.0.0,
+在启动多个的docker容器的时候会导致地址冲突，桥接网卡凉，
+需要更改docker 默认的网桥地址&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-markdown" data-lang="markdown"> {
+&amp;#34;debug&amp;#34; : true,
+&amp;#34;default-address-pools&amp;#34; : [
+{
+&amp;#34;base&amp;#34; : &amp;#34;172.31.0.0/16&amp;#34;,
+&amp;#34;size&amp;#34; : 24
+}
+]
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>更改成和主机不一样的的网段地址&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="redis分布式锁">redis分布式锁&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
+&lt;span style="color:#8b008b;font-weight:bold">package&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">com.kezaihui.thor.biz.core.adapter.redis.lock&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">lombok.extern.slf4j.Slf4j&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.beans.factory.annotation.Autowired&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.data.redis.core.RedisTemplate&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.data.redis.core.script.DefaultRedisScript&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">org.springframework.stereotype.Component&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">java.util.Collections&lt;/span>;
+&lt;span style="color:#228b22">/**
+&lt;/span>&lt;span style="color:#228b22"> * RedisTemplateDistributeLockUtil
+&lt;/span>&lt;span style="color:#228b22"> */&lt;/span>
+&lt;span style="color:#707a7c">@Slf4j&lt;/span>
+&lt;span style="color:#707a7c">@Component&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">RedisTemplateDistributeLockUtil&lt;/span> {
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String LOCK_SCRIPT =
+&lt;span style="color:#cd5555">&amp;#34;local key = KEYS[1]; local value = ARGV[1]; if redis.call(&amp;#39;set&amp;#39;, key, value, &amp;#39;NX&amp;#39; ,&amp;#39;PX&amp;#39;, %d) &amp;#34;&lt;/span>
++ &lt;span style="color:#cd5555">&amp;#34;then return 1 else return 0 end&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> String UNLOCK_SCRIPT =
+&lt;span style="color:#cd5555">&amp;#34;if redis.call(&amp;#39;get&amp;#39;, KEYS[1]) == ARGV[1] then return redis.call(&amp;#39;del&amp;#39;,KEYS[1]) else return 0 end&amp;#34;&lt;/span>;
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">static&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> EXPIRE = 5000;
+&lt;span style="color:#707a7c">@Autowired&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> RedisTemplate redisTemplate;
+&lt;span style="color:#8b008b;font-weight:bold">private&lt;/span> String &lt;span style="color:#008b45">lockExpireScript&lt;/span>(&lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (expireMills &amp;lt;= 0) {
+expireMills = EXPIRE;
+}
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> String.&lt;span style="color:#658b00">format&lt;/span>(LOCK_SCRIPT, expireMills);
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">lock&lt;/span>(String key, String value, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) {
+String script = lockExpireScript(expireMills);
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long execute = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key),
+Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(value));
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> execute != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; execute != 0;
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">blockLock&lt;/span>(String key, String value, &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> expireMills) &lt;span style="color:#8b008b;font-weight:bold">throws&lt;/span> DistributeLockTimeoutException {
+&lt;span style="color:#228b22">// 被阻塞的时间超过5秒就停止获取锁
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#00688b;font-weight:bold">int&lt;/span> blockTime = expireMills;
+&lt;span style="color:#228b22">// 默认的间隔时间
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> (; ; ) {
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (blockTime &amp;gt;= 0) {
+String script = lockExpireScript(expireMills);
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long result = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key), value);
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> (result != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; result == 1) {
+&lt;span style="color:#228b22">// 得到了锁
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>;
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+blockTime -= 300;
+&lt;span style="color:#8b008b;font-weight:bold">try&lt;/span> {
+Thread.&lt;span style="color:#658b00">sleep&lt;/span>(300);
+} &lt;span style="color:#8b008b;font-weight:bold">catch&lt;/span> (InterruptedException e) {
+log.&lt;span style="color:#658b00">error&lt;/span>(&lt;span style="color:#cd5555">&amp;#34;RedisTemplateDistributeLockUtil.blockLock error!&amp;#34;&lt;/span>, e);
+}
+}
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+&lt;span style="color:#228b22">// 已经超时
+&lt;/span>&lt;span style="color:#228b22">&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">throw&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DistributeLockTimeoutException(&lt;span style="color:#cd5555">&amp;#34;Distribute Lock Timeout&amp;#34;&lt;/span>);
+}
+}
+}
+&lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#00688b;font-weight:bold">boolean&lt;/span> &lt;span style="color:#008b45">unlock&lt;/span>(String key, String value) {
+String script = UNLOCK_SCRIPT;
+DefaultRedisScript&amp;lt;Long&amp;gt; redisScript = &lt;span style="color:#8b008b;font-weight:bold">new&lt;/span> DefaultRedisScript&amp;lt;&amp;gt;(script, Long.&lt;span style="color:#658b00">class&lt;/span>);
+Long execute = (Long) redisTemplate.&lt;span style="color:#658b00">execute&lt;/span>(redisScript, Collections.&lt;span style="color:#658b00">singletonList&lt;/span>(key), value);
+&lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> execute != &lt;span style="color:#8b008b;font-weight:bold">null&lt;/span> &amp;amp;&amp;amp; execute != 0;
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/14-%E5%B7%A5%E4%BD%9C%E7%BA%AA%E5%AE%9E2020/ - PinkHello, All Rights Reserved</description></item><item><title>03 String为什么设计成final</title><link>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</link><pubDate>Sun, 10 Feb 2019 08:19:51 +0800</pubDate><guid>https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/</guid><description>PinkHello https://pinkhello.me/posts/03-string%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%BE%E8%AE%A1%E6%88%90final/ -&lt;h1 id="string源码剖析">&lt;code>String&lt;/code>源码剖析&lt;/h1>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-java" data-lang="java">
 &lt;span style="color:#8b008b;font-weight:bold">public&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">final&lt;/span> &lt;span style="color:#8b008b;font-weight:bold">class&lt;/span> &lt;span style="color:#008b45;font-weight:bold">String&lt;/span>
 &lt;span style="color:#8b008b;font-weight:bold">implements&lt;/span> java.&lt;span style="color:#658b00">io&lt;/span>.&lt;span style="color:#658b00">Serializable&lt;/span>, Comparable&amp;lt;String&amp;gt;, CharSequence {
