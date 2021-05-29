@@ -682,9 +682,9 @@ p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b
 &lt;img src="https://img.shields.io/badge/-Python-black?style=flat-square&amp;amp;logo=Python" alt="Python">
 &lt;img src="https://img.shields.io/badge/-JavaScript-black?style=flat-square&amp;amp;logo=JavaScript" alt="JavaScript">&lt;/p>
 &lt;p>Framework&lt;br>
-&lt;img src="https://img.shields.io/badge/-Vue-000000?style=flat-square&amp;amp;logo=Vue.js" alt="Vue">
+&lt;img src="https://img.shields.io/badge/-Vue.js-000000?style=flat-square&amp;amp;logo=vue-dot-js" alt="Vue">
 &lt;img src="https://img.shields.io/badge/-Spring-black?style=flat-square&amp;amp;logo=Spring" alt="Spring">
-&lt;img src="https://img.shields.io/badge/-Spring%20Boot(Cloud)-black?style=flat-square&amp;amp;logo=Spring%20Boot(Cloud)" alt="Spring Boot(Cloud)">
+&lt;img src="https://img.shields.io/badge/-springboot-black?style=flat-square&amp;amp;logo=springboot" alt="SpringBoot">
 &lt;img src="https://img.shields.io/badge/-Dubbo-black?style=flat-square&amp;amp;logo=Dubbo" alt="Dubbo">
 &lt;img src="https://img.shields.io/badge/-Flask-black?style=flat-square&amp;amp;logo=Flask" alt="Flask">
 &lt;img src="https://img.shields.io/badge/-Echo-black?style=flat-square&amp;amp;logo=Echo" alt="Echo">
@@ -695,14 +695,19 @@ p.&lt;span style="color:#658b00">addLast&lt;/span>(&lt;span style="color:#8b008b
 &lt;img src="https://img.shields.io/badge/-MySQL-black?style=flat-square&amp;amp;logo=mysql" alt="MySQL">
 &lt;img src="https://img.shields.io/badge/-Nginx-black?style=flat-square&amp;amp;logo=Nginx" alt="Nginx">
 &lt;img src="https://img.shields.io/badge/-MongoDB-black?style=flat-square&amp;amp;logo=MongoDB" alt="MongoDB">
-&lt;img src="https://img.shields.io/badge/-Pulsar-black?style=flat-square&amp;amp;logo=Pulsar" alt="Pulsar">
-&lt;img src="https://img.shields.io/badge/-Kafka-black?style=flat-square&amp;amp;logo=Kafka" alt="Kafka">
+&lt;img src="https://img.shields.io/badge/-Pulsar-black?style=flat-square&amp;amp;logo=apache-pulsar" alt="Pulsar">
+&lt;img src="https://img.shields.io/badge/-Kafka-black?style=flat-square&amp;amp;logo=apache-kafka" alt="Kafka">
+&lt;img src="https://img.shields.io/badge/-RocketMQ-black?style=flat-square&amp;amp;logo=apache-rocketmq" alt="RocketMQ">
 &lt;img src="https://img.shields.io/badge/-Nsq-black?style=flat-square&amp;amp;logo=Nsq" alt="Nsq">
 &lt;img src="https://img.shields.io/badge/-RabbitMQ-black?style=flat-square&amp;amp;logo=RabbitMQ" alt="RabbitMQ">
-&lt;img src="https://img.shields.io/badge/-GitHub-181717?style=flat-square&amp;amp;logo=github" alt="GitHub">&lt;/p>
+&lt;img src="https://img.shields.io/badge/-GitHub-181717?style=flat-square&amp;amp;logo=github" alt="GitHub">
+&lt;img src="https://img.shields.io/badge/-Maven-black?style=flat-square&amp;amp;logo=apache-maven" alt="Maven">
+&lt;img src="https://img.shields.io/badge/-Gradle-black?style=flat-square&amp;amp;logo=gradle" alt="Gradle">
+&lt;img src="https://img.shields.io/badge/-Airflow-black?style=flat-square&amp;amp;logo=apache-airflow" alt="Airflow">&lt;/p>
 &lt;p>Others&lt;br>
 &lt;img src="https://img.shields.io/badge/-Kubernetes-black?style=flat-square&amp;amp;logo=Kubernetes" alt="Kubernetes">
 &lt;img src="https://img.shields.io/badge/-Docker-black?style=flat-square&amp;amp;logo=Docker" alt="Docker">
+&lt;img src="https://img.shields.io/badge/-Rancher-black?style=flat-square&amp;amp;logo=Rancher" alt="Rancher">
 &lt;img src="https://img.shields.io/badge/-Linux-black?style=flat-square&amp;amp;logo=Linux" alt="Linux">
 &lt;img src="https://img.shields.io/badge/-Deepin-007CFF?style=flat-square&amp;amp;logo=deepin" alt="Deepin">
 &lt;img src="https://img.shields.io/badge/-Centos-262577?style=flat-square&amp;amp;logo=Centos" alt="Centos">
