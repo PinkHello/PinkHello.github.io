@@ -1,4 +1,130 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Tue, 25 May 2021 19:00:00 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>回望K8S 白话容器</title><link>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Sat, 15 Feb 2020 10:16:34 +0800</pubDate><guid>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>PinkHello https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;h1 id="进程开启">进程开启&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Fri, 11 Jun 2021 09:10:14 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>回望K8S Kubernetes拼图</title><link>https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</link><pubDate>Sun, 16 Feb 2020 20:57:38 +0800</pubDate><guid>https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</guid><description>PinkHello https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ -&lt;h1 id="kubernetes-安装">&lt;code>kubernetes&lt;/code> 安装&lt;/h1>
+&lt;h2 id="all-节点安装-docker-和-kubeadm">all 节点安装 &lt;code>Docker&lt;/code> 和 &lt;code>Kubeadm&lt;/code>&lt;/h2>
+&lt;p>所有节点 &lt;code>root&lt;/code> 用户下操作&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+&amp;gt; cat &lt;span style="color:#cd5555">&amp;lt;&amp;lt;EOF &amp;gt; /etc/apt/sources.list.d/kubernetes.list
+&lt;/span>&lt;span style="color:#cd5555">deb http://apt.kubernetes.io/ kubernetes-xenial main
+&lt;/span>&lt;span style="color:#cd5555">EOF&lt;/span>
+&amp;gt; apt-get update
+&lt;span style="color:#228b22"># 这一步安装的时候 kubeadm 和 kubelet、kubectl、kubernetes-cni 都会自动安装完毕&lt;/span>
+&amp;gt; apt-get install -y docker.io kubeadm
+&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>提示：如果 &lt;code>apt.kubernetes.io&lt;/code> 因为网络问题访问不到，可以换成中科大的 &lt;code>Ubuntu&lt;/code> 镜像源 deb &lt;a href="http://mirrors.ustc.edu.cn/kubernetes/apt">http://mirrors.ustc.edu.cn/kubernetes/apt&lt;/a> kubernetes-xenial main。&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="部署-kubernetes-master">部署 &lt;code>Kubernetes&lt;/code> &lt;code>Master&lt;/code>&lt;/h2>
+&lt;p>声明一个 &lt;code>kubeadm.yaml&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>kubeadm.k8s.io/v1alpha1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>MasterConfiguration&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">controllerManagerExtraArgs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># 配置了自定义自动水平扩展&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">horizontal-pod-autoscaler-use-rest-clients&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;true&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">horizontal-pod-autoscaler-sync-period&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;10s&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">node-monitor-grace-period&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;10s&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiServerExtraArgs&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">runtime-config&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;api/all=true&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># kubeadm 部署的 kubernetes 的版本&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kubernetesVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;stable-1.11&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>···&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>执行下面的指令，完成 &lt;code>kubernetes&lt;/code> &lt;code>master&lt;/code> 部署，这回生成一行指令&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubeadm init --config kubeadm.yaml
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">kubeadm join 10.168.0.2:6443 --token 00bwbx.uvnaa2ewjflwu1ry --discovery-token-ca-cert-hash sha256:00eb62a2a6020f94132e3fe1ab721349bbcd3e9b94da9654cfe15f2985ebd711
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个 &lt;code>kubeadm join&lt;/code> 命令, 用来给这个 &lt;code>Master&lt;/code> 节点添加更多的 &lt;code>Worker&lt;/code> 节点.&lt;/p>
+&lt;p>另外 &lt;code>kubeadm&lt;/code> 会提示我们第一次使用 &lt;code>kubernetes&lt;/code> 集群所需要的配置命令:&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; mkdir -p &lt;span style="color:#00688b">$HOME&lt;/span>/.kube
+&amp;gt; sudo cp -i /etc/kubernetes/admin.conf &lt;span style="color:#00688b">$HOME&lt;/span>/.kube/config
+&amp;gt; sudo chown &lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>id -u&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span>:&lt;span style="color:#8b008b;font-weight:bold">$(&lt;/span>id -g&lt;span style="color:#8b008b;font-weight:bold">)&lt;/span> &lt;span style="color:#00688b">$HOME&lt;/span>/.kube/config
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>因为 &lt;code>Kubernetes&lt;/code> 集群默认需要加密方式访问，所以，需要将刚刚部署生成的 &lt;code>kubernetes&lt;/code> 集群安全配置文件，保存到当前用户的 &lt;code>.kube&lt;/code> 目录下, &lt;code>kubectl&lt;/code> 默认会使用这个目录下的授权信息进行访问&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22">#查看kubernetes集群的节点状态&lt;/span>
+&amp;gt; kubectl get nodes
+NAME STATUS ROLES AGE VERSION
+master NotReady master 1d v1.11.1
+&lt;span style="color:#228b22"># NotReady 因为还没有部署任何网络插件&lt;/span>
+&amp;gt; kubectl describe node master
+...
+Conditions:
+...
+Ready False ... KubeletNotReady runtime network not ready: &lt;span style="color:#00688b">NetworkReady&lt;/span>=&lt;span style="color:#658b00">false&lt;/span> reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized
+&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl get pods -n kube-system
+NAME READY STATUS RESTARTS AGE
+coredns-78fcdf6894-j9s52 0/1 Pending &lt;span style="color:#b452cd">0&lt;/span> 1h
+coredns-78fcdf6894-jm4wf 0/1 Pending &lt;span style="color:#b452cd">0&lt;/span> 1h
+etcd-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 2s
+kube-apiserver-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1s
+kube-controller-manager-master 0/1 Pending &lt;span style="color:#b452cd">0&lt;/span> 1s
+kube-proxy-xbd47 1/1 NodeLost &lt;span style="color:#b452cd">0&lt;/span> 1h
+kube-scheduler-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1s
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="部署-容器网络插件">部署 容器网络插件&lt;/h2>
+&lt;p>在 &lt;code>kubernetes&lt;/code> 内部里面 &lt;code>一切皆容器&lt;/code> 设计方式，部署网络插件非常简单,以 &lt;code>Weave&lt;/code> 为例子&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl apply -f https://git.io/weave-kube-1.6
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>部署完毕后, 通过 &lt;code>kubectl get&lt;/code> 检查 &lt;code>POD&lt;/code> 状态&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl get pods -n kube-system
+NAME READY STATUS RESTARTS AGE
+coredns-78fcdf6894-j9s52 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1d
+coredns-78fcdf6894-jm4wf 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1d
+etcd-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+kube-apiserver-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+kube-controller-manager-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+kube-proxy-xbd47 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1d
+kube-scheduler-master 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 9s
+weave-net-cmk27 2/2 Running &lt;span style="color:#b452cd">0&lt;/span> 19s
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>而刚刚部署的 &lt;code>Weave&lt;/code> 网络插件则在 &lt;code>kube-system&lt;/code> 下面新建了一个名叫 &lt;code>weave-net-cmk27&lt;/code> 的 &lt;code>Pod&lt;/code>，一般来说，这些 &lt;code>Pod&lt;/code> 就是容器网络插件在每个节点上的控制组件。&lt;/p>
+&lt;p>&lt;code>Kubernetes&lt;/code> 的支持的容器网络插件，使用的 &lt;code>CNI&lt;/code> 的通用接口，当前开源的容器网络插件有&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Flannel&lt;/code> 这个采用应该比较多的&lt;/li>
+&lt;li>&lt;code>Calico&lt;/code>&lt;/li>
+&lt;li>&lt;code>Canal&lt;/code>&lt;/li>
+&lt;li>&lt;code>Romana&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="部署-kubernetes-worker">部署 &lt;code>Kubernetes&lt;/code> &lt;code>Worker&lt;/code>&lt;/h2>
+&lt;p>&lt;code>Worker&lt;/code> 节点的部署 和 &lt;code>Master&lt;/code> 节点的运行的程序几乎相同, 都运行这 &lt;code>kubelet&lt;/code> 组件，唯一的区别是 &lt;code>kubelet&lt;/code> 启动后，&lt;code>Master&lt;/code> 节点需要自动运行 &lt;code>kube-apiserver&lt;/code>，&lt;code>kube-scheduler&lt;/code>，&lt;code>kube-controller-manager&lt;/code> 三个 &lt;code>Pod&lt;/code>&lt;/p>
+&lt;p>执行部署&lt;code>Master&lt;/code>时候生成的 &lt;code>kubeadm join&lt;/code> 指令&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubeadm join 10.168.0.2:6443 --token 00bwbx.uvnaa2ewjflwu1ry --discovery-token-ca-cert-hash sha256:00eb62a2a6020f94132e3fe1ab721349bbcd3e9b94da9654cfe15f2985ebd711
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>通过 &lt;code>Taint/Toleration&lt;/code> 调整 &lt;code>Master&lt;/code> 执行 &lt;code>Pod&lt;/code> 的策略&lt;/p>
+&lt;blockquote>
+&lt;p>默认情况下 &lt;code>Master&lt;/code> 节点是不允许运行用户 &lt;code>Pod&lt;/code> 的。而 &lt;code>Kubernetes&lt;/code> 做到这一点，依靠的是 &lt;code>Kubernetes&lt;/code> 的 Taint/Toleration 机制。&lt;/p>
+&lt;/blockquote>
+&lt;blockquote>
+&lt;p>它的原理非常简单：一旦某个节点被加上了一个 Taint，即被“打上了污点”，那么所有 Pod 就都不能在这个节点上运行，因为 Kubernetes 的 Pod 都有“洁癖”。除非，有个别的 Pod 声明自己能“容忍”这个“污点”，即声明了 Toleration，它才可以在这个节点上运行。其中，为节点打上“污点”（Taint）的命令是：kubectl taint nodes node1 foo=bar:NoSchedule&lt;/p>
+&lt;/blockquote>
+&lt;p>默认情况下 &lt;code>Master&lt;/code> 节点是不允许运行用户 &lt;code>Pod&lt;/code> 的, 可以通过 &lt;code>kubectl describe&lt;/code> 检查一下 &lt;code>Master&lt;/code> 节点的 &lt;code>Taint&lt;/code> 字段&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl describe node master
+Name: master
+Roles: master
+Taints: node-role.kubernetes.io/master:NoSchedule
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>可以看到，&lt;code>Master&lt;/code> 节点默认被加上了 &lt;code>node-role.kubernetes.io/master:NoSchedule&lt;/code> 这样一个“污点”，其中“键”是 &lt;code>node-role.kubernetes.io/master&lt;/code>，而没有提供“值”。&lt;/p>
+&lt;p>当然，如果你就是想要一个单节点的 &lt;code>Kubernetes&lt;/code>，删除这个 &lt;code>Taint&lt;/code> 才是正确的选择：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&lt;span style="color:#228b22"># “node-role.kubernetes.io/master”这个键后面加上了一个短横线“-”，这个格式就意味着移除所有以“node-role.kubernetes.io/master”为键的 Taint。&lt;/span>
+&amp;gt; kubectl taint nodes --all node-role.kubernetes.io/master-
+&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="部署-dashboard-可视化插件">部署 &lt;code>Dashboard&lt;/code> 可视化插件&lt;/h2>
+&lt;p>&lt;code>Web&lt;/code> 页面展示也是一个很重要的方面，能可视化的查看集群的各种信息&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-rc6/aio/deploy/recommended.yaml
+&amp;gt; kubectl get pods -n kube-system
+kubernetes-dashboard-6948bdb78-f67xk 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 1m
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Dashboard&lt;/code> 项目部署完成后，默认只能通过 &lt;code>Proxy&lt;/code> 的方式在本地访问&lt;/p>
+&lt;h2 id="部署-容器存储插件">部署 容器存储插件&lt;/h2>
+&lt;p>&lt;code>Kubernetes&lt;/code> 松耦合的设计，所以绝大多数存储项目都可以为 &lt;code>Kubernetes&lt;/code> 提供持久化存储能力.&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Ceph&lt;/code>&lt;/li>
+&lt;li>&lt;code>GlusterFS&lt;/code>&lt;/li>
+&lt;li>&lt;code>NFS&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>Rook&lt;/code> 插件是基于 &lt;code>Ceph&lt;/code> 的 &lt;code>Kubernetes&lt;/code> 存储插件，&lt;code>Rook&lt;/code> 在自己的实现中加入了水平扩展、迁移、灾备、监控等大量的企业级功能，这是一个完整的，可以应用在生产上的容器存储插件&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/common.yaml
+&amp;gt; kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/operator.yaml
+&amp;gt; kubectl apply -f https://raw.githubusercontent.com/rook/rook/master/cluster/examples/kubernetes/ceph/cluster.yaml
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>在部署完成后，你就可以看到 &lt;code>Rook&lt;/code> 项目会将自己的 &lt;code>Pod&lt;/code> 放置在由它自己管理的两个 &lt;code>Namespace&lt;/code> 当中：&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl get pods -n rook-ceph-system
+NAME READY STATUS RESTARTS AGE
+rook-ceph-agent-7cv62 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 15s
+rook-ceph-operator-78d498c68c-7fj72 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 44s
+rook-discover-2ctcv 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 15s
+&amp;gt; kubectl get pods -n rook-ceph
+NAME READY STATUS RESTARTS AGE
+rook-ceph-mon0-kxnzh 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 13s
+rook-ceph-mon1-7dn2t 1/1 Running &lt;span style="color:#b452cd">0&lt;/span> 2s
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这样，一个基于 &lt;code>Rook&lt;/code> 持久化存储集群就以容器的方式运行起来了，而接下来在 &lt;code>Kubernetes&lt;/code> 项目上创建的所有 &lt;code>Pod&lt;/code> 就能够通过 &lt;code>Persistent Volume&lt;/code>（PV）和 &lt;code>Persistent Volume Claim&lt;/code>（PVC）的方式，在容器里挂载由 &lt;code>Ceph&lt;/code> 提供的数据卷了。&lt;/p>
+- https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ - PinkHello, All Rights Reserved</description></item><item><title>回望K8S 白话容器</title><link>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</link><pubDate>Sat, 15 Feb 2020 10:16:34 +0800</pubDate><guid>https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/</guid><description>PinkHello https://pinkhello.me/posts/18-%E5%9B%9E%E6%9C%9Bk8s-%E7%99%BD%E8%AF%9D%E5%AE%B9%E5%99%A8/ -&lt;h1 id="进程开启">进程开启&lt;/h1>
 &lt;h2 id="容器-到底是什么">容器, 到底是什么?&lt;/h2>
 &lt;blockquote>
 &lt;p>前面提出: 容器是一种沙盒技术. 就是一个集装箱, 把应用装起来的技术. 这样, 应用与应用之间有了边界不至于互相干扰; 有了这些集装箱, 也方便搬来搬去.&lt;/p>
