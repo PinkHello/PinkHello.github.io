@@ -148,10 +148,10 @@ none /var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fc... aufs rw,relatime,si=972c6d
 
 app = Flask(__name__)
 
-<span style=color:#707a7c>@app.route</span>(<span style=color:#cd5555>&#39;/&#39;</span>)
+<span style=color:#707a7c>@app</span>.route(<span style=color:#cd5555>&#39;/&#39;</span>)
 <span style=color:#8b008b;font-weight:700>def</span> <span style=color:#008b45>hello</span>():
-    html = <span style=color:#cd5555>&#34;&lt;h3&gt;Hello {name}!&lt;/h3&gt;&#34;</span> \
-           <span style=color:#cd5555>&#34;&lt;b&gt;Hostname:&lt;/b&gt; {hostname}&lt;br/&gt;&#34;</span>           
+    html = <span style=color:#cd5555>&#34;&lt;h3&gt;Hello </span><span style=color:#cd5555>{name}</span><span style=color:#cd5555>!&lt;/h3&gt;&#34;</span> \
+           <span style=color:#cd5555>&#34;&lt;b&gt;Hostname:&lt;/b&gt; </span><span style=color:#cd5555>{hostname}</span><span style=color:#cd5555>&lt;br/&gt;&#34;</span>           
     <span style=color:#8b008b;font-weight:700>return</span> html.format(name=os.getenv(<span style=color:#cd5555>&#34;NAME&#34;</span>, <span style=color:#cd5555>&#34;world&#34;</span>), hostname=socket.gethostname())
     
 <span style=color:#8b008b;font-weight:700>if</span> __name__ == <span style=color:#cd5555>&#34;__main__&#34;</span>:

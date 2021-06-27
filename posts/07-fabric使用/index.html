@@ -95,7 +95,7 @@ env.roledefs= {
 <span style=color:#707a7c>@roles</span>(astra_server)
 <span style=color:#8b008b;font-weight:700>def</span> <span style=color:#008b45>put_docker_compose</span>():
 <span style=color:#228b22># 上传失败，照样往下执行 with settings(warn_only=True)</span>
-    <span style=color:#8b008b;font-weight:700>with</span> settings(warn_only=True):
+    <span style=color:#8b008b;font-weight:700>with</span> settings(warn_only=<span style=color:#8b008b;font-weight:700>True</span>):
         result = put(<span style=color:#cd5555>&#39;deploy/prod/docker-compose.yml&#39;</span>,<span style=color:#cd5555>&#39;~/docker-compose.yml&#39;</span>)
     <span style=color:#8b008b;font-weight:700>if</span> result.failed:
         abort(<span style=color:#cd5555>&#39;Aborting file put task!&#39;</span>)

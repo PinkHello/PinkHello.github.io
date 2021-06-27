@@ -1,4 +1,491 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Fri, 11 Jun 2021 09:10:14 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>回望K8S Kubernetes拼图</title><link>https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</link><pubDate>Sun, 16 Feb 2020 20:57:38 +0800</pubDate><guid>https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</guid><description>PinkHello https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ -&lt;h1 id="kubernetes-安装">&lt;code>kubernetes&lt;/code> 安装&lt;/h1>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PinkHello</title><link>https://pinkhello.me/</link><description>Recent content on PinkHello</description><generator>Hugo -- gohugo.io</generator><language>zh</language><copyright>PinkHello, All Rights Reserved</copyright><lastBuildDate>Thu, 17 Jun 2021 09:53:51 +0800</lastBuildDate><atom:link href="https://pinkhello.me/index.xml" rel="self" type="application/rss+xml"/><item><title>回望K8S 容器编排与Kubernetes作业管理</title><link>https://pinkhello.me/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/</link><pubDate>Sun, 16 Feb 2020 22:48:35 +0800</pubDate><guid>https://pinkhello.me/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/</guid><description>PinkHello https://pinkhello.me/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/ -&lt;h1 id="pod">Pod&lt;/h1>
+&lt;p>&lt;code>pod&lt;/code> 是 &lt;code>Kubernetes&lt;/code> 项目的最小的 API 对象，原子调度单位.&lt;/p>
+&lt;p>假设 &amp;ldquo;容器的本质是进程&amp;rdquo;，容器镜像就是 exe 安装包, kubernetes 是操作系统&lt;/p>
+&lt;p>&lt;code>Pod&lt;/code> 最重要的一个事实是一个逻辑概念。它对于 &lt;code>Kubernetes&lt;/code> 最核心的意义是 &lt;code>容器设计模式&lt;/code>。&lt;code>Kubernetes&lt;/code> 真正处理的还是宿主机上操作系统上的 &lt;code>Linux&lt;/code> 容器的 &lt;code>Namespace&lt;/code> 和 &lt;code>Cgroups&lt;/code>，而不是一个所谓的 &lt;code>Pod&lt;/code> 边界和隔离环境。&lt;/p>
+&lt;p>&lt;code>Pod&lt;/code> 其实是一组共享了某些资源的容器。&lt;code>Pod&lt;/code> 里面所有的容器，共享的同一个 &lt;code>Network Namespace&lt;/code>，并且可以声明共享同一个 &lt;code>Volume&lt;/code>.&lt;/p>
+&lt;p>&lt;code>Kubernetes&lt;/code> 项目内部，&lt;code>Pod&lt;/code> 实现需要使用一个中间容器，这个容器叫做 &lt;code>Infra&lt;/code> 容器，在 &lt;code>Pod&lt;/code> 中，&lt;code>Infra&lt;/code> 容器永远都是第一个被创建的容器，而其他用户定义的容器，则通过 &lt;code>Join Network Namespace&lt;/code> 的方式，与 &lt;code>Infra&lt;/code> 容器关联在一起。&lt;/p>
+&lt;h2 id="sidecar">&lt;code>sidecar&lt;/code>&lt;/h2>
+&lt;h3 id="典型的例子war-包和-web-服务器">典型的例子：WAR 包和 Web 服务器&lt;/h3>
+&lt;p>&lt;code>POD&lt;/code>后，将 &lt;code>WAR&lt;/code> 包和 &lt;code>Tomcat&lt;/code> 分别做成镜像，可以把他们容器结合在一起&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Pod&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>javaweb-2&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#228b22"># 启动后做了一件事 把应用的WAR包拷贝到 /app目录中，后退出&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">initContainers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>sample-war:v2&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>war&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">command&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;cp&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;/sample.war&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;/app&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumeMounts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/app&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>app-volume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>tomcat:7.0&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>tomcat&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">command&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;sh&amp;#34;&lt;/span>,&lt;span style="color:#cd5555">&amp;#34;-c&amp;#34;&lt;/span>,&lt;span style="color:#cd5555">&amp;#34;/root/apache-tomcat-7.0.42-v2/bin/start.sh&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumeMounts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/root/apache-tomcat-7.0.42-v2/webapps&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>app-volume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">containerPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">8080&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">hostPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">8001&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>app-volume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">emptyDir&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>{}&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">...&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个&lt;code>POD&lt;/code>中，定义了两个容器，第一个容器镜像&lt;code> sample-war:v2&lt;/code>，第二个容器镜像是 &lt;code>Tomcat&lt;/code> 镜像，War包容器的类型不是一个普通容器，是一个 &lt;code>Init Container&lt;/code> 类型的容器。&lt;/p>
+&lt;p>在Pod中，所有 &lt;code>Init Container&lt;/code> 定义的容器，都比 &lt;code>spec.containers&lt;/code> 定义的用户容器先启动。并且， &lt;code>Init Container&lt;/code> 容器会按顺序准一启动，而直到他们都启动并且退出了，用户容器才会启动。&lt;/p>
+&lt;p>这种组合的方式，正是容器设计模式里面最常用的一种模式：&lt;code>sidecar&lt;/code>&lt;/p>
+&lt;h3 id="容器的日志收集">容器的日志收集&lt;/h3>
+&lt;p>应用把日志文件输出到容器的 &lt;code>/var/log&lt;/code> 目录中，&lt;code>Pod&lt;/code>的 &lt;code>Volume&lt;/code> 挂载到应用容器的 &lt;code>/var/log&lt;/code> 目录上，然后在这个 &lt;code>Pod&lt;/code> 里的运行一个 &lt;code>sidecar&lt;/code> 容器，也声明挂载同一个 &lt;code>Volume&lt;/code> 到自己的 &lt;code>/var/log&lt;/code> 目录上，
+这样这个 &lt;code>sidecar&lt;/code> 容器只需要做一件事，把自己的 &lt;code>/var/log&lt;/code> 目录中读取日志文件，转发就可以了，就是一个基本的日志收集&lt;/p>
+&lt;h1 id="pod-对象的基本概念">&lt;code>Pod&lt;/code> 对象的基本概念&lt;/h1>
+&lt;p>&lt;code>Pod&lt;/code> 是容器环境的 &lt;code>Kubernetes&lt;/code> 的基本单元，调度、网络、存储、以及安全相关的熟悉，都是属于 &lt;code>Pod&lt;/code> 级别的。&lt;/p>
+&lt;p>&lt;code>Pod&lt;/code> 下重要的字段和含义&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>NodeSelector&lt;/code> : 用户将 &lt;code>Pod&lt;/code> 和 &lt;code>Node&lt;/code> 绑定的字段&lt;/li>
+&lt;li>&lt;code>NodeName&lt;/code> : 一旦 &lt;code>Pod&lt;/code> 的这个阻断被赋值，&lt;code>K8S&lt;/code> 会认为这个 &lt;code>Pod&lt;/code> 已经经过调度。&lt;/li>
+&lt;li>&lt;code>HostAliases&lt;/code>：定义了 &lt;code>Pod&lt;/code> 的 &lt;code>hosts&lt;/code> 文件（比如 &lt;code>/etc/hosts&lt;/code>）里的内容&lt;/li>
+&lt;/ul>
+&lt;p>凡是跟容器的 &lt;code>Linux Namespace&lt;/code> 相关的属性，也一定是 &lt;code>Pod&lt;/code> 级别的。
+&lt;code>shareProcessNamespace=true&lt;/code>&lt;/p>
+&lt;p>&lt;code>Pod&lt;/code> 对象在 &lt;code>Kubernetes&lt;/code> 中的生命周期。&lt;code>Pod&lt;/code> 生命周期的变化，主要体现在 &lt;code>Pod API 对象&lt;/code>的 &lt;code>Status&lt;/code> 部分，这是它除了 &lt;code>Metadata&lt;/code> 和 &lt;code>Spec&lt;/code> 之外的第三个重要字段。其中，&lt;code>pod.status.phase&lt;/code>，就是 &lt;code>Pod&lt;/code> 的当前状态，
+它有如下几种可能的情况：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Pending&lt;/code>。这个状态意味着，&lt;code>Pod&lt;/code> 的 &lt;code>YAML&lt;/code> 文件已经提交给了 &lt;code>Kubernetes&lt;/code>，&lt;code>API&lt;/code> 对象已经被创建并保存在 &lt;code>Etcd&lt;/code> 当中。但是，这个 &lt;code>Pod&lt;/code> 里有些容器因为某种原因而不能被顺利创建。比如，调度不成功。&lt;/li>
+&lt;li>&lt;code>Running&lt;/code>。这个状态下，&lt;code>Pod&lt;/code> 已经调度成功，跟一个具体的节点绑定。它包含的容器都已经创建成功，并且至少有一个正在运行中。&lt;/li>
+&lt;li>&lt;code>Succeeded&lt;/code>。这个状态意味着，&lt;code>Pod&lt;/code> 里的所有容器都正常运行完毕，并且已经退出了。这种情况在运行一次性任务时最为常见。&lt;/li>
+&lt;li>&lt;code>Failed&lt;/code>。这个状态下，&lt;code>Pod&lt;/code> 里至少有一个容器以不正常的状态（非 0 的返回码）退出。这个状态的出现，意味着你得想办法 &lt;code>Debug&lt;/code> 这个容器的应用，比如查看 &lt;code>Pod&lt;/code> 的 &lt;code>Events&lt;/code> 和日志。&lt;/li>
+&lt;li>&lt;code>Unknown&lt;/code>。这是一个异常状态，意味着 &lt;code>Pod&lt;/code> 的状态不能持续地被 &lt;code>kubelet&lt;/code> 汇报给 &lt;code>kube-apiserver&lt;/code>，这很有可能是主从节点（&lt;code>Master&lt;/code> 和 &lt;code>Kubelet&lt;/code>）间的通信出现了问题。&lt;/li>
+&lt;/ul>
+&lt;h1 id="kubernetes-其他对象-volume">&lt;code>Kubernetes&lt;/code> 其他对象 &lt;code>Volume&lt;/code>&lt;/h1>
+&lt;p>&lt;code>Kubernetes&lt;/code> 支持的 &lt;code>Project Volume&lt;/code> 一共有四种:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Secret&lt;/code> : 把 Pod 想要访问的加密数据，存放到 &lt;code>Etcd&lt;/code> 中，然后通过在 Pod 的容器里挂载 Volume 的方式。&lt;/li>
+&lt;li>&lt;code>ConfigMap&lt;/code> : 保存的是不需要加密的、应用所需的配置信息。而 &lt;code>ConfigMap&lt;/code> 的用法几乎与 &lt;code>Secret&lt;/code> 完全相同：你可以使用 &lt;code>kubectl create configmap&lt;/code> 从文件或者目录创建 &lt;code>ConfigMap&lt;/code>，也可以直接编写 &lt;code>ConfigMap&lt;/code> 对象的 &lt;code>YAML&lt;/code> 文件。&lt;/li>
+&lt;li>&lt;code>Downward API&lt;/code> : 让 Pod 里的容器能够直接获取到这个&lt;code> Pod API&lt;/code> 对象本身的信息。
+&lt;blockquote>
+&lt;p>一定是 Pod 里的容器进程启动之前就能够确定下来的信息。而如果你想要获取 Pod 容器运行后才会出现的信息，比如，容器进程的 &lt;code>PID&lt;/code>，那就肯定不能使用 &lt;code>Downward API&lt;/code> 了，而应该考虑在 &lt;code>Pod&lt;/code> 里定义一个 &lt;code>sidecar&lt;/code> 容器。&lt;/p>
+&lt;/blockquote>
+&lt;/li>
+&lt;li>&lt;code>ServiceAccountToken&lt;/code> : 这种把 &lt;code>Kubernetes&lt;/code> 客户端以容器的方式运行在集群里，然后使用 &lt;code>default Service Account&lt;/code> 自动授权的方式，被称作“InClusterConfig”.&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#008b45;text-decoration:underline">---&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Secret&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>mysecret&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">type&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Opaque&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">data&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">user&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>YWRtaW4=&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">pass&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>MWYyZDFlMmU2N2Rm&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#008b45;text-decoration:underline">...&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; kubectl create secret
+&lt;/code>&lt;/pre>&lt;/div>&lt;h1 id="容器的健康检查和恢复机制">容器的健康检查和恢复机制&lt;/h1>
+&lt;p>&lt;code>Pod&lt;/code> 容器定义了一个健康检查的&amp;quot;探针&amp;quot;（Probe）, 这样kubelet就会根据这个 probe 返回的值决定这个容器的状态，而不是直接以容器镜像十分运行来作为依据。生产环境保证应用健康存活的重要手段。&lt;/p>
+&lt;p>&lt;code>Pod&lt;/code> 恢复机制 restartPolicy, 它是 Pod 的 Spec 部分的一个标准字段（&lt;code>pod.spec.restartPolicy&lt;/code>），默认值是 &lt;code>Always&lt;/code>，即：任何时候这个容器发生了异常，它一定会被重新创建。&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;code>pod&lt;/code> 恢复，永远只发生在当前节点，而不会跑到别的节点上去。（不会发生故障转移）需要转移的需要切换到 &lt;code>Deployment&lt;/code> 这样的控制器来管理&lt;code>POD &lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;p>你还可以通过设置 &lt;code>restartPolicy&lt;/code>，改变 &lt;code>Pod&lt;/code> 的恢复策略。除了 &lt;code>Always&lt;/code>，它还有 &lt;code>OnFailure&lt;/code> 和 &lt;code>Never&lt;/code> 两种情况：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Always&lt;/code>：在任何情况下，只要容器不在运行状态，就自动重启容器；&lt;/li>
+&lt;li>&lt;code>OnFailure&lt;/code>: 只在容器 异常时才自动重启容器；&lt;/li>
+&lt;li>&lt;code>Never&lt;/code>: 从来不重启容器。&lt;/li>
+&lt;/ul>
+&lt;h1 id="编排其实很简单-控制器模型">编排其实很简单-&amp;ldquo;控制器&amp;quot;模型&lt;/h1>
+&lt;p>前面已经知道 &lt;code>POD&lt;/code> 是一个复杂的&lt;code>API对象&lt;/code>，实际也是对容器的进一步抽象和封装；也就是说&lt;code>Pod对象&lt;/code>是容器的升级版,它对容器的组合，添加了很多的属性和字段。&lt;/p>
+&lt;p>&lt;code>Kubernetes&lt;/code>操作&lt;code>POD&lt;/code>是依赖控制器(Controller)完成的。就是 kube-controller-manager 组件&lt;/p>
+&lt;p>通过查看 &lt;code>https://github.com/kubernetes/kubernetes/tree/master/pkg/controller&lt;/code> 源代码下能看见这些目录&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">deployment/ job/ podautoscaler/ cloud/ disruption/ namespace/
+replicaset/ serviceaccount/ volume/cronjob/ garbagecollector/ nodelifecycle/
+replication/ statefulset/ daemon/...
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这些每个目录都是一种类型的 &lt;code>controller&lt;/code>,各自负责某种编排功能。&lt;/p>
+&lt;p>控制循环（control loop）&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-go" data-lang="go">
+&lt;span style="color:#8b008b;font-weight:bold">for&lt;/span> {
+实际状态 := 获取集群中对象X的实际状态&lt;span style="color:#a61717;background-color:#e3d2d2">（&lt;/span>Actual State&lt;span style="color:#a61717;background-color:#e3d2d2">）&lt;/span>
+期望状态 := 获取集群中对象X的期望状态&lt;span style="color:#a61717;background-color:#e3d2d2">（&lt;/span>Desired State&lt;span style="color:#a61717;background-color:#e3d2d2">）&lt;/span>
+&lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> 实际状态 == 期望状态{
+什么都不做
+} &lt;span style="color:#8b008b;font-weight:bold">else&lt;/span> {
+执行编排动作&lt;span style="color:#a61717;background-color:#e3d2d2">，&lt;/span>将实际状态调整为期望状态
+}
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>具体实现时候，&lt;code>实际状态&lt;/code>来自于&lt;code>Kubernetes&lt;/code> 集群本身，&lt;code>期望状态&lt;/code>来自于用户提交的 &lt;code>YAML&lt;/code> 文件。&lt;/p>
+&lt;blockquote>
+&lt;p>比如&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>Deployment控制器&lt;/code>从&lt;code>Etcd&lt;/code>中获取到目标标签的 &lt;code>POD&lt;/code>，然后统计他们的数量，这是实际状态；&lt;/li>
+&lt;li>&lt;code>Deployment对象&lt;/code>的 &lt;code>Replicas&lt;/code> 字段的值是期望状态；&lt;/li>
+&lt;li>&lt;code>Deployment控制器&lt;/code>将两个状态做比较，然后根据比较结果，确定创建&lt;code>POD&lt;/code>还是删除已经存在的&lt;code>POD&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>这个操作叫做协调（&lt;code>Reconcile&lt;/code>）即 控制循环&lt;/p>
+&lt;blockquote>
+&lt;p>为什么是循环，因为事件往往是一次性的，如果操作失败比较难处理，但是控制器循环一直尝试，更符合 Kubernetes 声明式API，最终达成一致。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/deployment.png" alt="deployment结构">&lt;/p>
+&lt;p>上半部分的控制器定义（包含期望状态），下面的部分被控制对象的模板组成的。&lt;/p>
+&lt;h1 id="作业副本和水平扩展">作业副本和水平扩展&lt;/h1>
+&lt;h2 id="pod-的水平扩展--收缩horizontal-scaling-outin">Pod 的“水平扩展 / 收缩”（horizontal scaling out/in）&lt;/h2>
+&lt;p>如果我们更新了 &lt;code>Deployment&lt;/code> 的 &lt;code>Pod&lt;/code> 模板（假如更新了容器镜像），那么 &lt;code>Deployment&lt;/code> 需要遵循一种 &amp;ldquo;滚动更新&amp;rdquo;（&lt;code>rolling update&lt;/code>）的方式来升级现有的容器。这也是 &lt;code>kubernetes&lt;/code> 重要的概念（API对象）：&lt;code>ReplicaSet&lt;/code>&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>apps/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ReplicaSet&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx-set&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">replicas&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">3&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">selector&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">matchLabels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">template&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx:1.7.9&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>一个 &lt;code>ReplicaSet&lt;/code>对象，由 副本数目的定义和一个Pod模板组成的。它其实是 &lt;code>Deployment&lt;/code> 的子集。而且，&lt;code>Deployment控制器&lt;/code>操作的正是 &lt;code>ReplicaSet&lt;/code> 对象，而不是&lt;code>Pod对象&lt;/code>。&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">kubectl scale
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/replicaset.jpg" alt="ReplicaSet结构">&lt;/p>
+&lt;h2 id="滚动更新">滚动更新&lt;/h2>
+&lt;p>将一个集群中正在运行的多个 &lt;code>Pod&lt;/code> 版本，交替地逐一升级的过程，就是“滚动更新”。&lt;/p>
+&lt;blockquote>
+&lt;ul>
+&lt;li>依赖 &lt;code>health check&lt;/code> 机制&lt;/li>
+&lt;li>保证服务的连续性&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://pinkhello.me/%E5%9B%9E%E6%9C%9BK8S/deployment-replicaset-pod.jpg" alt="DeploymentReplicaSet">&lt;/p>
+&lt;p>&lt;code>Deployment&lt;/code> 实际上是一个两层控制器。首先，它通过 &lt;code>ReplicaSet&lt;/code> 的个数来描述应用的版本；然后，它再通过 &lt;code>ReplicaSet&lt;/code> 的属性（比如 &lt;code>replicas&lt;/code> 的值），来保证 &lt;code>Pod&lt;/code> 的副本数量。&lt;/p>
+&lt;h1 id="深入理解statefulset">深入理解StatefulSet&lt;/h1>
+&lt;ul>
+&lt;li>拓扑状态：应用间不完全对等，需要谁先启动，谁后启动，必须按照某些顺序来启动。（在&lt;code>Pod&lt;/code>删除和再创建中保持稳定）&lt;/li>
+&lt;li>存储状态：多个实例绑定了不同的存储数据，一个数据库应用的多个存储实例&lt;/li>
+&lt;/ul>
+&lt;h2 id="拓扑状态">拓扑状态&lt;/h2>
+&lt;p>StatefulSet 核心功能：通过某种方式纪录这些状态，等POD被重新创建时候，能够为新的POD恢复状态。&lt;/p>
+&lt;p>Headless Service&lt;/p>
+&lt;p>Service 是 Kubernetes 项目中用来将一组 Pod 暴露给外界访问的一种机制。比如，一个 &lt;code>Deployment&lt;/code> 有 &lt;code>3&lt;/code> 个 &lt;code>Pod&lt;/code>，那么我就可以定义一个 &lt;code>Service&lt;/code>。然后，用户只要能访问到这个 &lt;code>Service&lt;/code>，它就能访问到某个具体的 &lt;code>Pod&lt;/code>。&lt;/p>
+&lt;ul>
+&lt;li>第一种方式，是以 &lt;code>Service&lt;/code> 的 &lt;code>VIP&lt;/code>（&lt;code>Virtual IP&lt;/code>，即：虚拟 IP）方式。&lt;/li>
+&lt;li>第二种方式，就是以 &lt;code>Service&lt;/code> 的 &lt;code>DNS&lt;/code> 方式, 比如 只要我访问“&lt;code>my-svc.my-namespace.svc.cluster.local&lt;/code>”这条 DNS 记录，就可以访问到名叫 &lt;code>my-svc&lt;/code> 的 &lt;code>Service&lt;/code> 所代理的某一个 &lt;code>Pod&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>Service DNS&lt;/code> 下两种处理方法&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;code>Normal Service&lt;/code>。这种情况下，你访问“my-svc.my-namespace.svc.cluster.local”解析到的，正是 my-svc 这个 Service 的 VIP，后面的流程就跟 VIP 方式一致了。
+&lt;code>Headless Service&lt;/code>。这种情况下，你访问“my-svc.my-namespace.svc.cluster.local”解析到的，直接就是 my-svc 代理的某一个 Pod 的 IP 地址。可以看到，这里的区别在于，Headless Service 不需要分配一个 VIP，而是可以直接以 DNS 记录的方式解析出被代理 Pod 的 IP 地址。&lt;/p>
+&lt;/blockquote>
+&lt;p>Headless Service Yaml&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Service&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">port&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">80&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>web&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">clusterIP&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>None&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">selector&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>StatefulSet Yaml&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>apps/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>StatefulSet&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>web&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 多了这个 ServiceName 就是告诉 StatefulSet 控制器，在执行控制循环（Control Loop）的时候，请使用 nginx 这个 Headless Service 来保证 Pod 的“可解析身份”。&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">serviceName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;nginx&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">replicas&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">2&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">selector&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">matchLabels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">template&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx:1.9.1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">containerPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">80&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>web&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>，对于“有状态应用”实例的访问，你必须使用 &lt;code>DNS 记录&lt;/code>或者 &lt;code>hostname&lt;/code> 的方式，而绝不应该直接访问这些 &lt;code>Pod&lt;/code> 的 IP 地址。&lt;/p>
+&lt;h2 id="存储状态">存储状态&lt;/h2>
+&lt;p>&lt;code>StatefulSet&lt;/code> 存储状态的管理机制，主要使用的是一个叫做 &lt;code>Persistent Volume Claim&lt;/code> 功能。&lt;/p>
+&lt;p>要在一个 Pod 里面声明 Volume，只要在 Pod 里加上 &lt;code>spec.volumes&lt;/code> 字段，然后就可以在这个字段里面定义一个具体的类型的 &lt;code>Volume&lt;/code>。比如 &lt;code>hostPath&lt;/code>。&lt;/p>
+&lt;p>&lt;code>Kubernetes&lt;/code> 项目引入了一组叫作 &lt;code>Persistent Volume Claim&lt;/code>（PVC）和 &lt;code>Persistent Volume&lt;/code>（PV）的 API 对象，大大降低了用户声明和使用持久化 &lt;code>Volume&lt;/code> 的门槛。&lt;/p>
+&lt;p>使用PVC的两步：&lt;/p>
+&lt;ul>
+&lt;li>定义一个 &lt;code>PVC&lt;/code>，声明想要的 &lt;code>Volume&lt;/code> 属性&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>PersistentVolumeClaim&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pv-claim&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">accessModes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- ReadWriteOnce&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 挂载方式：可读写，并且只能被挂载在一个节点上，非多个节点共享&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">requests&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">storage&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>1Gi &lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22">#存储大小&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>在应用 &lt;code>POD&lt;/code> 中，使用这个 &lt;code>PVC&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Pod&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pv-pod&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pv-container&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>nginx&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">ports&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">containerPort&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">80&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;http-server&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumeMounts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;/usr/share/nginx/html&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pv-storage&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pv-storage&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">persistentVolumeClaim&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">claimName&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pv-claim&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 指定上面的PVC的名字&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>从上面来看，这个 &lt;code>Volume&lt;/code> 又从何而来呢？（运维人员维护的 &lt;code>PV&lt;/code>）&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#228b22"># 这个 PV 对象的 spec.rbd 字段，正是我们前面介绍过的 Ceph RBD Volume 的详细定义。而且，它还声明了这个 PV 的容量是 10 GiB。这样，Kubernetes 就会为我们刚刚创建的 PVC 对象绑定这个 PV&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>PersistentVolume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pv-volume&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">type&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>local&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">capacity&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">storage&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>10Gi&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">accessModes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- ReadWriteOnce&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">rbd&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">monitors&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 使用 kubectl get pods -n rook-ceph 查看 rook-ceph-mon- 开头的 POD IP 即可得下面的列表&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#39;10.16.154.78:6789&amp;#39;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#39;10.16.154.82:6789&amp;#39;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#cd5555">&amp;#39;10.16.154.83:6789&amp;#39;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">pool&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>kube&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>foo&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">fsType&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>ext4&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">readOnly&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">user&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>admin&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">keyring&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/etc/ceph/keyring&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>所以 &lt;code>Kubernetes&lt;/code> 中的 &lt;code>PVC&lt;/code> 和 &lt;code>PV&lt;/code> 的设计，类似于 &amp;ldquo;接口&amp;rdquo; 和 &amp;ldquo;实现&amp;rdquo; 的思想，这种解耦，避免了暴露系统更多的细节，也是职责的分离，更容易定位问题&lt;/p>
+&lt;h2 id="statefulset-的工作原理">StatefulSet 的工作原理&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>StatefulSet&lt;/code> 控制器直接管理的是 &lt;code>POD&lt;/code>&lt;/li>
+&lt;li>&lt;code>Kubernetes&lt;/code> 通过 &lt;code>Headless Service&lt;/code> 为这些有编号的 &lt;code>POD&lt;/code>。在 &lt;code>DNS&lt;/code> 服务器众生成同样带有编号的 &lt;code>DNS纪录&lt;/code>。只要 &lt;code>StatefulSet&lt;/code> 能够保证这些 &lt;code>POD&lt;/code> 的名字编号不变，类似 &amp;ldquo;&lt;code>web-0.default.svc.cluster.local&lt;/code>&amp;rdquo; 这样的 &lt;code>DNS纪录&lt;/code> 就不会变，而这条纪录解析出来的&lt;code>POD&lt;/code>的&lt;code>IP&lt;/code>地址，会随着&lt;code>后端的POD删除和再创建&lt;/code>而更新。&lt;/li>
+&lt;li>&lt;code>StatefulSet&lt;/code> 还为每个 &lt;code>POD&lt;/code> 分配并创建一个同样编号的 &lt;code>PVC&lt;/code>，这样 &lt;code>Kubernetes&lt;/code> 可以通过 &lt;code>Persistent Volume&lt;/code> 机制为这个 &lt;code>PVC&lt;/code> 绑定对应的 &lt;code>PV&lt;/code>，保证一个&lt;code>POD&lt;/code>都有一个独立的 &lt;code>Volume&lt;/code>（即使&lt;code>POD&lt;/code>被删除，但是对应的 &lt;code>PVC&lt;/code> 和 &lt;code>PV&lt;/code> 保留下来，重新创建&lt;code>POD&lt;/code>的时候，还会找回来，数据还存在）&lt;/li>
+&lt;/ul>
+&lt;h1 id="容器化守护进程的意义-daemonset">容器化守护进程的意义 DaemonSet&lt;/h1>
+&lt;p>&lt;code>DaemonSet&lt;/code> 主要的作用: 在&lt;code>Kubernetes&lt;/code>集群里运行一个 &lt;code>Daemon Pod&lt;/code>,这个&lt;code>Pod&lt;/code>三个特征&lt;/p>
+&lt;ul>
+&lt;li>每个&lt;code>Kubernetes&lt;/code>节点都会运行一个这样的&lt;code>POD&lt;/code>&lt;/li>
+&lt;li>每个节点上只有一个这样的 &lt;code>Pod&lt;/code> 实例&lt;/li>
+&lt;li>当有新的节点加入 &lt;code>Kuberntes&lt;/code> 集群后，该 &lt;code>Pod&lt;/code> 会自动的在新的节点上被创建出来，而当旧节点被删除后, 它上面的 Pod 也会相应地被回收掉。&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>eg：&lt;/p>
+&lt;ul>
+&lt;li>网络插件的 Agent 组件，必须运行在每个节点上，用来处理容器的网络&lt;/li>
+&lt;li>存储插件 Agent 组件，必须运行在每个节点上，用来挂载远程存储目录，操作容器的 Volume 目录&lt;/li>
+&lt;li>监控组件 以及 日志组件，也是一样，负责节点的监控信息和日志收集&lt;/li>
+&lt;/ul>
+&lt;/blockquote>
+&lt;p>跟其他编排不一样，DaemonSet 开始运行的时机，很多时候比整个 Kubernetes 集群出现的还要早。比如容器网络组件，在所有的 Worker节点状态都是 NotReady。&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#228b22"># fluentd-elasticsearch 镜像POD， 通过 Fluentd 将 Docker 容器日志转发到 ES 内。&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>apps/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>DaemonSet&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>fluentd-elasticsearch&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">namespace&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>kube-system&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">k8s-app&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>fluentd-logging&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">selector&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">matchLabels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>fluentd-elasticsearch&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">template&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>fluentd-elasticsearch&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">tolerations&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">key&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>node-role.kubernetes.io/master&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">effect&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>NoSchedule&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>fluentd-elasticsearch&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>k8s.gcr.io/fluentd-elasticsearch:1.20&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">resources&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">limits&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">memory&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>200Mi&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">requests&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">cpu&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>100m&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">memory&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>200Mi&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 挂载了两个hostPath类型 的 Volume &lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumeMounts&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>varlog&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/var/log&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># Docker 容器里应用的日志，默认会保存在宿主机的 /var/lib/docker/containers/{{. 容器 ID}}/{{. 容器 ID}}-json.log 文件里，所以这个目录正是 fluentd 的搜集目标 &lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>varlibdockercontainers&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">mountPath&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/var/lib/docker/containers&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">readOnly&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">true&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">terminationGracePeriodSeconds&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">30&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">volumes&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>varlog&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">hostPath&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">path&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/var/log&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>varlibdockercontainers&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">hostPath&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">path&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>/var/lib/docker/containers&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>DaemonSet Controller&lt;/code>，首先从 &lt;code>Etcd&lt;/code> 里获取所有的 &lt;code>Node&lt;/code> 列表，然后遍历所有的 &lt;code>Node&lt;/code>。这时就会去检查这个&lt;code>Node&lt;/code>上是不是已经存在携带了 &lt;code>name=fluentd-elasticsearch&lt;/code> 的 &lt;code>POD&lt;/code> 在运行了&lt;/p>
+&lt;ul>
+&lt;li>没有这个POD，则创建一个新的 POD&lt;/li>
+&lt;li>有这种POD，数量 &amp;gt; 1, 删除多余的&lt;/li>
+&lt;li>正好一个，节点正常&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>DaemonSet&lt;/code> 会自动加上 &lt;code>tolerations&lt;/code>字段&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Pod&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>with-toleration&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># “容忍”所有被标记为 unschedulable“污点”的 Node；“容忍”的效果是允许调度。&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">tolerations&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">key&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>node.kubernetes.io/unschedulable&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">operator&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Exists&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">effect&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>NoSchedule&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>在正常情况下，被标记了 unschedulable“污点”的 Node，是不会有任何 Pod 被调度上去的（effect: NoSchedule）。可是，DaemonSet 自动地给被管理的 Pod 加上了这个特殊的 Toleration，就使得这些 Pod 可以忽略这个限制，继而保证每个节点上都会被调度一个 Pod。当然，如果这个节点有故障的话，这个 Pod 可能会启动失败，而 DaemonSet 则会始终尝试下去，直到 Pod 启动成功。&lt;/p>
+&lt;h1 id="离线业务-job-与-cronjob">离线业务 Job 与 CronJob&lt;/h1>
+&lt;p>像在线业务诸如应用一类的，抽离了描述离线业务的API对象：Job&lt;/p>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>batch/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Job&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pi&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">template&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>pi&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>resouer/ubuntu-bc &lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">command&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;sh&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;-c&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;echo &amp;#39;scale=10000; 4*a(1)&amp;#39; | bc -l &amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">restartPolicy&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Never&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">backoffLimit&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#b452cd">4&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">
+$ kubectl describe jobs/pi
+Name: pi
+Namespace: default
+Selector: controller-uid=c2db599a-2c9d-11e6-b324-0209dc45a495
+Labels: controller-uid=c2db599a-2c9d-11e6-b324-0209dc45a495
+job-name=pi
+Annotations: &amp;lt;none&amp;gt;
+Parallelism: &lt;span style="color:#b452cd">1&lt;/span>
+Completions: &lt;span style="color:#b452cd">1&lt;/span>
+..
+Pods Statuses: &lt;span style="color:#b452cd">0&lt;/span> Running / &lt;span style="color:#b452cd">1&lt;/span> Succeeded / &lt;span style="color:#b452cd">0&lt;/span> Failed
+Pod Template:
+Labels: controller-uid=c2db599a-2c9d-11e6-b324-0209dc45a495
+job-name=pi
+Containers:
+...
+Volumes: &amp;lt;none&amp;gt;
+Events:
+FirstSeen LastSeen Count From SubobjectPath Type Reason Message
+--------- -------- ----- ---- ------------- -------- ------ -------
+1m 1m &lt;span style="color:#b452cd">1&lt;/span> {job-controller } Normal SuccessfulCreate Created pod: pi-rq5rl
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>这个 Job 对象在创建后，它的 Pod 模板，被自动加上了一个 controller-uid=&amp;lt; 一个随机字符串 &amp;gt; 这样的 Label。而这个 Job 对象本身，则被自动加上了这个 Label 对应的 Selector，从而 保证了 Job 与它所管理的 Pod 之间的匹配关系。而 Job Controller 之所以要使用这种携带了 UID 的 Label，就是为了避免不同 Job 对象所管理的 Pod 发生重合。&lt;/p>
+&lt;p>如果作业失败了怎么办？&lt;/p>
+&lt;p>定义了 restartPolicy=Never，那么离线作业失败后 Job Controller 就会不断地尝试创建一个新 Pod
+我们就在 Job 对象的 spec.backoffLimit 字段里定义了重试次数为 4（即，backoffLimit=4），而这个字段的默认值是 6。
+定义的 restartPolicy=OnFailure，那么离线作业失败后，Job Controller 就不会去尝试创建新的 Pod。但是，它会不断地尝试重启 Pod 里的容器&lt;/p>
+&lt;p>Job 对象中，并行作业的控制方法&lt;/p>
+&lt;ul>
+&lt;li>1、spec.parallelism，它定义的是一个 Job 在任意时间最多可以启动多少个 Pod 同时运行；&lt;/li>
+&lt;li>2、spec.completions，它定义的是 Job 至少要完成的 Pod 数目，即 Job 的最小完成数。&lt;/li>
+&lt;/ul>
+&lt;h2 id="常用的使用-job对象的方法">常用的使用 Job对象的方法&lt;/h2>
+&lt;ul>
+&lt;li>外部管理器 + Job模板 （sed）&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>batch/v1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Job&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># 带遍历替换&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>process-item-$ITEM&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">jobgroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>jobexample&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">template&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>jobexample&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">labels&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">jobgroup&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>jobexample&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>c&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>busybox&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">command&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>[&lt;span style="color:#cd5555">&amp;#34;sh&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;-c&amp;#34;&lt;/span>,&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;echo Processing item $ITEM &amp;amp;&amp;amp; sleep 5&amp;#34;&lt;/span>]&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">restartPolicy&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>Never&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>
+&lt;p>拥有固定任务数目的并行Job&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>指定并行度（parallelism），但不设置固定的 completions 的值。&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cronjob-对象">CronJob 对象&lt;/h2>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">apiVersion&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>batch/v1beta1&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">kind&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>CronJob&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">metadata&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>hello&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#228b22"># cron &lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">schedule&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#cd5555">&amp;#34;*/1 * * * *&amp;#34;&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">jobTemplate&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">template&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">spec&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">containers&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- &lt;span style="color:#8b008b;font-weight:bold">name&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>hello&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">image&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>busybox&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">args&lt;/span>:&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- /bin/sh&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- -c&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>- date; echo Hello from the Kubernetes cluster&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb"> &lt;/span>&lt;span style="color:#8b008b;font-weight:bold">restartPolicy&lt;/span>:&lt;span style="color:#bbb"> &lt;/span>OnFailure&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>CronJob 是专门管理 Job 对象的控制其。只不过它的创建和删除Job依据是根据
+schedule 字段来定义的。&lt;/p>
+&lt;p>在 定时任务的时候，可能有任务未执行完毕，就下面的Pod启动&lt;/p>
+&lt;ul>
+&lt;li>concurrencyPolicy=Allow，这也是默认情况，这意味着这些 Job 可以同时存在；&lt;/li>
+&lt;li>concurrencyPolicy=Forbid，这意味着不会创建新的 Pod，该创建周期被跳过；&lt;/li>
+&lt;li>concurrencyPolicy=Replace，这意味着新产生的 Job 会替换旧的、没有执行完的 Job。&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="color:#228b22"># startingDeadlineSeconds=200，意味着在过去 200 s 里，如果 miss 的数目达到了 100 次，那么这个 Job 就不会被创建执行了&lt;/span>&lt;span style="color:#bbb">
+&lt;/span>&lt;span style="color:#bbb">&lt;/span>spec.startingDeadlineSeconds 时间窗口&lt;span style="color:#bbb">
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>- https://pinkhello.me/posts/20-%E5%9B%9E%E6%9C%9Bk8s-%E5%AE%B9%E5%99%A8%E7%BC%96%E6%8E%92%E4%B8%8Ekubernetes%E4%BD%9C%E4%B8%9A%E7%AE%A1%E7%90%86/ - PinkHello, All Rights Reserved</description></item><item><title>回望K8S Kubernetes拼图</title><link>https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</link><pubDate>Sun, 16 Feb 2020 20:57:38 +0800</pubDate><guid>https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/</guid><description>PinkHello https://pinkhello.me/posts/19-%E5%9B%9E%E6%9C%9Bk8s-kubernetes%E6%8B%BC%E5%9B%BE/ -&lt;h1 id="kubernetes-安装">&lt;code>kubernetes&lt;/code> 安装&lt;/h1>
 &lt;h2 id="all-节点安装-docker-和-kubeadm">all 节点安装 &lt;code>Docker&lt;/code> 和 &lt;code>Kubeadm&lt;/code>&lt;/h2>
 &lt;p>所有节点 &lt;code>root&lt;/code> 用户下操作&lt;/p>
 &lt;div class="highlight">&lt;pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-shell" data-lang="shell">&amp;gt; curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
@@ -364,10 +851,10 @@ none /var/lib/docker/aufs/mnt/6e3be5d2ecccae7cc0fc... aufs rw,relatime,si=972c6d
 &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">socket&lt;/span>
 &lt;span style="color:#8b008b;font-weight:bold">import&lt;/span> &lt;span style="color:#008b45;text-decoration:underline">os&lt;/span>
 app = Flask(__name__)
-&lt;span style="color:#707a7c">@app.route&lt;/span>(&lt;span style="color:#cd5555">&amp;#39;/&amp;#39;&lt;/span>)
+&lt;span style="color:#707a7c">@app&lt;/span>.route(&lt;span style="color:#cd5555">&amp;#39;/&amp;#39;&lt;/span>)
 &lt;span style="color:#8b008b;font-weight:bold">def&lt;/span> &lt;span style="color:#008b45">hello&lt;/span>():
-html = &lt;span style="color:#cd5555">&amp;#34;&amp;lt;h3&amp;gt;Hello {name}!&amp;lt;/h3&amp;gt;&amp;#34;&lt;/span> \
-&lt;span style="color:#cd5555">&amp;#34;&amp;lt;b&amp;gt;Hostname:&amp;lt;/b&amp;gt; {hostname}&amp;lt;br/&amp;gt;&amp;#34;&lt;/span>
+html = &lt;span style="color:#cd5555">&amp;#34;&amp;lt;h3&amp;gt;Hello &lt;/span>&lt;span style="color:#cd5555">{name}&lt;/span>&lt;span style="color:#cd5555">!&amp;lt;/h3&amp;gt;&amp;#34;&lt;/span> \
+&lt;span style="color:#cd5555">&amp;#34;&amp;lt;b&amp;gt;Hostname:&amp;lt;/b&amp;gt; &lt;/span>&lt;span style="color:#cd5555">{hostname}&lt;/span>&lt;span style="color:#cd5555">&amp;lt;br/&amp;gt;&amp;#34;&lt;/span>
 &lt;span style="color:#8b008b;font-weight:bold">return&lt;/span> html.format(name=os.getenv(&lt;span style="color:#cd5555">&amp;#34;NAME&amp;#34;&lt;/span>, &lt;span style="color:#cd5555">&amp;#34;world&amp;#34;&lt;/span>), hostname=socket.gethostname())
 &lt;span style="color:#8b008b;font-weight:bold">if&lt;/span> __name__ == &lt;span style="color:#cd5555">&amp;#34;__main__&amp;#34;&lt;/span>:
 app.run(host=&lt;span style="color:#cd5555">&amp;#39;0.0.0.0&amp;#39;&lt;/span>, port=&lt;span style="color:#b452cd">80&lt;/span>)
